@@ -88,6 +88,14 @@ NULL
 #'     In this case, the column specified in the 'pairs' argument must assign the subjects to the treatment/tissue/etc groups.
 #'     For example, if we have two treatments the effects of which are to be observed in each two tissues, this design would apply.
 #'     The 'pairs' factor is passed to the functions 'duplicateCorrelation' and 'lmFit'.
+#' @return A list of all relevant objects generated in the course of the workflow:
+#' \itemize{
+#'   \item if `voom=TRUE`, voomed counts, otherwise DGEList object with TMM-normalisation factors
+#'   \item if `voom=TRUE`, lmFit object, otherwise DGEList object with estimated dispersion
+#'   \item if `voom=TRUE`, eBayes output of contrasted groups, otherwise glmFit object
+#'   \item annotated topTable/topTags output
+#' }
+#' However, the function is first and foremost called for its side effects of generating results tables and plots.
 #'
 #' @export
 diffExpr <-

@@ -41,6 +41,16 @@ vector of groups.}
 
 \item{block}{\code{logical}. Are the comparisons to be made within AND between subjects? See Details section.}
 }
+\value{
+A list of all relevant objects generated in the course of the workflow:
+\itemize{
+  \item if `voom=TRUE`, voomed counts, otherwise DGEList object with TMM-normalisation factors
+  \item if `voom=TRUE`, lmFit object, otherwise DGEList object with estimated dispersion
+  \item if `voom=TRUE`, eBayes output of contrasted groups, otherwise glmFit object
+  \item annotated topTable/topTags output
+}
+However, the function is first and foremost called for its side effects of generating results tables and plots.
+}
 \description{
 \command{diffExpr} is a conveniency wrapper performing all steps automatically.
    Most sub-functions are exported and can be called by the user, as well, if desired.

@@ -64,6 +64,7 @@
 #' @import ggrepel
 #' @import biomaRt
 #' @import maptools
+#' @import scatterplot3d
 #' @importFrom genefilter rowVars
 NULL
 #'

@@ -178,7 +178,7 @@ diffExpr <-
 	d <- calcNormFactors(d)
 	## Inspect the relationships between samples using a multidimensional scaling (MDS) plot
 	if (plots) {
-		diff_expr_mds_plot(d, groups, analysis.name, out.dir)
+		diff_expr_mds_plot(d, groups=groups, analysis.name=analysis.name, do.pdf=FALSE, out.dir=out.dir)
 	}
 
 	# create design matrix

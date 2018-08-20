@@ -85,6 +85,8 @@ NULL
 #'     vector of groups.
 #' @param pairs \code{character}. Name of the column in 'samp.info' containing paired sample information.
 #' @param block \code{logical}. Are the comparisons to be made within AND between subjects? See Details section.
+#' @param bayes.trend \code{logical}. Should an intensity-trend be allowed for the prior variance? Passed to 'limma::eBayes'.
+#' @param bayes.robust \code{logical}. Should the estimation of df.prior and var.prior be robustified against outlier sample variances? Passed to 'limma::eBayes'.
 #'
 #' @details For experiemtal desgins involving comparisons within as well as between subjects inter-subject needs to be computed.
 #'     In this case, the column specified in the 'pairs' argument must assign the subjects to the treatment/tissue/etc groups.
@@ -105,8 +107,9 @@ diffExpr <-
 				analysis.name=NULL, biomart=FALSE, biom.data.set="hsapiens_gene_ensembl", biom.mart=c("ensembl", "snp", "funcgen", "vega", "pride"),
 				host="www.ensembl.org", biom.filter="ensembl_gene_id", biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"), rm.dups=FALSE,
 				p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE, min.samp=NULL, strict = TRUE, disp=c("gene", "trend", "common"), do.voom=FALSE,
-				voom.fun=voom, norm.method=c("tmm", "quantile"), n=500, gene.selection="common", ellipse=TRUE, circle=TRUE, varname.size=0, var.axes=FALSE, samp.lab=TRUE,
-				PC=c(1,2,3), type=c("both", "uncorrected", "pseudo-corrected"), font.size=5, plots=TRUE, lists=TRUE)
+				voom.fun=voom, norm.method=c("tmm", "quantile"), bayes.trend=FALSE, bayes.robust=FALSE, n=500, gene.selection="common", ellipse=TRUE,
+				circle=TRUE, varname.size=0, var.axes=FALSE, samp.lab=TRUE, PC=c(1,2,3), type=c("both", "uncorrected", "pseudo-corrected"), font.size=5,
+				plots=TRUE, lists=TRUE)
 {
 	## initial checks
 	if (missing(expr.file) || !is.character(unlist(expr.file))) {
@@ -135,6 +138,11 @@ diffExpr <-
 		if (!is.data.frame(samp.info)) {
 			stop("'samp.info' needs to be a data.frame object containing at least two columns: 'SampleNames' and 'Groups' (the actual names can be provided\nby the 'samples' and 'groups' arguments, repsectively.)")
 		}
+	}
+	
+	if (block) {
+		do.voom <- TRUE
+		cat("*** Using 'blocked' design (i.e., samples are measured _in blocks_). Enforcing 'voom'! ***\n")
 	}
 
 	## switch off plotting device on exit
@@ -217,17 +225,17 @@ diffExpr <-
 			pairs_col <- pairs
 			pairs <- samp.info[[pairs]]
 		}
-		fit.l <- diff_expr_fit(counts, d, design, do.voom=TRUE, voom.fun, norm.method, pairs, pairs_col, block, contrasts)
+		fit.l <- diff_expr_fit(counts, d, design, do.voom=TRUE, voom.fun, norm.method, bayes.trend, bayes.robust, pairs, pairs_col, block, contrasts)
 
 		out.l <- list(v=fit.l$v, fit=fit.l$fit, fit2=fit.l$fit2)
 		if (!block && !is.null(pairs)) {
 			cat("    Paired samples: additional eBayes on first fit object...\n")
-			fit3 <- eBayes(fit.l$fit)
+			fit3 <- eBayes(fit.l$fit, trend = bayes.trend, robust = bayes.robust)
 			out.l$fit3 <- fit.l$fit3
 		}
 		normcnt <- fit.l$v$E
 	} else {
-		fit.l <- diff_expr_fit(counts, d, design, do.voom=FALSE, disp=disp)
+		fit.l <- diff_expr_fit(counts, d, design, do.voom=FALSE, bayes.trend=bayes.trend, bayes.robust=bayes.robust, disp=disp)
 		out.l <- list(d=fit.l$d, d2=fit.l$d2, fit=fit.l$fit)
 		# normalized expression
 		# Get the depth-adjusted reads per million
@@ -449,10 +457,11 @@ diff_expr_make_contrasts <-
 	return(contrasts)
 }
 
-## function to compute linear model fit and optionally apply voom beforehand
+#' Function to compute linear model fit and optionally apply 'voom' beforehand
 #' @export
 diff_expr_fit <-
-		function(counts, d, design, do.voom=TRUE, voom.fun=voom, norm.method=c("quantile", "tmm"), pairs=NULL, pairs_col=NULL, block=FALSE, contrasts=NULL, disp="tagwise.dispersion")
+		function(counts, d, design, do.voom=TRUE, voom.fun=voom, norm.method=c("quantile", "tmm"), bayes.trend=FALSE, bayes.robust=FALSE, pairs=NULL,
+				pairs_col=NULL, block=FALSE, contrasts=NULL, disp="tagwise.dispersion")
 {
 	if (do.voom) {
 		if (norm.method=="tmm") {
@@ -485,10 +494,10 @@ diff_expr_fit <-
 			cat("  Fitting contrasts...\n")
 			fit2 <- contrasts.fit(fit, contrasts)
 			cat("  eBayes fit...\n")
-			fit2 <- eBayes(fit2)
+			fit2 <- eBayes(fit2, trend = bayes.trend, robust = bayes.robust)
 		} else {
 			cat("  eBayes fit...\n")
-			fit2 <- eBayes(fit)
+			fit2 <- eBayes(fit, trend = bayes.trend, robust = bayes.robust)
 		}
 		return(list(v=v, fit=fit, fit2=fit2))
 	} else {

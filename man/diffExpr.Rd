@@ -16,7 +16,8 @@ diffExpr(expr.file = "mature_miRNA_expression.xls", samp.info, control,
   rm.dups = FALSE, p.thr = 0.05, fdr.thr = 0.05, logfc.thr = 1,
   numlab = 15, point.lab = TRUE, min.samp = NULL, strict = TRUE,
   disp = c("gene", "trend", "common"), do.voom = FALSE,
-  voom.fun = voom, norm.method = c("tmm", "quantile"), n = 500,
+  voom.fun = voom, norm.method = c("tmm", "quantile"),
+  bayes.trend = FALSE, bayes.robust = FALSE, n = 500,
   gene.selection = "common", ellipse = TRUE, circle = TRUE,
   varname.size = 0, var.axes = FALSE, samp.lab = TRUE, PC = c(1, 2,
   3), type = c("both", "uncorrected", "pseudo-corrected"),
@@ -40,6 +41,10 @@ vector of groups.}
 \item{pairs}{\code{character}. Name of the column in 'samp.info' containing paired sample information.}
 
 \item{block}{\code{logical}. Are the comparisons to be made within AND between subjects? See Details section.}
+
+\item{bayes.trend}{\code{logical}. Should an intensity-trend be allowed for the prior variance? Passed to 'limma::eBayes'.}
+
+\item{bayes.robust}{\code{logical}. Should the estimation of df.prior and var.prior be robustified against outlier sample variances? Passed to 'limma::eBayes'.}
 }
 \value{
 A list of all relevant objects generated in the course of the workflow:

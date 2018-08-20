@@ -104,7 +104,7 @@ NULL
 #' @export
 diffExpr <-
 		function(expr.file="mature_miRNA_expression.xls", samp.info, control, design=NULL, samples=NULL, groups=NULL, pairs=NULL, block=FALSE, contrasts=NULL, out.dir=NULL,
-				analysis.name=NULL, biomart=FALSE, biom.data.set="hsapiens_gene_ensembl", biom.mart=c("ensembl", "snp", "funcgen", "vega", "pride"),
+				analysis.name=NULL, biomart=FALSE, biom.data.set="hsapiens_gene_ensembl", biom.mart=c("ensembl", "snp", "funcgen", "vega", "pride", "plants"),
 				host="www.ensembl.org", biom.filter="ensembl_gene_id", biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"), rm.dups=FALSE,
 				p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE, min.samp=NULL, strict = TRUE, disp=c("gene", "trend", "common"), do.voom=FALSE,
 				voom.fun=voom, norm.method=c("tmm", "quantile"), bayes.trend=FALSE, bayes.robust=FALSE, n=500, gene.selection="common", ellipse=TRUE,
@@ -518,7 +518,7 @@ diff_expr_fit <-
 #' @export
 diff_expr_extract_contrasts <-
 		function(contrasts=NULL, fit, fit2=NULL, normcnt, out.l, do.voom=TRUE, out.dir=NULL,
-				analysis.name=NULL, biomart=FALSE, biom.data.set="hsapiens_gene_ensembl", biom.mart=c("ensembl", "snp", "funcgen", "vega", "pride"),
+				analysis.name=NULL, biomart=FALSE, biom.data.set="hsapiens_gene_ensembl", biom.mart=c("ensembl", "snp", "funcgen", "vega", "pride", "plants"),
 				host="www.ensembl.org", biom.filter="ensembl_gene_id", biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"), rm.dups=FALSE,
 				p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE, font.size=5, plots=TRUE, lists=TRUE)
 {
@@ -586,11 +586,11 @@ diff_expr_extract_contrasts <-
 			id.col <- names(d3)[names(d3) %in% biom.filter]
 		} else {
 			syms <- convertId2(as.character(d3$ID))
-			syms <- data.frame(ID=names(syms), hgnc_symbol=as.character(syms), stringsAsFactors=FALSE)
+			syms <- data.frame(ID=names(syms), gene_symbol=as.character(syms), stringsAsFactors=FALSE)
 			d3 <- merge(syms, d3, by="ID", all.y=TRUE, all.x=FALSE, sort=TRUE)
-			if (any(d3$hgnc_symbol=="") || any(is.na(d3$hgnc_symbol))) {
-				cat("  Replacing", length(which(d3$hgnc_symbol=="" | is.na(d3$hgnc_symbol))), "missing Gene Symbols by Ensembl IDs...\n")
-				d3$hgnc_symbol[d3$hgnc_symbol=="" | is.na(d3$hgnc_symbol)] <- as.character(d3$ID[d3$hgnc_symbol=="" | is.na(d3$hgnc_symbol)])
+			if (any(d3$gene_symbol=="") || any(is.na(d3$gene_symbol))) {
+				cat("  Replacing", length(which(d3$gene_symbol=="" | is.na(d3$gene_symbol))), "missing Gene Symbols by Ensembl IDs...\n")
+				d3$gene_symbol[d3$gene_symbol=="" | is.na(d3$gene_symbol)] <- as.character(d3$ID[d3$gene_symbol=="" | is.na(d3$gene_symbol)])
 			}
 			id.col <- "ID"
 		}
@@ -657,11 +657,12 @@ diff_expr_pseudo_counts <-
 ## biomart function to retrieve additional information
 #' @export
 diff_expr_biomart <-
-		function(d3, biom.data.set="hsapiens_gene_ensembl", biom.mart=c("ensembl", "snp", "funcgen", "vega", "pride"),
+		function(d3, biom.data.set="hsapiens_gene_ensembl", biom.mart=c("ensembl", "snp", "funcgen", "vega", "pride", "plants"),
 				host="www.ensembl.org", biom.filter="ensembl_gene_id", biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"),
-				rm.dups=FALSE)
+				sym.col="hgnc_symbol", rm.dups=FALSE)
 {
-	gene.lab <- convert.bm(d3, "ID", biom.data.set, biom.mart, host, biom.filter, biom.attributes, rm.dups)
+	gene.lab <- convert.bm(d3, "ID", biom.data.set, biom.mart, host, biom.filter, biom.attributes, sym.col, rm.dups)
+	names(gene.lab)[names(gene.lab)==sym.col] <- "gene_symbol"
 	cat("  Extended annotation:\n")
 	if (length(d3$ID)>8) {
 		print(gene.lab[1:8, biom.attributes])
@@ -951,7 +952,7 @@ diff_expr_ma_plot <-
 				print(gene.lab[1:8, 1:2])
 			}
 			g <- g + ggtitle(paste0("M-A plot for ", contr, " (highl.: FDR < ", fdr.thr, "; FC >= ", 2^logfc.thr, "-fold)"))
-			g <- g + geom_text_repel(data = gene.lab, aes(label = hgnc_symbol), size = font.size, box.padding = unit(0.35, "lines"), point.padding = unit(0.3, "lines"), show.legend = F)
+			g <- g + geom_text_repel(data = gene.lab, aes(label = gene_symbol), size = font.size, box.padding = unit(0.35, "lines"), point.padding = unit(0.3, "lines"), show.legend = F)
 			if (lists) {
 				write.table(gene.lab, file.path(out.dir, paste(analysis.name, contr, "labelledPointsSmearPlot.tsv", sep="_")), sep="\t", quote=FALSE, row.names=FALSE)
 			}
@@ -987,7 +988,7 @@ diff_expr_ma_plot <-
 				print(gene.lab[1:8, 1:2])
 			}
 			g <- g + ggtitle(paste0("M-A plot for ", contr, " (highl.: P-value < ", p.thr, "; FC >= ", 2^logfc.thr, "-fold)"))
-			g <- g + geom_text_repel(data = gene.lab, aes(label = hgnc_symbol), size = font.size, box.padding = unit(0.35, "lines"), point.padding = unit(0.3, "lines"), show.legend = F)
+			g <- g + geom_text_repel(data = gene.lab, aes(label = gene_symbol), size = font.size, box.padding = unit(0.35, "lines"), point.padding = unit(0.3, "lines"), show.legend = F)
 			if (lists) {
 				write.table(gene.lab, file.path(out.dir, paste(analysis.name, contr, "labelledPointsSmearPlot.tsv", sep="_")), sep="\t", quote=FALSE, row.names=FALSE)
 			}
@@ -1000,7 +1001,7 @@ diff_expr_ma_plot <-
 
 #' @export
 diff_expr_volcano_plot <-
-		function(d3, id, sym.col="hgnc_symbol", p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE)
+		function(d3, id, sym.col="gene_symbol", p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE)
 {
 	pv.col <- names(d3)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
 	fdr.col <- names(d3)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
@@ -1008,8 +1009,8 @@ diff_expr_volcano_plot <-
 	## Updated: using ggplot2
 	if (point.lab) {
 		cont.dat.fdr <- d3[, c(id, sym.col, "logFC", pv.col, fdr.col)]
-		if (any(cont.dat.fdr$hgnc_symbol=="" || any(is.na(cont.dat.fdr$hgnc_symbol)))) {
-			repl <- which(cont.dat.fdr$hgnc_symbol==""|is.na(cont.dat.fdr$hgnc_symbol))
+		if (any(cont.dat.fdr$gene_symbol=="" || any(is.na(cont.dat.fdr$gene_symbol)))) {
+			repl <- which(cont.dat.fdr$gene_symbol==""|is.na(cont.dat.fdr$gene_symbol))
 			cont.dat.fdr[repl, sym.col] <- cont.dat.fdr[repl, as.character(id)]
 		}
 	} else {
@@ -1056,8 +1057,8 @@ diff_expr_volcano_plot <-
 	## Updated: using ggplot2
 	if (point.lab) {
 		cont.dat <- d3[, c(id, sym.col, "logFC", pv.col, fdr.col)]
-		if (any(cont.dat$hgnc_symbol=="")) {
-			cont.dat[cont.dat$hgnc_symbol=="", sym.col] <- cont.dat[cont.dat$hgnc_symbol=="", id]
+		if (any(cont.dat$gene_symbol=="")) {
+			cont.dat[cont.dat$gene_symbol=="", sym.col] <- cont.dat[cont.dat$gene_symbol=="", id]
 		}
 	} else {
 		cont.dat <- d3[, c(id, "logFC", pv.col, fdr.col)]

@@ -65,6 +65,7 @@
 #' @import biomaRt
 #' @import maptools
 #' @import scatterplot3d
+#' @import dendextend
 #' @importFrom genefilter rowVars
 NULL
 #'

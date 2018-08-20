@@ -212,6 +212,12 @@ diffExpr <-
 	disp <- match.arg(disp)
 	disp <- switch(disp, gene="tagwise.dispersion", trend="trended.dispersion", common="bin.dispersion")
 
+	## extract 'pairs' factor from 'samp.info' and keep column name in 'pairs_col' variable
+	if (!is.null(pairs)) {
+		pairs_col <- pairs
+		pairs <- samp.info[[pairs]]
+	}
+	
 	## voom
 	if (do.voom) {
 		cat("Running 'voom'...\n")
@@ -221,10 +227,6 @@ diffExpr <-
 		## compute linear model fit and optionally apply voom beforehand
 		#### NOTE: voom generates log2-cpms
 
-		if (!is.null(pairs)) {
-			pairs_col <- pairs
-			pairs <- samp.info[[pairs]]
-		}
 		fit.l <- diff_expr_fit(counts, d, design, do.voom=TRUE, voom.fun, norm.method, bayes.trend, bayes.robust, pairs, pairs_col, block, contrasts)
 
 		out.l <- list(v=fit.l$v, fit=fit.l$fit, fit2=fit.l$fit2)
@@ -258,7 +260,7 @@ diffExpr <-
 				type.plot <- "uncorrected, normalised DGEList"
 			}
 			diff_expr_QC_plots(counts=normcnt, samp.info=samp.info, control=control, grp.nam=grp.nam, PC=PC, ellipse=ellipse, circle=circle, varname.size=varname.size,
-					var.axes=var.axes, samp.lab=samp.lab, pairs=pairs, gene.selection=gene.selection, n=n, type=type.plot, analysis.name=analysis.name, out.dir=out.dir)
+					var.axes=var.axes, samp.lab=samp.lab, pairs=pairs, pairs.name=pairs_col, gene.selection=gene.selection, n=n, type=type.plot, analysis.name=analysis.name, out.dir=out.dir)
 		}
 
 		if (!block && !is.null(pairs) && (type %in% c("both", "pseudo-corrected"))) {
@@ -269,7 +271,7 @@ diffExpr <-
 			pseudo.counts <- diff_expr_pseudo_counts(design=design, d=d, pairs=pairs, disp=disp, do.cpm=TRUE)
 			cat("   done\n")
 			diff_expr_QC_plots(counts=pseudo.counts, samp.info=samp.info, control=control, grp.nam=grp.nam, PC=PC, ellipse=ellipse, circle=circle, varname.size=varname.size,
-					var.axes=var.axes, samp.lab=samp.lab, pairs=pairs, gene.selection=gene.selection, n=n, type="pseudo-corrected, normalised DGEList", analysis.name=analysis.name, out.dir=out.dir)
+					var.axes=var.axes, samp.lab=samp.lab, pairs=pairs, pairs.name=pairs_col, gene.selection=gene.selection, n=n, type="pseudo-corrected, normalised DGEList", analysis.name=analysis.name, out.dir=out.dir)
 		}
 	}
 
@@ -846,8 +848,8 @@ diff_expr_dendro_plot <-
 ## wrapper function for QC plots
 #' @export
 diff_expr_QC_plots <-
-		function(counts, samp.info, control, grp.nam=NULL, PC=c(1,2,3), ellipse=TRUE, circle=TRUE, varname.size=0, var.axes=FALSE, samp.lab=TRUE, pairs=NULL, gene.selection="common",
-				n=500, type=NULL, analysis.name=NULL, out.dir=NULL)
+		function(counts, samp.info, control, grp.nam=NULL, PC=c(1,2,3), ellipse=TRUE, circle=TRUE, varname.size=0, var.axes=FALSE, samp.lab=TRUE, pairs=NULL,
+				pairs.name=NULL, gene.selection="common", n=500, type=NULL, analysis.name=NULL, out.dir=NULL)
 {
 	cat("  Doing PCA...\n")
 	PCA <- diff_expr_PCA(counts=counts, n=n)
@@ -857,10 +859,6 @@ diff_expr_QC_plots <-
 	samp.name_pca <- NA
 	if (samp.lab) {
 		samp.name_pca <- NULL
-	}
-	if (!is.null(pairs)) {
-		pairs.name <- pairs
-		pairs <- samp.info[[pairs]]
 	}
 	main <- paste(type, analysis.name, sep="_")
 	main <- gsub("\\.{1,}", "_", make.names(main))

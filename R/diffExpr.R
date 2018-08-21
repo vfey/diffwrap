@@ -552,6 +552,8 @@ diff_expr_extract_contrasts <-
 		# which means contrasts are inherent to the design and only need to be extracted
 		cn <- contrasts
 	}
+	out.l$MAplots <- list()
+	out.l$volcanoPlots <- list()
 	for (contr in cn) {
 		cat("Calculating differential expression for", contr, "\n")
 		if (do.voom) {
@@ -621,12 +623,10 @@ diff_expr_extract_contrasts <-
 			cat("Plotting...\n")
 			pdf(file.path(out.dir, paste(analysis.name, contr, "_plots.pdf", sep="_")), width=11, height=8.5)
 			par(mar = c(6,6,5,3))
-			out.l$MAplots <- list()
 			cat(" MA-plot...\n")
 			out.l$MAplots[[contr]] <- diff_expr_ma_plot(d3, contr, p.thr, fdr.thr, logfc.thr, numlab, out.dir, analysis.name, point.lab, biom.attributes, font.size, lists)
 
 			## Volcano plot
-			out.l$volcanoPlots <- list()
 			cat(" Volcano plot...\n")
 			out.l$volcanoPlots[[contr]] <- diff_expr_volcano_plot(d3, id.col, sym.col="gene_symbol", p.thr=p.thr, fdr.thr=fdr.thr, logfc.thr=logfc.thr, numlab=numlab, point.lab=point.lab)
 

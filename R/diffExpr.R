@@ -308,7 +308,7 @@ diffExpr <-
 	return(out.l)
 }
 
-## function to standardize samp.info
+#' Function to standardize `samp.info` sample information data frame
 #' @export
 diff_expr_get_samp_info <-
 		function(samp.info, samples, groups)
@@ -375,7 +375,7 @@ diff_expr_read_counts <-
 	return(counts)
 }
 
-## function to filter counts
+#' Function to filter counts
 #' @export
 diff_expr_filter_counts <-
 		function(counts, samp.info, strict=TRUE, min.samp=NULL)
@@ -405,7 +405,7 @@ diff_expr_filter_counts <-
 	return(counts)
 }
 
-## function to create design matrix
+#' Function to create design matrix
 #' @export
 diff_expr_make_design <-
 		function(samp.info, groups, pairs=NULL, block=FALSE)
@@ -428,7 +428,7 @@ diff_expr_make_design <-
 	return(design)
 }
 
-## function to make contrast matrix
+#' Function to make contrast matrix
 #' @export
 diff_expr_make_contrasts <-
 		function(design, pairs=NULL, block=FALSE, contrasts=NULL)
@@ -515,7 +515,7 @@ diff_expr_fit <-
 	}
 }
 
-## function to extract contrasts and generate top tables and plots
+#' Function to extract contrasts and generate top tables and plots
 #' @export
 diff_expr_extract_contrasts <-
 		function(contrasts=NULL, fit, fit2=NULL, normcnt, out.l, do.voom=TRUE, out.dir=NULL,
@@ -615,7 +615,7 @@ diff_expr_extract_contrasts <-
 
 			## Volcano plot of FDR values
 			cat(" Volcano plot...\n")
-			diff_expr_volcano_plot(d3, id.col, p.thr, fdr.thr, logfc.thr, numlab, point.lab)
+			diff_expr_volcano_plot(d3, id.col, sym.col="gene_symbol", p.thr=p.thr, fdr.thr=fdr.thr, logfc.thr=logfc.thr, numlab=numlab, point.lab=point.lab)
 
 #png(paste(out.dir,"/",analysis.name,".Pvalue_distribution.png",sep=""),width=1280,height=960,res=150)
 			## Histogram of P-value distribution
@@ -628,7 +628,7 @@ diff_expr_extract_contrasts <-
 	}
 }
 
-## function to calculate pseudo counts representing batch-corrected normalised but untransformed values
+#' Function to calculate pseudo counts representing batch-corrected normalised but untransformed values
 #' @export
 diff_expr_pseudo_counts <-
 		function(design, d, pairs, disp="tagwise.dispersion", do.cpm=TRUE)
@@ -675,7 +675,7 @@ diff_expr_biomart <-
 	return(gene.lab)
 }
 
-# function to do PCA
+#' Function to do PCA using `stats::prcomp`
 #' @export
 diff_expr_PCA <-
 		function(counts, n=500, scale.=FALSE)
@@ -694,7 +694,7 @@ diff_expr_PCA <-
 	return(PCA)
 }
 
-## ggplot2 mds plot function
+#' Function to generate a MDS plot usig `ggplot2`
 #' @export
 diff_expr_ggplot_mds <-
 		function(counts, samp.name, groups, grp.nam=NULL, pairs=NULL, pairs.name=NULL, gene.selection="common", dim.plot=c(1,2), main=NULL)
@@ -737,7 +737,7 @@ diff_expr_ggplot_mds <-
 }
 
 ## PCA plots
-#### ggbiplot from package medseqr
+#' Function to generate a PCA biplot using `medseqr::ggbiplot`
 #' @export
 diff_expr_PCA_ggbiplot <-
 		function(PCA, groups, grp.nam=NULL, ellipse=TRUE, circle=TRUE, varname.size=0, var.axes=FALSE, main=NULL, fix.aspect=FALSE, tweak=FALSE, ...)
@@ -748,6 +748,7 @@ diff_expr_PCA_ggbiplot <-
 	cat("done\n")
 }
 
+#' Function to generate an ordinary two-dimensional PCA plot using `ggplot2`
 #' @export
 diff_expr_PCA_ggplot <-
 		function(PCA, samp.name=NULL, groups, grp.nam=NULL, PC=c(1,2), main=NULL)
@@ -785,7 +786,7 @@ diff_expr_PCA_ggplot <-
 	cat("done\n")
 }
 
-#### 3D scatterplot TODO: fix colors!!!
+#' Function to generate a 3D scatterplot
 #' @export
 diff_expr_3d_scatterplot <-
 		function(PCA, samp.name=NULL, groups, grp.nam=NULL, PC=c(1,2,3), main=NULL)
@@ -832,7 +833,7 @@ diff_expr_3d_scatterplot <-
 	cat("    done\n")
 }
 
-## hclust
+#' Function to generate dendrogram plots based on hierarchical clustering
 #' @export
 diff_expr_dendro_plot <-
 		function(counts, groups, grp.nam=NULL, main=NULL)
@@ -848,7 +849,7 @@ diff_expr_dendro_plot <-
 	cat("done\n")
 }
 
-## wrapper function for QC plots
+#' Main wrapper function for QC plots
 #' @export
 diff_expr_QC_plots <-
 		function(counts, samp.info, control, grp.nam=NULL, PC=c(1,2,3), ellipse=TRUE, circle=TRUE, varname.size=0, var.axes=FALSE, samp.lab=TRUE, pairs=NULL,
@@ -885,7 +886,7 @@ diff_expr_QC_plots <-
 	cat("  Plotting finished.\n")
 }
 
-## function to generate MDS plot
+#' Function to generate a MDS plot using `limma::plotMDS`
 #' @export
 diff_expr_mds_plot <-
 		function(d, groups, analysis.name=NULL, do.pdf=FALSE, out.dir=NULL)
@@ -901,7 +902,7 @@ diff_expr_mds_plot <-
 	}
 }
 
-## function to generate M-A plot
+#' Function to generate a M-A plot using `ggplot2`
 #' @export
 diff_expr_ma_plot <-
 		function(dat, contr, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, out.dir=NULL, analysis.name=NULL, point.lab=TRUE, biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"),
@@ -1001,6 +1002,7 @@ diff_expr_ma_plot <-
 	}
 }
 
+#' Function to generate a Volcano plot using `ggplot2`
 #' @export
 diff_expr_volcano_plot <-
 		function(d3, id, sym.col="gene_symbol", p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE)
@@ -1103,6 +1105,7 @@ diff_expr_volcano_plot <-
 #dev.off()
 }
 
+#' Function to generate a histogram of the P-Value distribution
 #' @export
 diff_expr_pval_hist_plot <-
 		function(d3)

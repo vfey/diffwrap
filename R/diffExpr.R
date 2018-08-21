@@ -81,6 +81,7 @@ NULL
 #' @param design \code{matrix}. design matrix
 #' @param samples \code{character}. Name of the column in 'samp.info' containing sample names. If 'samp.info' is not supplied
 #'     vector of sample names.
+#' @param sample.plot.names \code{character}. Optional name of a column with "nice" sample names for plotting.
 #' @param groups \code{character}. Name of the column in 'samp.info' containing grouping information. If 'samp.info' is not supplied
 #'     vector of groups.
 #' @param pairs \code{character}. Name of the column in 'samp.info' containing paired sample information.
@@ -104,7 +105,7 @@ NULL
 #'
 #' @export
 diffExpr <-
-		function(expr.file="mature_miRNA_expression.xls", samp.info, control, design=NULL, samples=NULL, groups=NULL, pairs=NULL, block=FALSE, contrasts=NULL, out.dir=NULL,
+		function(expr.file="mature_miRNA_expression.xls", samp.info, control, design=NULL, samples=NULL, sample.plot.names=NULL, groups=NULL, pairs=NULL, block=FALSE, contrasts=NULL, out.dir=NULL,
 				analysis.name=NULL, biomart=FALSE, biom.data.set="hsapiens_gene_ensembl", biom.mart=c("ensembl", "snp", "funcgen", "vega", "pride", "plants"),
 				host="www.ensembl.org", biom.filter="ensembl_gene_id", biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"), sym.col="hgnc_symbol",
 				rm.dups=FALSE, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE, min.samp=NULL, strict = TRUE, disp=c("gene", "trend", "common"), do.voom=FALSE,
@@ -189,7 +190,14 @@ diffExpr <-
 	d <- calcNormFactors(d)
 	## Inspect the relationships between samples using a multidimensional scaling (MDS) plot
 	if (plots) {
-		diff_expr_mds_plot(d, groups=groups, analysis.name=analysis.name, do.pdf=FALSE, out.dir=out.dir)
+		if (!is.null(sample.plot.names)) {
+			spn <- samp.info[, c("SampleNames", sample.plot.names)]
+			spn <- spn[match(colnames(d), spn$SampleNames), ]
+			if (identical(as.character(spn$SampleNames), colnames(d))) {
+				sample.plot.names <- as.character(spn[, sample.plot.names])
+			}
+		}
+		diff_expr_mds_plot(d, groups=groups, sample.plot.names=sample.plot.names, analysis.name=analysis.name, do.pdf=FALSE, out.dir=out.dir)
 	}
 
 	# create design matrix
@@ -372,6 +380,9 @@ diff_expr_read_counts <-
 		samples <- make.names(samp.info$SampleNames)
 		counts <- counts[, samples]
 	}
+	# in case of untypical gene identifiers change those
+	## for "gene:" in front of the Ensembl Gene ID
+	rownames(counts) <- sub("^gene:", "", rownames(counts))
 	return(counts)
 }
 
@@ -889,13 +900,16 @@ diff_expr_QC_plots <-
 #' Function to generate a MDS plot using `limma::plotMDS`
 #' @export
 diff_expr_mds_plot <-
-		function(d, groups, analysis.name=NULL, do.pdf=FALSE, out.dir=NULL)
+		function(d, groups, sample.plot.names=NULL, analysis.name=NULL, do.pdf=FALSE, out.dir=NULL)
 {
+	if (!is.null(samples)) {
+		cat("  *** Using custom sample labels: ***\n  ", head(sample.plot.names), "\n")
+	}
 	if (do.pdf) {
 		pdf(file.path(out.dir, paste0(analysis.name, "_MDS_plot.pdf")), width=11, height=11)
 	}
 	par(mar = c(6,6,5,3))
-	plotMDS(d, main=paste0("MDS plot for '", analysis.name, "' normalised DGEList"), col = rainbow(length(levels(groups)))[factor(groups)])
+	plotMDS(d, labels=sample.plot.names, main=paste0("MDS plot for '", analysis.name, "' normalised DGEList"), col = rainbow(length(levels(groups)))[factor(groups)])
 	legend("bottomright", legend=levels(groups), pch=15, col=rainbow(length(levels(groups))))
 	if (do.pdf) {
 		dev.off()

@@ -6,9 +6,9 @@
 files to producing text files and graphs}
 \usage{
 diffExpr(expr.file = "mature_miRNA_expression.xls", samp.info, control,
-  design = NULL, samples = NULL, groups = NULL, pairs = NULL,
-  block = FALSE, contrasts = NULL, out.dir = NULL,
-  analysis.name = NULL, biomart = FALSE,
+  design = NULL, samples = NULL, sample.plot.names = NULL,
+  groups = NULL, pairs = NULL, block = FALSE, contrasts = NULL,
+  out.dir = NULL, analysis.name = NULL, biomart = FALSE,
   biom.data.set = "hsapiens_gene_ensembl", biom.mart = c("ensembl",
   "snp", "funcgen", "vega", "pride", "plants"), host = "www.ensembl.org",
   biom.filter = "ensembl_gene_id",
@@ -34,6 +34,8 @@ diffExpr(expr.file = "mature_miRNA_expression.xls", samp.info, control,
 
 \item{samples}{\code{character}. Name of the column in 'samp.info' containing sample names. If 'samp.info' is not supplied
 vector of sample names.}
+
+\item{sample.plot.names}{\code{character}. Optional name of a column with "nice" sample names for plotting.}
 
 \item{groups}{\code{character}. Name of the column in 'samp.info' containing grouping information. If 'samp.info' is not supplied
 vector of groups.}

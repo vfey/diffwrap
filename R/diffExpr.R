@@ -637,6 +637,7 @@ diff_expr_extract_contrasts <-
 			cat("done\n")
 		}
 	}
+	return(out.l)
 }
 
 #' Function to calculate pseudo counts representing batch-corrected normalised but untransformed values

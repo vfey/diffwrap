@@ -10,14 +10,14 @@ diffExpr(expr.file = "mature_miRNA_expression.xls", samp.info, control,
   block = FALSE, contrasts = NULL, out.dir = NULL,
   analysis.name = NULL, biomart = FALSE,
   biom.data.set = "hsapiens_gene_ensembl", biom.mart = c("ensembl",
-  "snp", "funcgen", "vega", "pride"), host = "www.ensembl.org",
+  "snp", "funcgen", "vega", "pride", "plants"), host = "www.ensembl.org",
   biom.filter = "ensembl_gene_id",
   biom.attributes = c("ensembl_gene_id", "hgnc_symbol", "description"),
-  rm.dups = FALSE, p.thr = 0.05, fdr.thr = 0.05, logfc.thr = 1,
-  numlab = 15, point.lab = TRUE, min.samp = NULL, strict = TRUE,
-  disp = c("gene", "trend", "common"), do.voom = FALSE,
-  voom.fun = voom, norm.method = c("tmm", "quantile"),
-  bayes.trend = FALSE, bayes.robust = FALSE, n = 500,
+  sym.col = "hgnc_symbol", rm.dups = FALSE, p.thr = 0.05,
+  fdr.thr = 0.05, logfc.thr = 1, numlab = 15, point.lab = TRUE,
+  min.samp = NULL, strict = TRUE, disp = c("gene", "trend",
+  "common"), do.voom = FALSE, voom.fun = voom, norm.method = c("tmm",
+  "quantile"), bayes.trend = FALSE, bayes.robust = FALSE, n = 500,
   gene.selection = "common", ellipse = TRUE, circle = TRUE,
   varname.size = 0, var.axes = FALSE, samp.lab = TRUE, PC = c(1, 2,
   3), type = c("both", "uncorrected", "pseudo-corrected"),
@@ -41,6 +41,8 @@ vector of groups.}
 \item{pairs}{\code{character}. Name of the column in 'samp.info' containing paired sample information.}
 
 \item{block}{\code{logical}. Are the comparisons to be made within AND between subjects? See Details section.}
+
+\item{sym.col}{\code{character}. Name of the column in the query result with gene symbols}
 
 \item{bayes.trend}{\code{logical}. Should an intensity-trend be allowed for the prior variance? Passed to 'limma::eBayes'.}
 

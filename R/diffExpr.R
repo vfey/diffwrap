@@ -87,6 +87,7 @@ NULL
 #' @param block \code{logical}. Are the comparisons to be made within AND between subjects? See Details section.
 #' @param bayes.trend \code{logical}. Should an intensity-trend be allowed for the prior variance? Passed to 'limma::eBayes'.
 #' @param bayes.robust \code{logical}. Should the estimation of df.prior and var.prior be robustified against outlier sample variances? Passed to 'limma::eBayes'.
+#' @param sym.col \code{character}. Name of the column in the query result with gene symbols
 #'
 #' @details For experiemtal desgins involving comparisons within as well as between subjects inter-subject needs to be computed.
 #'     In this case, the column specified in the 'pairs' argument must assign the subjects to the treatment/tissue/etc groups.
@@ -105,8 +106,8 @@ NULL
 diffExpr <-
 		function(expr.file="mature_miRNA_expression.xls", samp.info, control, design=NULL, samples=NULL, groups=NULL, pairs=NULL, block=FALSE, contrasts=NULL, out.dir=NULL,
 				analysis.name=NULL, biomart=FALSE, biom.data.set="hsapiens_gene_ensembl", biom.mart=c("ensembl", "snp", "funcgen", "vega", "pride", "plants"),
-				host="www.ensembl.org", biom.filter="ensembl_gene_id", biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"), rm.dups=FALSE,
-				p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE, min.samp=NULL, strict = TRUE, disp=c("gene", "trend", "common"), do.voom=FALSE,
+				host="www.ensembl.org", biom.filter="ensembl_gene_id", biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"), sym.col="hgnc_symbol",
+				rm.dups=FALSE, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE, min.samp=NULL, strict = TRUE, disp=c("gene", "trend", "common"), do.voom=FALSE,
 				voom.fun=voom, norm.method=c("tmm", "quantile"), bayes.trend=FALSE, bayes.robust=FALSE, n=500, gene.selection="common", ellipse=TRUE,
 				circle=TRUE, varname.size=0, var.axes=FALSE, samp.lab=TRUE, PC=c(1,2,3), type=c("both", "uncorrected", "pseudo-corrected"), font.size=5,
 				plots=TRUE, lists=TRUE)
@@ -282,12 +283,12 @@ diffExpr <-
 			cont <- grep("^groups.+", colnames(fit3$coefficients), value=TRUE)
 			cat("  ", cont, "\n")
 			out.l <- diff_expr_extract_contrasts(cont, fit.l$fit, fit3, normcnt, out.l, do.voom=TRUE, out.dir, analysis.name, biomart, biom.data.set, biom.mart,
-					host, biom.filter, biom.attributes, rm.dups, p.thr, fdr.thr, logfc.thr, numlab, point.lab, font.size, plots, lists)
+					host, biom.filter, biom.attributes, sym.col, rm.dups, p.thr, fdr.thr, logfc.thr, numlab, point.lab, font.size, plots, lists)
 		}
 		if (!is.null(contrasts)) {
 			cat("  ...for all (remaining) comparisons (voom)...\n")
 			out.l <- diff_expr_extract_contrasts(contrasts, fit.l$fit, fit.l$fit2, normcnt, out.l, do.voom=TRUE, out.dir, analysis.name, biomart, biom.data.set, biom.mart,
-					host, biom.filter, biom.attributes, rm.dups, p.thr, fdr.thr, logfc.thr, numlab, point.lab, font.size, plots, lists)
+					host, biom.filter, biom.attributes, sym.col, rm.dups, p.thr, fdr.thr, logfc.thr, numlab, point.lab, font.size, plots, lists)
 		}
 	} else {
 		if (!is.null(pairs)) {
@@ -295,12 +296,12 @@ diffExpr <-
 			cont <- grep("^groups.+", colnames(fit$coefficients), value=TRUE)
 			cat("  ", cont, "\n")
 			out.l <- diff_expr_extract_contrasts(cont, fit.l$fit, NULL, normcnt, out.l, do.voom=FALSE, out.dir, analysis.name, biomart, biom.data.set, biom.mart,
-					host, biom.filter, biom.attributes, rm.dups, p.thr, fdr.thr, logfc.thr, numlab, point.lab, font.size, plots, lists)
+					host, biom.filter, biom.attributes, sym.col, rm.dups, p.thr, fdr.thr, logfc.thr, numlab, point.lab, font.size, plots, lists)
 		}
 		if (!is.null(contrasts)) {
 			cat("  ...for all (remaining) comparisons (GLM)...\n")
 			out.l <- diff_expr_extract_contrasts(contrasts, fit.l$fit, NULL, normcnt, out.l, do.voom=FALSE, out.dir, analysis.name, biomart, biom.data.set, biom.mart,
-					host, biom.filter, biom.attributes, rm.dups, p.thr, fdr.thr, logfc.thr, numlab, point.lab, font.size, plots, lists)
+					host, biom.filter, biom.attributes, sym.col, rm.dups, p.thr, fdr.thr, logfc.thr, numlab, point.lab, font.size, plots, lists)
 		}
 	}
 	on.exit()
@@ -519,8 +520,8 @@ diff_expr_fit <-
 diff_expr_extract_contrasts <-
 		function(contrasts=NULL, fit, fit2=NULL, normcnt, out.l, do.voom=TRUE, out.dir=NULL,
 				analysis.name=NULL, biomart=FALSE, biom.data.set="hsapiens_gene_ensembl", biom.mart=c("ensembl", "snp", "funcgen", "vega", "pride", "plants"),
-				host="www.ensembl.org", biom.filter="ensembl_gene_id", biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"), rm.dups=FALSE,
-				p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE, font.size=5, plots=TRUE, lists=TRUE)
+				host="www.ensembl.org", biom.filter="ensembl_gene_id", biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"), sym.col="hgnc_symbol",
+				rm.dups=FALSE, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE, font.size=5, plots=TRUE, lists=TRUE)
 {
 	if (!length(grep("contrasts", names(out.l)))) {
 		out.l$contrasts <- list()
@@ -582,7 +583,7 @@ diff_expr_extract_contrasts <-
 		cat("Renaming ID column...\n")
 		names(d3)[1] <- "ID"
 		if (biomart) {
-			d3 <- diff_expr_biomart(d3, biom.data.set, biom.mart, host, biom.filter, biom.attributes, rm.dups)
+			d3 <- diff_expr_biomart(d3, biom.data.set, biom.mart, host, biom.filter, biom.attributes, sym.col, rm.dups)
 			id.col <- names(d3)[names(d3) %in% biom.filter]
 		} else {
 			syms <- convertId2(as.character(d3$ID))
@@ -654,7 +655,7 @@ diff_expr_pseudo_counts <-
 	return(pseudo.counts)
 }
 
-## biomart function to retrieve additional information
+#' Function to retrieve additional information from biomart
 #' @export
 diff_expr_biomart <-
 		function(d3, biom.data.set="hsapiens_gene_ensembl", biom.mart=c("ensembl", "snp", "funcgen", "vega", "pride", "plants"),

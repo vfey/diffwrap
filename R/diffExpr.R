@@ -1037,7 +1037,7 @@ diff_expr_volcano_plot <-
 {
 	pv.col <- names(d3)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
 	fdr.col <- names(d3)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
-	g.l <- list
+	g.l <- list()
 	cat("  Volcano plot of FDR values...\n")
 	## Updated: using ggplot2
 	if (point.lab) {

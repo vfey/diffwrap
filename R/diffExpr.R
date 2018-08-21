@@ -666,6 +666,9 @@ diff_expr_biomart <-
 	names(gene.lab)[names(gene.lab)==sym.col] <- "gene_symbol"
 	cat("  Extended annotation:\n")
 	if (length(d3$ID)>8) {
+		print(names(gene.lab))
+		print(names(d3))
+		print(str(gene.lab))
 		print(gene.lab[1:8, biom.attributes])
 		cat("_truncated_ (", length(d3$ID), "features)\n")
 	} else {

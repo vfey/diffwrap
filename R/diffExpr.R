@@ -197,7 +197,7 @@ diffExpr <-
 				sample.plot.names <- as.character(spn[, sample.plot.names])
 			}
 		}
-		diff_expr_mds_plot(d, groups=groups, sample.plot.names=sample.plot.names, analysis.name=analysis.name, do.pdf=FALSE, out.dir=out.dir)
+		diff_expr_mds_plot(d, groups=groups, n=n, sample.plot.names=sample.plot.names, analysis.name=analysis.name, do.pdf=TRUE, out.dir=out.dir)
 	}
 
 	# create design matrix
@@ -268,7 +268,7 @@ diffExpr <-
 			} else {
 				type.plot <- "uncorrected, normalised DGEList"
 			}
-			diff_expr_QC_plots(counts=normcnt, samp.info=samp.info, control=control, grp.nam=grp.nam, PC=PC, ellipse=ellipse, circle=circle, varname.size=varname.size,
+			out.l <- diff_expr_QC_plots(counts=normcnt, samp.info=samp.info, control=control, out.l=out.l, grp.nam=grp.nam, PC=PC, ellipse=ellipse, circle=circle, varname.size=varname.size,
 					var.axes=var.axes, samp.lab=samp.lab, pairs=pairs, pairs.name=pairs_col, gene.selection=gene.selection, n=n, type=type.plot, analysis.name=analysis.name, out.dir=out.dir)
 		}
 
@@ -279,7 +279,7 @@ diffExpr <-
 			cat("   Calculating pseudo-counts...\n")
 			pseudo.counts <- diff_expr_pseudo_counts(design=design, d=d, pairs=pairs, disp=disp, do.cpm=TRUE)
 			cat("   done\n")
-			diff_expr_QC_plots(counts=pseudo.counts, samp.info=samp.info, control=control, grp.nam=grp.nam, PC=PC, ellipse=ellipse, circle=circle, varname.size=varname.size,
+			out.l <- diff_expr_QC_plots(counts=pseudo.counts, samp.info=samp.info, control=control, out.l=out.l, grp.nam=grp.nam, PC=PC, ellipse=ellipse, circle=circle, varname.size=varname.size,
 					var.axes=var.axes, samp.lab=samp.lab, pairs=pairs, pairs.name=pairs_col, gene.selection=gene.selection, n=n, type="pseudo-corrected, normalised DGEList", analysis.name=analysis.name, out.dir=out.dir)
 		}
 	}
@@ -621,12 +621,14 @@ diff_expr_extract_contrasts <-
 			cat("Plotting...\n")
 			pdf(file.path(out.dir, paste(analysis.name, contr, "_plots.pdf", sep="_")), width=11, height=8.5)
 			par(mar = c(6,6,5,3))
+			out.l$maplots <- list()
 			cat(" MA-plot...\n")
-			diff_expr_ma_plot(d3, contr, p.thr, fdr.thr, logfc.thr, numlab, out.dir, analysis.name, point.lab, biom.attributes, font.size, lists)
+			out.l$MAplots[[contr]] <- diff_expr_ma_plot(d3, contr, p.thr, fdr.thr, logfc.thr, numlab, out.dir, analysis.name, point.lab, biom.attributes, font.size, lists)
 
-			## Volcano plot of FDR values
+			## Volcano plot
+			out.l$volcanoPlots <- list()
 			cat(" Volcano plot...\n")
-			diff_expr_volcano_plot(d3, id.col, sym.col="gene_symbol", p.thr=p.thr, fdr.thr=fdr.thr, logfc.thr=logfc.thr, numlab=numlab, point.lab=point.lab)
+			out.l$volcanoPlots[[contr]] <- diff_expr_volcano_plot(d3, id.col, sym.col="gene_symbol", p.thr=p.thr, fdr.thr=fdr.thr, logfc.thr=logfc.thr, numlab=numlab, point.lab=point.lab)
 
 #png(paste(out.dir,"/",analysis.name,".Pvalue_distribution.png",sep=""),width=1280,height=960,res=150)
 			## Histogram of P-value distribution
@@ -746,6 +748,7 @@ diff_expr_ggplot_mds <-
 	g <- g + ggtitle(paste0("Multi-dimensional scaling (", main, ")"))
 	print(g)
 	cat("    done\n")
+	return(g)
 }
 
 ## PCA plots
@@ -756,8 +759,10 @@ diff_expr_PCA_ggbiplot <-
 {
 	main <- paste("Biplot for PCA (", main, ")")
 	cat("    Plotting...")
-	print(medseqr::ggbiplot.n(PCA, var.scale = 1, obs.scale = 1, groups = groups, grp.nam=grp.nam, ellipse = ellipse, circle = circle, varname.size = varname.size, var.axes = var.axes, main=main, fix.aspect=fix.aspect, tweak=tweak, ...))
+	g <- medseqr::ggbiplot.n(PCA, var.scale = 1, obs.scale = 1, groups = groups, grp.nam=grp.nam, ellipse = ellipse, circle = circle, varname.size = varname.size, var.axes = var.axes, main=main, fix.aspect=fix.aspect, tweak=tweak, ...)
+	print(g)
 	cat("done\n")
+	return(g)
 }
 
 #' Function to generate an ordinary two-dimensional PCA plot using `ggplot2`
@@ -796,6 +801,7 @@ diff_expr_PCA_ggplot <-
 	}
 	print(g)
 	cat("done\n")
+	return(g)
 }
 
 #' Function to generate a 3D scatterplot
@@ -864,7 +870,7 @@ diff_expr_dendro_plot <-
 #' Main wrapper function for QC plots
 #' @export
 diff_expr_QC_plots <-
-		function(counts, samp.info, control, grp.nam=NULL, PC=c(1,2,3), ellipse=TRUE, circle=TRUE, varname.size=0, var.axes=FALSE, samp.lab=TRUE, pairs=NULL,
+		function(counts, samp.info, control, out.l, grp.nam=NULL, PC=c(1,2,3), ellipse=TRUE, circle=TRUE, varname.size=0, var.axes=FALSE, samp.lab=TRUE, pairs=NULL,
 				pairs.name=NULL, gene.selection="common", n=500, type=NULL, analysis.name=NULL, out.dir=NULL)
 {
 	cat("  Doing PCA...\n")
@@ -878,17 +884,18 @@ diff_expr_QC_plots <-
 	}
 	main <- paste(type, analysis.name, sep="_")
 	main <- gsub("\\.{1,}", "_", make.names(main))
+	out.l$QCplots <- list()
 	cat("  Plotting...\n")
 	pdf_file <- file.path(out.dir, paste0(Sys.Date(), "_", main, "_QC_plots.pdf"))
 	cat("   Saving plot to", pdf_file, "...\n")
 	pdf(pdf_file, width=11, height=11)
 	main <- paste(type, analysis.name)
 	cat("   MDS ggplot...\n")
-	diff_expr_ggplot_mds(counts=counts, samp.name=samp.name, groups=groups, grp.nam=grp.nam, pairs=pairs, pairs.name=pairs.name, gene.selection=gene.selection, dim.plot=PC[1:2], main=main)
+	out.l$QCplots[["MDS"]] <- diff_expr_ggplot_mds(counts=counts, samp.name=samp.name, groups=groups, grp.nam=grp.nam, pairs=pairs, pairs.name=pairs.name, gene.selection=gene.selection, dim.plot=PC[1:2], main=main)
 	cat("   done.\n   PCA ggbiplot...\n")
-	diff_expr_PCA_ggbiplot(PCA=PCA, groups=groups, grp.nam=grp.nam, ellipse=ellipse, circle=circle, varname.size=varname.size, var.axes=var.axes, main=main)
+	out.l$QCplots[["PCAbiplot"]] <- diff_expr_PCA_ggbiplot(PCA=PCA, groups=groups, grp.nam=grp.nam, ellipse=ellipse, circle=circle, varname.size=varname.size, var.axes=var.axes, main=main)
 	cat("   done.\n   PCA ggplot...\n")
-	diff_expr_PCA_ggplot(PCA=PCA, samp.name=samp.name_pca, groups=groups, grp.nam=grp.nam, PC=c(1,2), main=main)
+	out.l$QCplots[["PCAlabelledPlot"]] <- diff_expr_PCA_ggplot(PCA=PCA, samp.name=samp.name_pca, groups=groups, grp.nam=grp.nam, PC=c(1,2), main=main)
 	cat("   done.\n   PCA 3d scatterplot...\n")
 	diff_expr_3d_scatterplot(PCA=PCA, samp.name=samp.name_pca, groups=groups, grp.nam=grp.nam, PC=PC[1:3], main=main)
 	cat("   done.\n   PCA cluster dendrogram...\n")
@@ -896,12 +903,13 @@ diff_expr_QC_plots <-
 	cat("   done.\n")
 	dev.off()
 	cat("  Plotting finished.\n")
+	return(out.l)
 }
 
 #' Function to generate a MDS plot using `limma::plotMDS`
 #' @export
 diff_expr_mds_plot <-
-		function(d, groups, sample.plot.names=NULL, analysis.name=NULL, do.pdf=FALSE, out.dir=NULL)
+		function(d, groups, n=500, sample.plot.names=NULL, analysis.name=NULL, do.pdf=FALSE, out.dir=NULL)
 {
 	if (!is.null(samples)) {
 		cat("  *** Using custom sample labels: ***\n  ", head(sample.plot.names), "\n")
@@ -910,7 +918,7 @@ diff_expr_mds_plot <-
 		pdf(file.path(out.dir, paste0(analysis.name, "_MDS_plot.pdf")), width=11, height=11)
 	}
 	par(mar = c(6,6,5,3))
-	plotMDS(d, labels=sample.plot.names, main=paste0("MDS plot for '", analysis.name, "' normalised DGEList"), col = rainbow(length(levels(groups)))[factor(groups)])
+	plotMDS(d, top=n, labels=sample.plot.names, main=paste0("MDS plot for '", analysis.name, "' normalised DGEList"), col = rainbow(length(levels(groups)))[factor(groups)])
 	legend("bottomright", legend=levels(groups), pch=15, col=rainbow(length(levels(groups))))
 	if (do.pdf) {
 		dev.off()
@@ -934,6 +942,8 @@ diff_expr_ma_plot <-
 	dat$`adj. P-Value` <- dat[[fdr.col]]
 	dat$`log2 Fold-Change` <- abs(dat$logFC)
 	dat$`Average Expression` <- dat[[A]]
+	# list to collect ggplot2 objects for output
+	g.l <- list()
 	cat("  M-A plot...\n")
 	## BiomaRt
 #				marts <- listMarts(host=host)[["biomart"]]
@@ -978,6 +988,7 @@ diff_expr_ma_plot <-
 			g <- g + ggtitle(paste("M-A plot for", contr))
 		}
 		print(g)
+		g.l[["FDR"]] <- g
 	}
 	if (length(degPval)>0) {
 		cat("    for P-value filtered values...\n")
@@ -1014,7 +1025,9 @@ diff_expr_ma_plot <-
 			g <- g + ggtitle(paste("M-A plot for", contr))
 		}
 		print(g)
+		g.l[["Pval"]] <- g
 	}
+	return(g.l)
 }
 
 #' Function to generate a Volcano plot using `ggplot2`
@@ -1024,6 +1037,7 @@ diff_expr_volcano_plot <-
 {
 	pv.col <- names(d3)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
 	fdr.col <- names(d3)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
+	g.l <- list
 	cat("  Volcano plot of FDR values...\n")
 	## Updated: using ggplot2
 	if (point.lab) {
@@ -1067,6 +1081,7 @@ diff_expr_volcano_plot <-
 		)
 	}
 	print(gfdr)
+	g.l[["FDR"]] <- gfdr
 #			plot(d3$logFC, -log10(d3$FDR), col=ifelse(d3$FDR<0.05, "red", "black"), main="FDR volcano plot", xlab="log2FC", ylab="-log10(FDR)")
 #dev.off()
 
@@ -1115,6 +1130,8 @@ diff_expr_volcano_plot <-
 	}
 #			pdf(file.path(home, "differential_expression/chemosensitive_vs_chemoresistant_volcano.pdf"), width=12, height=12)
 	print(g)
+	g.l[["Pval"]] <- g
+	return(g.l)
 #			dev.off()
 #			plot(d3$logFC, -log10(d3$PValue), col=ifelse(d3$PValue<0.01,"red","black"), main="P-value volcano plot", xlab="log2FC", ylab="-log10(Pvalue)")
 #dev.off()

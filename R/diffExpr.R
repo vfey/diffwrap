@@ -1042,7 +1042,7 @@ diff_expr_volcano_plot <-
 	## Updated: using ggplot2
 	if (point.lab) {
 		cont.dat.fdr <- d3[, c(id, sym.col, "logFC", pv.col, fdr.col)]
-		if (any(cont.dat.fdr$gene_symbol=="" || any(is.na(cont.dat.fdr$gene_symbol)))) {
+		if (any(cont.dat.fdr$gene_symbol=="") || any(is.na(cont.dat.fdr$gene_symbol))) {
 			repl <- which(cont.dat.fdr$gene_symbol==""|is.na(cont.dat.fdr$gene_symbol))
 			cont.dat.fdr[repl, sym.col] <- cont.dat.fdr[repl, as.character(id)]
 		}
@@ -1070,7 +1070,7 @@ diff_expr_volcano_plot <-
 	gfdr <- gfdr + theme_bw(base_size = 10)
 	gfdr <- gfdr + geom_text(data=cont.dat.fdr, aes(x=floor(min(logFC)), y=-log10(0.05)), label="q=0.05", nudge_x=-1.5, nudge_y=max(-log10(cont.dat.fdr$fdr))/60, size=3, color="red")
 	gfdr <- gfdr + geom_text(x=0, y=-0.7, label="two-fold FC", size=3, color="red")
-	if (point.lab) {
+	if (point.lab && nrow(filtdat)>0) {
 		gfdr <- gfdr + geom_text_repel(
 				data = filtdat,
 				aes(label = filtdat[[sym.col]]),
@@ -1091,8 +1091,9 @@ diff_expr_volcano_plot <-
 	## Updated: using ggplot2
 	if (point.lab) {
 		cont.dat <- d3[, c(id, sym.col, "logFC", pv.col, fdr.col)]
-		if (any(cont.dat$gene_symbol=="")) {
-			cont.dat[cont.dat$gene_symbol=="", sym.col] <- cont.dat[cont.dat$gene_symbol=="", id]
+		if (any(cont.dat$gene_symbol=="") || any(is.na(cont.dat$gene_symbol))) {
+			repl <- which(cont.dat$gene_symbol==""|is.na(cont.dat$gene_symbol))
+			cont.dat[repl, sym.col] <- cont.dat[repl, as.character(id)]
 		}
 	} else {
 		cont.dat <- d3[, c(id, "logFC", pv.col, fdr.col)]
@@ -1118,7 +1119,7 @@ diff_expr_volcano_plot <-
 	g <- g + theme_bw(base_size = 10)
 	g <- g + geom_text(data=cont.dat, aes(x=floor(min(logFC)), y=-log10(0.05)), label="p=0.05", nudge_x=-1.5, nudge_y=max(-log10(cont.dat$pval))/60, size=3, color="red")
 	g <- g + geom_text(x=0, y=-0.7, label="two-fold FC", size=3, color="red")
-	if (point.lab) {
+	if (point.lab && nrow(filtdat)>0) {
 		g <- g + geom_text_repel(
 				data = filtdat,
 				aes(label = filtdat[[sym.col]]),

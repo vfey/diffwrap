@@ -928,9 +928,19 @@ diff_expr_mds_plot <-
 #' Function to generate a M-A plot using `ggplot2`
 #' @export
 diff_expr_ma_plot <-
-		function(dat, contr, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, out.dir=NULL, analysis.name=NULL, point.lab=TRUE, biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"),
+		function(dat, contr, id=NULL, sym.col="gene_symbol", p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, out.dir=NULL, analysis.name=NULL, point.lab=TRUE, biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"),
 				font.size=5, lists=TRUE)
 {
+	if (is.null(id) && !sym.col %in% names(dat)) {
+		stop("Need one of 'id' or 'sym.col'.")
+	}
+	if (sym.col %in% names(dat)) {
+		dat$label_id <- dat[[sym.col]]
+	} else if (id %in% names(dat)) {
+		dat$label_id <- dat[[id]]
+	} else {
+		stop("No ID columns found.")
+	}
 	rn <- rownames(dat)
 	pv.col <- names(dat)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(dat)))]
 	fdr.col <- names(dat)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(dat)))]
@@ -980,7 +990,7 @@ diff_expr_ma_plot <-
 				print(gene.lab[1:8, 1:2])
 			}
 			g <- g + ggtitle(paste0("M-A plot for ", contr, " (highl.: FDR < ", fdr.thr, "; FC >= ", 2^logfc.thr, "-fold)"))
-			g <- g + geom_text_repel(data = gene.lab, aes(label = gene_symbol), size = font.size, box.padding = unit(0.35, "lines"), point.padding = unit(0.3, "lines"), show.legend = F)
+			g <- g + geom_text_repel(data = gene.lab, aes(label = label_id), size = font.size, box.padding = unit(0.35, "lines"), point.padding = unit(0.3, "lines"), show.legend = F)
 			if (lists) {
 				write.table(gene.lab, file.path(out.dir, paste(analysis.name, contr, "labelledPointsSmearPlot.tsv", sep="_")), sep="\t", quote=FALSE, row.names=FALSE)
 			}
@@ -1017,7 +1027,7 @@ diff_expr_ma_plot <-
 				print(gene.lab[1:8, 1:2])
 			}
 			g <- g + ggtitle(paste0("M-A plot for ", contr, " (highl.: P-value < ", p.thr, "; FC >= ", 2^logfc.thr, "-fold)"))
-			g <- g + geom_text_repel(data = gene.lab, aes(label = gene_symbol), size = font.size, box.padding = unit(0.35, "lines"), point.padding = unit(0.3, "lines"), show.legend = F)
+			g <- g + geom_text_repel(data = gene.lab, aes(label = label_id), size = font.size, box.padding = unit(0.35, "lines"), point.padding = unit(0.3, "lines"), show.legend = F)
 			if (lists) {
 				write.table(gene.lab, file.path(out.dir, paste(analysis.name, contr, "labelledPointsSmearPlot.tsv", sep="_")), sep="\t", quote=FALSE, row.names=FALSE)
 			}

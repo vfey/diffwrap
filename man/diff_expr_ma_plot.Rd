@@ -4,10 +4,11 @@
 \alias{diff_expr_ma_plot}
 \title{Function to generate a M-A plot using `ggplot2`}
 \usage{
-diff_expr_ma_plot(dat, contr, p.thr = 0.05, fdr.thr = 0.05,
-  logfc.thr = 1, numlab = 15, out.dir = NULL, analysis.name = NULL,
-  point.lab = TRUE, biom.attributes = c("ensembl_gene_id",
-  "hgnc_symbol", "description"), font.size = 5, lists = TRUE)
+diff_expr_ma_plot(dat, contr, id = NULL, sym.col = "gene_symbol",
+  p.thr = 0.05, fdr.thr = 0.05, logfc.thr = 1, numlab = 15,
+  out.dir = NULL, analysis.name = NULL, point.lab = TRUE,
+  biom.attributes = c("ensembl_gene_id", "hgnc_symbol", "description"),
+  font.size = 5, lists = TRUE)
 }
 \description{
 Function to generate a M-A plot using `ggplot2`

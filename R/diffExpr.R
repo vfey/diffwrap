@@ -911,7 +911,7 @@ diff_expr_QC_plots <-
 diff_expr_mds_plot <-
 		function(d, groups, n=500, sample.plot.names=NULL, analysis.name=NULL, do.pdf=FALSE, out.dir=NULL)
 {
-	if (!is.null(samples)) {
+	if (!is.null(sample.plot.names)) {
 		cat("  *** Using custom sample labels: ***\n  ", head(sample.plot.names), "\n")
 	}
 	if (do.pdf) {

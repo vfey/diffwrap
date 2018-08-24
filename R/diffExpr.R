@@ -1043,7 +1043,7 @@ diff_expr_ma_plot <-
 #' Function to generate a Volcano plot using `ggplot2`
 #' @export
 diff_expr_volcano_plot <-
-		function(d3, id, sym.col="gene_symbol", p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE)
+		function(d3, id, sym.col="gene_symbol", main=NULL, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE)
 {
 	pv.col <- names(d3)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
 	fdr.col <- names(d3)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
@@ -1078,6 +1078,7 @@ diff_expr_volcano_plot <-
 	gfdr <- gfdr + geom_vline(aes(xintercept=1), colour="red", linetype="dashed")
 	gfdr <- gfdr + geom_vline(aes(xintercept=-1), colour="red", linetype="dashed")
 	gfdr <- gfdr + theme_bw(base_size = 10)
+	gfdr <- gfdr + ggtitle(main, "(FDR)")
 	gfdr <- gfdr + geom_text(data=cont.dat.fdr, aes(x=floor(min(logFC)), y=-log10(0.05)), label="q=0.05", nudge_x=-1.5, nudge_y=max(-log10(cont.dat.fdr$fdr))/60, size=3, color="red")
 	gfdr <- gfdr + geom_text(x=0, y=-0.7, label="two-fold FC", size=3, color="red")
 	if (point.lab && nrow(filtdat)>0) {
@@ -1127,6 +1128,7 @@ diff_expr_volcano_plot <-
 	g <- g + geom_vline(aes(xintercept=1), colour="red", linetype="dashed")
 	g <- g + geom_vline(aes(xintercept=-1), colour="red", linetype="dashed")
 	g <- g + theme_bw(base_size = 10)
+	g <- g + ggtitle(main, "(P-values)")
 	g <- g + geom_text(data=cont.dat, aes(x=floor(min(logFC)), y=-log10(0.05)), label="p=0.05", nudge_x=-1.5, nudge_y=max(-log10(cont.dat$pval))/60, size=3, color="red")
 	g <- g + geom_text(x=0, y=-0.7, label="two-fold FC", size=3, color="red")
 	if (point.lab && nrow(filtdat)>0) {

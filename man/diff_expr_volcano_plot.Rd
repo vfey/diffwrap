@@ -4,8 +4,9 @@
 \alias{diff_expr_volcano_plot}
 \title{Function to generate a Volcano plot using `ggplot2`}
 \usage{
-diff_expr_volcano_plot(d3, id, sym.col = "gene_symbol", p.thr = 0.05,
-  fdr.thr = 0.05, logfc.thr = 1, numlab = 15, point.lab = TRUE)
+diff_expr_volcano_plot(d3, id, sym.col = "gene_symbol", main = NULL,
+  p.thr = 0.05, fdr.thr = 0.05, logfc.thr = 1, numlab = 15,
+  point.lab = TRUE)
 }
 \description{
 Function to generate a Volcano plot using `ggplot2`

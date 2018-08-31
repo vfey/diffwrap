@@ -328,8 +328,8 @@ diff_expr_get_samp_info <-
 		cat("  Renaming groups column...\n")
 		names(samp.info)[names(samp.info) == groups] <- "Groups"
 		cat("  Factorizing columns... \n")
-		samp.info$SampleNames <- dropEmptyLevels(as.factor(samp.info$SampleNames))
-		samp.info$Groups <- dropEmptyLevels(as.factor(samp.info$Groups))
+		samp.info$SampleNames <- edgeR::dropEmptyLevels(as.factor(samp.info$SampleNames))
+		samp.info$Groups <- edgeR::dropEmptyLevels(as.factor(samp.info$Groups))
 	} else {
 		samp.info <- data.frame(SampleNames=samples, Groups=groups)
 	}

@@ -141,7 +141,7 @@ diffExpr <-
 			stop("'samp.info' needs to be a data.frame object containing at least two columns: 'SampleNames' and 'Groups' (the actual names can be provided\nby the 'samples' and 'groups' arguments, repsectively.)")
 		}
 	}
-	
+
 	if (block) {
 		do.voom <- TRUE
 		cat("*** Using 'blocked' design (i.e., samples are measured _in blocks_). Enforcing 'voom'! ***\n")
@@ -226,7 +226,7 @@ diffExpr <-
 		pairs_col <- pairs
 		pairs <- samp.info[[pairs]]
 	}
-	
+
 	## voom
 	if (do.voom) {
 		cat("Running 'voom'...\n")

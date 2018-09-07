@@ -141,7 +141,7 @@ diffExpr <-
 			stop("'samp.info' needs to be a data.frame object containing at least two columns: 'SampleNames' and 'Groups' (the actual names can be provided\nby the 'samples' and 'groups' arguments, repsectively.)")
 		}
 	}
-	
+
 	if (block) {
 		do.voom <- TRUE
 		cat("*** Using 'blocked' design (i.e., samples are measured _in blocks_). Enforcing 'voom'! ***\n")
@@ -226,7 +226,7 @@ diffExpr <-
 		pairs_col <- pairs
 		pairs <- samp.info[[pairs]]
 	}
-	
+
 	## voom
 	if (do.voom) {
 		cat("Running 'voom'...\n")
@@ -1041,20 +1041,42 @@ diff_expr_ma_plot <-
 }
 
 #' Function to generate a Volcano plot using `ggplot2`
+#' @description `diff_expr_volcano_plot` generates two Volcano plots highlighing genes that are differentially expressed beyond custom thresholds for siginificance (set by parameters `p.thr` and fdr.thr`) and differential expression level (set by parameter `logfc.thr`).
+#' @param d3 \code{data.frame}. Data frame containing all necessary columns to generate a Volcano plot with gene labels (at least p-values, FDR values, log-ratios and gene symbols or other IDs)
+#' @param id \code{character}. Name of the gene ID column. Can be the same as `sym.col` but usually refers to an additional column with, e.g., Ensembl Gene IDs.
+#' @param sym.col \code{character}. Name of column with gene symbols, e.g., HGNC Symbols.
+#' @param main \code{character}. Main plot title. (Will be complemented with additional information, e.g., 'FDR' when labelling according to and FDR threshold.)
+#' @param p.thr \code{numeric}. Plotted values with a P-Value below this threshold will be labelled in the P-Value plot.
+#' @param fdr.thr \code{numeric}. Plotted values with a FDR below this threshold will be labelled in the FDR plot.
+#' @param logfc.thr \code{numeric}. Plotted (`abs`olute) values above this threshold will have bigger dots.
+#' @param numlab \code{numeric}. Maximum number of labels per plot. Supersedes numbers calculated based on `p.thr` and `fdr.thr`.
+#' @param point.lab \code{logical}. Should points be labelled, at all?
 #' @export
 diff_expr_volcano_plot <-
 		function(d3, id, sym.col="gene_symbol", main=NULL, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE)
 {
+	# initial checks
+	if ((missing(id) || !id %in% names(d3)) && (!sym.col %in% names(d3))) {
+		stop("Need at least one ID column, i.e., one of 'id' or 'sym.col'.")
+	}
+	## if ID column exists and symbol column is missing and different from ID column, create symbol column from ID column
+	if (!missing(id) && id %in% names(d3) && !sym.col %in% names(d3) && sym.col != id) {
+		d3[[sym.col]] <- id
+	}
+	
+	# find columns with P-Values or FDR values
 	pv.col <- names(d3)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
 	fdr.col <- names(d3)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
+	
 	g.l <- list()
 	cat("  Volcano plot of FDR values...\n")
-	## Updated: using ggplot2
+	
+	# replacing missing or empty values in symbol column
 	if (point.lab) {
-		cont.dat.fdr <- d3[, c(id, sym.col, "logFC", pv.col, fdr.col)]
-		if (any(cont.dat.fdr$gene_symbol=="") || any(is.na(cont.dat.fdr$gene_symbol))) {
-			repl <- which(cont.dat.fdr$gene_symbol==""|is.na(cont.dat.fdr$gene_symbol))
-			cont.dat.fdr[repl, sym.col] <- cont.dat.fdr[repl, as.character(id)]
+		cont.dat.fdr <- as.data.frame(d3[, c(unique(c(id, sym.col)), "logFC", pv.col, fdr.col)], stringsAsFactors=FALSE)
+		if (id != sym.col && (any(cont.dat.fdr[[sym.col]]=="") || any(is.na(cont.dat.fdr[[sym.col]])))) {
+			repl <- which(cont.dat.fdr[[sym.col]]==""|is.na(cont.dat.fdr[[sym.col]]))
+			cont.dat.fdr[repl, sym.col] <- cont.dat.fdr[repl, id]
 		}
 	} else {
 		cont.dat.fdr <- d3[, c(id, "logFC", pv.col, fdr.col)]
@@ -1101,10 +1123,10 @@ diff_expr_volcano_plot <-
 	cat("  Volcano plot of P -values...\n")
 	## Updated: using ggplot2
 	if (point.lab) {
-		cont.dat <- d3[, c(id, sym.col, "logFC", pv.col, fdr.col)]
-		if (any(cont.dat$gene_symbol=="") || any(is.na(cont.dat$gene_symbol))) {
-			repl <- which(cont.dat$gene_symbol==""|is.na(cont.dat$gene_symbol))
-			cont.dat[repl, sym.col] <- cont.dat[repl, as.character(id)]
+		cont.dat <- as.data.frame(d3[, c(unique(c(id, sym.col)), "logFC", pv.col, fdr.col)], stringsAsFactors=FALSE)
+		if (id != sym.col && (any(cont.dat[[sym.col]]=="") || any(is.na(cont.dat[[sym.col]])))) {
+			repl <- which(cont.dat[[sym.col]]==""|is.na(cont.dat[[sym.col]]))
+			cont.dat[repl, sym.col] <- cont.dat[repl, id]
 		}
 	} else {
 		cont.dat <- d3[, c(id, "logFC", pv.col, fdr.col)]
@@ -1144,6 +1166,8 @@ diff_expr_volcano_plot <-
 #			pdf(file.path(home, "differential_expression/chemosensitive_vs_chemoresistant_volcano.pdf"), width=12, height=12)
 	print(g)
 	g.l[["Pval"]] <- g
+	
+	# return ggplot object
 	return(g.l)
 #			dev.off()
 #			plot(d3$logFC, -log10(d3$PValue), col=ifelse(d3$PValue<0.01,"red","black"), main="P-value volcano plot", xlab="log2FC", ylab="-log10(Pvalue)")

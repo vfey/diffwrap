@@ -141,7 +141,7 @@ diffExpr <-
 			stop("'samp.info' needs to be a data.frame object containing at least two columns: 'SampleNames' and 'Groups' (the actual names can be provided\nby the 'samples' and 'groups' arguments, repsectively.)")
 		}
 	}
-	
+
 	if (block) {
 		do.voom <- TRUE
 		cat("*** Using 'blocked' design (i.e., samples are measured _in blocks_). Enforcing 'voom'! ***\n")
@@ -226,7 +226,7 @@ diffExpr <-
 		pairs_col <- pairs
 		pairs <- samp.info[[pairs]]
 	}
-	
+
 	## voom
 	if (do.voom) {
 		cat("Running 'voom'...\n")
@@ -1159,4 +1159,181 @@ diff_expr_pval_hist_plot <-
 	pv.col <- names(d3)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
 	hist(d3[[pv.col]],breaks=20, xlab="P Value", ylab="Frequency", main="P-value distribution")
 }
+
+
+#' Function to generate a heatmap
+#' @export
+diff_expr_pval_hist_plot <-
+  function(expr.mat, clinical.mat, legend.fl = TRUE, row.clust = TRUE, col.clust = TRUE, biserial.fl = FALSE)
+  {
+    if(!missing(clinical.mat)) {
+      pheatmap(expr.mat,
+               show_colnames = T, show_rownames = T, cluster_rows = T, cluster_cols = T, legend = legend.fl,
+               border_color = "white", scale = "row", annotation = clinical.mat, annotation_row = correlation_group)
+    }
+
+  }
+#function by: Kamil Slowikowski, https://github.com/slowkow/slowkow.com/blob/master/_rmd/2017-02-16-heatmap-tutorial.R,
+#defines quantile breaks to be used for changing the palette of the heatmap
+
+quantile.breaks <- function(xs, n = 10) {
+  breaks <- quantile(xs, probs = seq(0, 1, length.out = n))
+  breaks[!duplicated(breaks)]
+}
+
+#function which reorders the levels of a column of a data frame specified as a factor, the desired order is a vector containing the levels of the factor in the desired order
+#written by https://stackoverflow.com/users/1701600/boern
+reorderFactors <- function(df, column = "my_column_name",
+                           desired_level_order) {
+
+  x = df[[column]]
+  lvls_src = levels(x)
+
+  idxs_target <- vector(mode = "numeric", length = 0)
+  for (target in desired_level_order) {
+    idxs_target <- c(idxs_target, which(lvls_src == target))
+  }
+
+  x_new <- factor(x,levels(x)[idxs_target])
+
+  df[[column]] <- x_new
+
+  return(df)
+}
+
+
+# Function: diffr_pheatmap()
+#
+# Author: Bogdan Iancu - Genevia Technologies Oy
+#
+# Arguments:
+#         expr.mat = expression matrix in regular  (genes, samples) format
+#         clinical.mat = clinical matrix, by default a column with sample types
+#         legend.fl logical to determine if legend should be drawn or not (default = FALSE)
+#         scale.fl = character indicating if values should be centered and scaled in either
+#                   the row direction or the column direction, or none (values %in%
+#                   ("row","column","none"), deafault = none)
+#          row.clust = boolean values determining if rows should be clustered
+#          col.clust = boolean values determining if cols should be clustered
+#          biserial.fl = boolean values determining if biserial correlation is calculated
+#                       and corresponding heatmap outputed, assuming clinical.mat is provided
+#          quantile.breaks.fl = boolean values determing if quantile breaks are used to changed
+#                               the colors of the heatmap, otherwise min-max breaks are used by default
+# Output: list of pheatmap objects
+#
+# Details: calls function quantile.breaks
+#          calls function reorderFactors written by https://stackoverflow.com/users/1701600/boern,
+#                                        which reorders the levels of a column of a data frame specified as a factor,
+#                                       the desired order is a vector containing the levels of the factor
+#          requires R-packages: 'pheatmap','RColorBrewer','Hmisc','ltm'
+#
+#
+#
+#' @export
+diffr_pheatmap = function(expr.mat, clinical.mat,
+                          legend.fl = TRUE, scale.fl = "none",
+                          row.clust = TRUE, col.clust = TRUE,
+                          biserial.fl = FALSE, quantile.breaks.fl = FALSE) {
+
+
+  mat.breaks <- seq(min(expr.mat), max(expr.mat),by = 0.05)
+  colour = colorRampPalette(rev(brewer.pal(n = 11, name = "RdBu")))(length(mat.breaks) + 1)
+
+  #change the colours of the matrix based on quantile breaks, the default is above
+  if (quantile.breaks.fl) {
+    mat.breaks = quantile.breaks(as.matrix(expr.mat), n = 11)
+    colour = colorRampPalette(rev(brewer.pal(n = 11, name = "RdBu")))(length(mat.breaks) - 1)
+
+  }
+
+  if (missing(clinical.mat)) {
+
+    p = pheatmap::pheatmap(expr.mat,
+                           show_colnames = T, show_rownames = T,
+                           cluster_rows = row.clust, cluster_cols = col.clust,
+                           legend = legend.fl, border_color = "white",
+                           scale = "row", color = colour)
+
+  }
+  else {
+    names(clinical.mat)[1] = "Sample.class"
+
+    if (!biserial.fl) {
+      p = pheatmap::pheatmap(expr.mat,
+                             show_colnames = T, show_rownames = T,
+                             cluster_rows = row.clust, cluster_cols = col.clust,
+                             legend = legend.fl, border_color = "white",
+                             scale = "row", color = colour,
+                             annotation = clinical.mat)
+    }
+    else {
+      #get the annotation that will be transformed into a categorial variable
+      biserial.vars = unique(clinical.mat[,1])
+      #transform annotation into categorical variaable
+      biserial.vec = ifelse(!grepl(biserial.vars[1],clinical.mat[,1]),1,0)
+      #calculate biserial correl for every gene
+      biserial.cor.vec = apply(expr.mat, 1, function(x) {ltm::biserial.cor(as.numeric(x), biserial.vec,level = 2)})
+      #build the annotation for the correlations
+      anno.correl = ifelse(biserial.cor.vec > 0.75, "0.75<r<=1",
+                           ifelse(biserial.cor.vec > 0.5 & biserial.cor.vec <= 0.75, "0.5<r<=0.75",
+                                  ifelse(biserial.cor.vec > 0.25 & biserial.cor.vec <= 0.5 , "0.25<r<=0.5",
+                                         ifelse(biserial.cor.vec <= 0.25 & biserial.cor.vec > 0, "0<r<=0.25",
+                                                ifelse(biserial.cor.vec <= 0 & biserial.cor.vec > -0.25, "-0.25<r<=0",
+                                                       ifelse(-0.5 < biserial.cor.vec & biserial.cor.vec <= -0.25, "-0.5<r<=-0.25",
+                                                              ifelse(-0.75 < biserial.cor.vec & biserial.cor.vec <= -0.5,"-0.75<r<=-0.5","-1<r<=-0.75")))))))
+
+      anno.correl = as.data.frame(anno.correl)
+      colnames(anno.correl)[1] = "Correlation"
+      anno.correl$Correlation = as.factor(anno.correl$Correlation)
+      anno.correl = reorderFactors(anno.correl,"Correlation", c("-1<r<=-0.75","-0.75<r<=-0.5","-0.5<r<=-0.25","-0.25<r<=0", "0<r<=0.25","0.25<r<=0.5","0.5<r<=0.75"))
+
+      p.biserial = pheatmap::pheatmap(expr.mat,
+                                      show_colnames = T, show_rownames = T,
+                                      cluster_rows = row.clust, cluster_cols = col.clust,
+                                      legend = legend.fl, border_color = "white",
+                                      scale = "row", color = colour,
+                                      annotation = clinical.mat, annotation_row = anno.correl)
+    }
+
+  }
+
+
+  #calculate the correlation matrix using Hmisc package
+  t_data_heat_map = t(data_heatmap)
+  corr_hmap = Hmisc::rcorr(t_data_heat_map)
+  cor.mat = as.matrix(corr_hmap$r)
+  pv.mat = as.matrix(corr_hmap$P)
+
+  cor.mat.breaks <- seq(min(cor.mat), max(cor.mat),by = 0.05)
+  colour = colorRampPalette(rev(brewer.pal(n = 11, name = "RdBu")))(length(cor.mat.breaks) + 1)
+
+  #define new clustering distance
+  dissimilarity <- 1 - cor.mat
+  dist.clust <- as.dist(dissimilarity)
+
+
+  # define significance levels
+  sign.stars <- ifelse(pv.mat < .001, "***", ifelse(pv.mat < .01, "** ", ifelse(pv.mat < .05, "* ", " ")))
+  sign.stars <- ifelse(is.na(sign.stars),"",sign.stars)
+
+  #build the correlogram using pheatmap
+  p.cor = pheatmap::pheatmap(as.data.frame(corr_hmap$r),
+                             show_colnames = T, show_rownames = T,
+                             cluster_rows = T, cluster_cols = T,
+                             legend = T, border_color = "white",
+                             scale = "none", color = colour,
+                             clustering_distance_rows = dist.clust, clustering_distance_cols = dist.clust,
+                             display_numbers = sign.stars, number_color = "#FFFF00",
+                             treeheight_row = 100, treheight_col = 100 )
+
+  #create the heatmap list and populate it
+  heatmap.list = list()
+  heatmap.list[["regular"]] = p
+  heatmap.list[["correlogram"]] = p.cor
+  if (biserial.fl) {
+    heatmap.list[["biserial.cor"]] = p.biserial
+  }
+  return(heatmap.list)
+}
+
 

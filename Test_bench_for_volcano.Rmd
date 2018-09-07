@@ -11,11 +11,12 @@ Try executing this chunk by clicking the *Run* button within the chunk or by pla
 
 library(ggplot2)
 library(ggrepel)
+library(scales) #Needed for auto-scaling the axes!!
 
 ```
 #Editing diff_expr_volcano_plot_function
 
-```{r}
+```{r, fig.height=6, fig.width=6}
 diff_expr_volcano_plot <-
 		function(d3, id, sym.col="gene_symbol", main=NULL, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE)
 {
@@ -46,20 +47,23 @@ diff_expr_volcano_plot <-
 		filtdat <- filtdat[ix[1:numlab], ][order(ix[1:numlab]), ]
 	}
 	gfdr <- ggplot(cont.dat.fdr, aes(x=logFC, y=-log10(fdr), color=`FDR-Values`, fill=`FDR-Values`, size=FC))
-	gfdr <- gfdr + geom_point(alpha=0.4)
-	gfdr <- gfdr + scale_color_manual(values=c("#0066FF", "#CC0000"))
+	gfdr <- gfdr + geom_point(alpha=0.4, size=1.75)
+	#gfdr <- gfdr + scale_color_manual(values=c("#0066FF", "#CC0000"))
+	gfdr <- gfdr + scale_x_continuous(breaks = scales::pretty_breaks(n=10)) + scale_y_continuous(breaks = scales::pretty_breaks(n=10))
+	
 	gfdr <- gfdr + geom_hline(aes(yintercept=-log10(0.05)), colour="red", linetype="dashed")
 	gfdr <- gfdr + geom_vline(aes(xintercept=1), colour="red", linetype="dashed")
 	gfdr <- gfdr + geom_vline(aes(xintercept=-1), colour="red", linetype="dashed")
-	gfdr <- gfdr + theme_bw(base_size = 10)
-	gfdr <- gfdr + ggtitle(main, "(FDR)")
+	#gfdr <- gfdr + theme_bw(base_size = 10)
+	gfdr <- gfdr + ggtitle(main, "(FDR)") + theme(plot.title = element_text(hjust = 0.5))+ theme(plot.subtitle = element_text(hjust = 0.5))
 	gfdr <- gfdr + geom_text(data=cont.dat.fdr, aes(x=floor(min(logFC)), y=-log10(0.05)), label="q=0.05", nudge_x=-1.5, nudge_y=max(-log10(cont.dat.fdr$fdr))/60, size=3, color="red")
 	gfdr <- gfdr + geom_text(x=0, y=-0.7, label="two-fold FC", size=3, color="red")
 	if (point.lab && nrow(filtdat)>0) {
 		gfdr <- gfdr + geom_text_repel(
 				data = filtdat,
 				aes(label = filtdat[[sym.col]]),
-				size = 5,
+				size = 3,
+				colour = "gray30",
 				box.padding = unit(0.35, "lines"),
 				point.padding = unit(0.3, "lines"),
 				show.legend = F
@@ -114,7 +118,7 @@ diff_expr_volcano_plot <-
 				point.padding = unit(0.3, "lines"),
 				show.legend = F
 		)
-		print(g)
+		
 	}
 #			pdf(file.path(home, "differential_expression/chemosensitive_vs_chemoresistant_volcano.pdf"), width=12, height=12)
 	print(g)

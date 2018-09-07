@@ -47,14 +47,14 @@ diff_expr_volcano_plot <-
 		filtdat <- filtdat[ix[1:numlab], ][order(ix[1:numlab]), ]
 	}
 	gfdr <- ggplot(cont.dat.fdr, aes(x=logFC, y=-log10(fdr), color=`FDR-Values`, fill=`FDR-Values`, size=FC))
-	gfdr <- gfdr + geom_point(alpha=0.4, size=1.75)
+	gfdr <- gfdr + geom_point(alpha=0.4, size = 1.75) # owerwrites previous size=FC
 	#gfdr <- gfdr + scale_color_manual(values=c("#0066FF", "#CC0000"))
 	gfdr <- gfdr + scale_x_continuous(breaks = scales::pretty_breaks(n=10)) + scale_y_continuous(breaks = scales::pretty_breaks(n=10))
 	
 	gfdr <- gfdr + geom_hline(aes(yintercept=-log10(0.05)), colour="red", linetype="dashed")
 	gfdr <- gfdr + geom_vline(aes(xintercept=1), colour="red", linetype="dashed")
 	gfdr <- gfdr + geom_vline(aes(xintercept=-1), colour="red", linetype="dashed")
-	#gfdr <- gfdr + theme_bw(base_size = 10)
+	gfdr <- gfdr + theme_bw(base_size = 10)
 	gfdr <- gfdr + ggtitle(main, "(FDR)") + theme(plot.title = element_text(hjust = 0.5))+ theme(plot.subtitle = element_text(hjust = 0.5))
 	gfdr <- gfdr + geom_text(data=cont.dat.fdr, aes(x=floor(min(logFC)), y=-log10(0.05)), label="q=0.05", nudge_x=-1.5, nudge_y=max(-log10(cont.dat.fdr$fdr))/60, size=3, color="red")
 	gfdr <- gfdr + geom_text(x=0, y=-0.7, label="two-fold FC", size=3, color="red")
@@ -131,6 +131,7 @@ diff_expr_volcano_plot <-
 
 ```
 
+
 ```{r}
 #Test data
 d3=read.table("Test_data_to_volcano.tsv")
@@ -146,7 +147,142 @@ numlab=15
 
 graphs = diff_expr_volcano_plot(d3, id=id, sym.col=sym.col, main=main, p.thr=p.thr, fdr.thr=fdr.thr, logfc.thr=logfc.thr, numlab=numlab, point.lab=TRUE)
 ```
+    
+#Simplified and edited version with a subfunction:
+```{r}
+prepare_volcano_of_given_property = function(data, property.to.plot, property.column,
+                                             property.thr, logfc.thr, main, 
+                                             numlab, point.lab, sym.col){
+  
+  data[,property.to.plot] <- data[[property.column]]
+  
+  #formatted names to use in plot texts:
+  property.formatted.name = toupper(property.to.plot)
+  name.of.legend = paste0(property.formatted.name, "-values")
+  legend.treshold.tag = paste0("signif. (", property.formatted.name) 
+  subtitle.name = paste("(",")", sep=name.of.legend )
+  line.label.tag = "p" #except if we have FDR-values:
+  if(property.to.plot == "fdr" ){
+    line.label.tag = "q"
+  }
+  line_label_text = paste(line.label.tag, property.thr, sep = "=")
+    
+  #Constructing new bivalue column for legend values
+  data[,name.of.legend] <- "not signif."
+  data[,name.of.legend][data[,property.to.plot] < property.thr] <- paste(legend.treshold.tag, fdr.thr, sep="<")
+  
+  #Adding another bivalue column for magnitude of foldchange
+  data$FC <- paste0("less than ", 2^logfc.thr, "-fold")
+  data$FC[(data$logFC < -1*logfc.thr | data$logFC > logfc.thr)] <- paste0("more than ", 2^logfc.thr, "-fold")
+  
+  #Filtering data to color points
+  filtdat <- data[ data[,property.to.plot] < property.thr, ]
+  print(dim(filtdat))
+  cat("    ", nrow(filtdat), "point(s) labelled...\n")
+  if (nrow(filtdat) > numlab) {
+    cat("     Restricting to", numlab, "...\n")
+    ix <- sort(filtdat[,property.to.plot], index=T)$ix
+    filtdat <- filtdat[ix[1:numlab], ][order(ix[1:numlab]), ]
+  }
+  print(dim(filtdat))
+  
+  
+  volcano.plot <- ggplot(data, aes(x = data$logFC, y = -log10(data[,property.to.plot]), 
+                                   color = data[,name.of.legend], fill=data[,name.of.legend]))
+ 
+  
+  volcano.plot <- volcano.plot + geom_point(alpha=0.4, size=1.75)
+  
+ 
+  #volcano.plot <- volcano.plot + scale_color_manual(values=c("#0066FF", "#CC0000"))
+  volcano.plot <- volcano.plot + scale_x_continuous(breaks = scales::pretty_breaks(n=10)) + scale_y_continuous(breaks = scales::pretty_breaks(n=10))
+  
+  volcano.plot <- volcano.plot + theme_bw(base_size = 10)
+    
+  volcano.plot <- volcano.plot + geom_hline(aes(yintercept=-log10(property.thr)), colour="red", linetype="dashed")
+  volcano.plot <- volcano.plot + geom_vline(aes(xintercept=logfc.thr), colour="red", linetype="dashed")
+  volcano.plot <- volcano.plot + geom_vline(aes(xintercept=-logfc.thr), colour="red", linetype="dashed")
+ 
+   
+   
+    volcano.plot <- volcano.plot + ggtitle(main, subtitle = subtitle.name) + 
+      theme(plot.title = element_text(hjust = 0.5)) + 
+      theme(plot.subtitle = element_text(hjust = 0.5))
+    
+    volcano.plot <- volcano.plot + geom_text(data=data, aes(x=floor(min(data$logFC)), y=-log10(property.thr)), label = line_label_text, nudge_x=-1.5, nudge_y=max(-log10(data[,property.to.plot]))/60, size=3, color="red")
+    volcano.plot <- volcano.plot + geom_text(x=0, y=-0.7, label="two-fold FC", size=3, color="red")
+    
+  if (point.lab && nrow(filtdat)>0) {
+   
+      volcano.plot <- volcano.plot + geom_text_repel(
+        data = filtdat,
+        aes(label = filtdat[[sym.col]]),
+        size = 3,
+        colour = "gray30",
+        box.padding = unit(0.35, "lines"),
+        point.padding = unit(0.3, "lines"),
+        show.legend = F
+      )
+      print(volcano.plot)
+    }
+    
+    return(volcano.plot)
+}
+  
+```
 
+    ```{r}
+diff_expr_volcano_plot <-
+  function(d3, id, sym.col="gene_symbol", main=NULL, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE)
+  {
+    pv.col <- names(d3)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
+    fdr.col <- names(d3)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
+   
+    if (point.lab) {
+      cont.dat <- d3[, c(id, sym.col, "logFC", pv.col, fdr.col)]
+      if (any(cont.dat$gene_symbol=="") || any(is.na(cont.dat$gene_symbol))) {
+        repl <- which(cont.dat$gene_symbol==""|is.na(cont.dat$gene_symbol))
+        cont.dat[repl, sym.col] <- cont.dat[repl, as.character(id)]
+      }
+    } else {
+      cont.dat <- d3[, c(id, "logFC", pv.col, fdr.col)]
+    }
+    
+    
+   g.l <- list()
+   g.l[["FDR"]] = prepare_volcano_of_given_property(data = cont.dat, 
+                                                     property.to.plot = 'fdr', 
+                                                     property.column = fdr.col, 
+                                                     property.thr = fdr.thr, 
+                                                     logfc.thr = logfc.thr,
+                                                     main = main, 
+                                                     numlab = numlab,
+                                                    point.lab = TRUE,
+                                                    sym.col = sym.col)
+   
+   # g.l[["Pval"]] = prepare_volcano_of_given_property(data = cont.dat, 
+   #                                                   property.to.plot = 'p', 
+   #                                                   property.column = pv.col, 
+   #                                                   property.thr = pv.thr, 
+   #                                                   logfc.thr = logfc.thr,
+   #                                                   main = main, 
+   #                                                   numlab = numlab,
+   #                                                   point.lab = TRUE,
+   #                                                   sym.col = sym.col)
+   #  
+   #  
+    
+    return(g.l)
+    
+  }
+
+
+``` 
+```{r}
+graphs = diff_expr_volcano_plot(d3, id=id, sym.col=sym.col, main=main, p.thr=p.thr, fdr.thr=fdr.thr, logfc.thr=logfc.thr, numlab=numlab, point.lab=TRUE)
+graphs
+
+```
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
 

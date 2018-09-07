@@ -1,0 +1,152 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+
+library(ggplot2)
+library(ggrepel)
+
+```
+#Editing diff_expr_volcano_plot_function
+
+```{r}
+diff_expr_volcano_plot <-
+		function(d3, id, sym.col="gene_symbol", main=NULL, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE)
+{
+	pv.col <- names(d3)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
+	fdr.col <- names(d3)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
+	g.l <- list()
+	cat("  Volcano plot of FDR values...\n")
+	## Updated: using ggplot2
+	if (point.lab) {
+		cont.dat.fdr <- d3[, c(id, sym.col, "logFC", pv.col, fdr.col)]
+		if (any(cont.dat.fdr$gene_symbol=="") || any(is.na(cont.dat.fdr$gene_symbol))) {
+			repl <- which(cont.dat.fdr$gene_symbol==""|is.na(cont.dat.fdr$gene_symbol))
+			cont.dat.fdr[repl, sym.col] <- cont.dat.fdr[repl, as.character(id)]
+		}
+	} else {
+		cont.dat.fdr <- d3[, c(id, "logFC", pv.col, fdr.col)]
+	}
+	cont.dat.fdr$fdr <- cont.dat.fdr[[fdr.col]]
+	cont.dat.fdr$`FDR-Values` <- "not signif."
+	cont.dat.fdr$`FDR-Values`[cont.dat.fdr$fdr<fdr.thr] <- paste0("signif. (FDR<", fdr.thr, ")")
+	cont.dat.fdr$FC <- paste0("less than ", 2^logfc.thr, "-fold")
+	cont.dat.fdr$FC[(cont.dat.fdr$logFC < -1*logfc.thr | cont.dat.fdr$logFC > logfc.thr)] <- paste0("more than ", 2^logfc.thr, "-fold")
+	filtdat <- cont.dat.fdr[cont.dat.fdr$fdr < fdr.thr, ]
+	cat("    ", nrow(filtdat), "point(s) labelled...\n")
+	if (nrow(filtdat)>numlab) {
+		cat("     Restricting to", numlab, "...\n")
+		ix <- sort(filtdat$fdr, index=T)$ix
+		filtdat <- filtdat[ix[1:numlab], ][order(ix[1:numlab]), ]
+	}
+	gfdr <- ggplot(cont.dat.fdr, aes(x=logFC, y=-log10(fdr), color=`FDR-Values`, fill=`FDR-Values`, size=FC))
+	gfdr <- gfdr + geom_point(alpha=0.4)
+	gfdr <- gfdr + scale_color_manual(values=c("#0066FF", "#CC0000"))
+	gfdr <- gfdr + geom_hline(aes(yintercept=-log10(0.05)), colour="red", linetype="dashed")
+	gfdr <- gfdr + geom_vline(aes(xintercept=1), colour="red", linetype="dashed")
+	gfdr <- gfdr + geom_vline(aes(xintercept=-1), colour="red", linetype="dashed")
+	gfdr <- gfdr + theme_bw(base_size = 10)
+	gfdr <- gfdr + ggtitle(main, "(FDR)")
+	gfdr <- gfdr + geom_text(data=cont.dat.fdr, aes(x=floor(min(logFC)), y=-log10(0.05)), label="q=0.05", nudge_x=-1.5, nudge_y=max(-log10(cont.dat.fdr$fdr))/60, size=3, color="red")
+	gfdr <- gfdr + geom_text(x=0, y=-0.7, label="two-fold FC", size=3, color="red")
+	if (point.lab && nrow(filtdat)>0) {
+		gfdr <- gfdr + geom_text_repel(
+				data = filtdat,
+				aes(label = filtdat[[sym.col]]),
+				size = 5,
+				box.padding = unit(0.35, "lines"),
+				point.padding = unit(0.3, "lines"),
+				show.legend = F
+		)
+	}
+	print(gfdr)
+	g.l[["FDR"]] <- gfdr
+#			plot(d3$logFC, -log10(d3$FDR), col=ifelse(d3$FDR<0.05, "red", "black"), main="FDR volcano plot", xlab="log2FC", ylab="-log10(FDR)")
+#dev.off()
+
+#png(paste(out.dir,"/",analysis.name,".Pvalue.volcano_plot.png",sep=""),width=1280,height=960,res=150)
+	## Volcano plot of P-values
+	cat("  Volcano plot of P -values...\n")
+	## Updated: using ggplot2
+	if (point.lab) {
+		cont.dat <- d3[, c(id, sym.col, "logFC", pv.col, fdr.col)]
+		if (any(cont.dat$gene_symbol=="") || any(is.na(cont.dat$gene_symbol))) {
+			repl <- which(cont.dat$gene_symbol==""|is.na(cont.dat$gene_symbol))
+			cont.dat[repl, sym.col] <- cont.dat[repl, as.character(id)]
+		}
+	} else {
+		cont.dat <- d3[, c(id, "logFC", pv.col, fdr.col)]
+	}
+	cont.dat$pval <- cont.dat[[pv.col]]
+	cont.dat$`P-Values` <- "not signif."
+	cont.dat$`P-Values`[cont.dat$pval<p.thr] <- paste0("signif. (P<", p.thr, ")")
+	cont.dat$FC <- paste0("less than ", 2^logfc.thr, "-fold")
+	cont.dat$FC[(cont.dat$logFC < -1*logfc.thr | cont.dat$logFC > logfc.thr)] <- paste0("more than ", 2^logfc.thr, "-fold")
+	filtdat <- cont.dat[cont.dat$pval < p.thr, ]
+	cat("    ", nrow(filtdat), "point(s) labelled...\n")
+	if (nrow(filtdat)>numlab) {
+		cat("     Restricting to", numlab, "...\n")
+		ix <- sort(filtdat$pval, index=T)$ix
+		filtdat <- filtdat[ix[1:numlab], ][order(ix[1:numlab]), ]
+	}
+	g <- ggplot(cont.dat, aes(x=logFC, y=-log10(pval), color=`P-Values`, fill=`P-Values`, size=FC))
+	g <- g + geom_point(alpha=0.4)
+	g <- g + scale_color_manual(values=c("#0066FF", "#CC0000"))
+	g <- g + geom_hline(aes(yintercept=-log10(0.05)), colour="red", linetype="dashed")
+	g <- g + geom_vline(aes(xintercept=1), colour="red", linetype="dashed")
+	g <- g + geom_vline(aes(xintercept=-1), colour="red", linetype="dashed")
+	g <- g + theme_bw(base_size = 10)
+	g <- g + ggtitle(main, "(P-values)")
+	g <- g + geom_text(data=cont.dat, aes(x=floor(min(logFC)), y=-log10(0.05)), label="p=0.05", nudge_x=-1.5, nudge_y=max(-log10(cont.dat$pval))/60, size=3, color="red")
+	g <- g + geom_text(x=0, y=-0.7, label="two-fold FC", size=3, color="red")
+	if (point.lab && nrow(filtdat)>0) {
+		g <- g + geom_text_repel(
+				data = filtdat,
+				aes(label = filtdat[[sym.col]]),
+				size = 5,
+				box.padding = unit(0.35, "lines"),
+				point.padding = unit(0.3, "lines"),
+				show.legend = F
+		)
+		print(g)
+	}
+#			pdf(file.path(home, "differential_expression/chemosensitive_vs_chemoresistant_volcano.pdf"), width=12, height=12)
+	print(g)
+	g.l[["Pval"]] <- g
+	return(g.l)
+#			dev.off()
+#			plot(d3$logFC, -log10(d3$PValue), col=ifelse(d3$PValue<0.01,"red","black"), main="P-value volcano plot", xlab="log2FC", ylab="-log10(Pvalue)")
+#dev.off()
+}
+
+```
+
+```{r}
+#Test data
+d3=read.table("Test_data_to_volcano.tsv")
+
+#Setting values:
+id="ID"
+sym.col="gene_symbol"
+main="Test volcano plot"
+p.thr = 0.05
+fdr.thr=0.05
+logfc.thr=1
+numlab=15
+
+graphs = diff_expr_volcano_plot(d3, id=id, sym.col=sym.col, main=main, p.thr=p.thr, fdr.thr=fdr.thr, logfc.thr=logfc.thr, numlab=numlab, point.lab=TRUE)
+```
+
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+

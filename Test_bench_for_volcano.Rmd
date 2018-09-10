@@ -154,7 +154,7 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot, property
                                              property.thr, logfc.thr, main, 
                                              numlab, point.lab, sym.col){
   
-  data.df[,property.to.plot] <- data.df[[property.column]]
+  data.df[[property.to.plot]] <- data.df[[property.column]]
   
   #formatted names to use in plot texts:
   property.formatted.name = toupper(property.to.plot)
@@ -170,15 +170,15 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot, property
   line_label_text = paste(line.label.tag, property.thr, sep = "=")
     
   #Constructing new bivalue column for legend values
-  data.df[,name.of.legend] <- "not signif."
-  data.df[,name.of.legend][data.df[,property.to.plot] < property.thr] <- paste(legend.treshold.tag, fdr.thr, sep="<")
+  data.df[[name.of.legend]] <- "not signif."
+  data.df[[name.of.legend]][data.df[[property.to.plot]] < property.thr] <- paste(legend.treshold.tag, fdr.thr, sep="<")
   
   #Adding another bivalue column for magnitude of foldchange
   data.df$FC <- paste0("less than ", 2^logfc.thr, "-fold")
   data.df$FC[(data.df$logFC < -1*logfc.thr | data.df$logFC > logfc.thr)] <- paste0("more than ", 2^logfc.thr, "-fold")
   
   #Filtering data.df to color points
-  filtdat <- data.df[ data.df[,property.to.plot] < property.thr, ]
+  filtdat <- data.df[ data.df[[property.to.plot]] < property.thr, ]
   print(dim(filtdat))
   cat("    ", nrow(filtdat), "point(s) labelled...\n")
   if (nrow(filtdat) > numlab) {
@@ -193,6 +193,14 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot, property
                                    color = data.df[[name.of.legend]]))
  
   volcano.plot <- volcano.plot + geom_point(alpha=0.4, size=1.75)
+  volcano.plot <- volcano.plot + theme_bw(base_size = 10) 
+  
+   volcano.plot <- volcano.plot + theme(panel.border = element_blank(),
+       axis.line = element_line(color='black'))
+  
+  # theme(panel.border = element_blank())
+  # volcano.plot <- volcano.plot + theme(axis.line.x=element_line(color="black", size = 2),
+  #       axis.line.y=element_line(color="black", size = 2))
   
   volcano.plot <- volcano.plot + xlab(x.axis.name) + ylab(y.axis.name)
   volcano.plot <- volcano.plot + labs(color = name.of.legend) #guides(color=guide_legend(legend.name))
@@ -200,26 +208,19 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot, property
   #volcano.plot <- volcano.plot + scale_color_manual(values=c("#0066FF", "#CC0000"))
   #volcano.plot <- volcano.plot + scale_x_continuous(breaks = scales::pretty_breaks(n=10)) + scale_y_continuous(breaks = scales::pretty_breaks(n=10))
   
-  volcano.plot <- volcano.plot + theme_bw(base_size = 10)
-    
   volcano.plot <- volcano.plot + geom_hline(aes(yintercept=-log10(property.thr)), colour="red", linetype="dashed")
   volcano.plot <- volcano.plot + geom_vline(aes(xintercept=logfc.thr), colour="red", linetype="dashed")
   volcano.plot <- volcano.plot + geom_vline(aes(xintercept=-logfc.thr), colour="red", linetype="dashed")
  
-   
-   
-    volcano.plot <- volcano.plot + ggtitle(main, subtitle = subtitle.name) + 
+  volcano.plot <- volcano.plot + ggtitle(main, subtitle = subtitle.name) + 
       theme(plot.title = element_text(hjust = 0.5)) + 
       theme(plot.subtitle = element_text(hjust = 0.5))
     
     volcano.plot <- volcano.plot + geom_text(data=data.df, aes(x=floor(min(data.df$logFC)), y=-log10(property.thr)), label = line_label_text, nudge_x=-1.5, nudge_y=max(-log10(data.df[,property.to.plot]))/60, size=3, color="red")
     volcano.plot <- volcano.plot + geom_text(x=0, y=-0.7, label="two-fold FC", size=3, color="red")
     
-    print(volcano.plot)
-    
   if (point.lab && nrow(filtdat)>0) {
-  print(filtdat$logFC)
-    print(filtdat[[property.to.plot]])
+
       volcano.plot <- volcano.plot + geom_text_repel(
         data = filtdat,
         aes(x= filtdat$logFC, y = -log10(filtdat[[property.to.plot]]), label = filtdat[[sym.col]]),
@@ -229,7 +230,7 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot, property
             point.padding = unit(0.3, "lines"),
             show.legend = F
       )
-      print(volcano.plot)
+    
     }
     
     return(volcano.plot)

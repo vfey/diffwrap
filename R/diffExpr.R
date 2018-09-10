@@ -1040,115 +1040,136 @@ diff_expr_ma_plot <-
 	return(g.l)
 }
 
+
+##' Helper function that returns volcano plot.
+#' @export
+prepare_volcano_of_given_property = function(data.df, property.to.plot = c("fdr", "p"), property.column,
+                                             property.thr, logfc.thr, main,
+                                             numlab, point.lab, sym.col){
+
+  data.df[[property.to.plot]] <- data.df[[property.column]]
+
+  # Formatted names to use in plot texts:
+  property.formatted.name = toupper(property.to.plot)
+  name.of.legend = paste0(property.formatted.name, "-values")
+  legend.treshold.tag = paste0("signif. (", property.formatted.name, "<", property.thr, " & ", "logFC>", logfc.thr, ")")
+  subtitle.name = paste("(",")", sep=name.of.legend )
+  x.axis.name = "Logarithmic fold change"
+  y.axis.name = paste0("-log10(", property.formatted.name, ")")
+  line.label.tag = "p" #except if we have FDR-values:
+  if(property.to.plot == "fdr" ){
+    line.label.tag = "q"
+  }
+  line_label_text = paste(line.label.tag, property.thr, sep = "=")
+
+  # Constructing new bivalue column for coloring the points and displaying legend
+  data.df[[name.of.legend]] <- "not signif."
+  data.df[[name.of.legend]][data.df[[property.to.plot]] < property.thr & abs(data.df$logFC) > logfc.thr] <- legend.treshold.tag
+
+  # Adding another bivalue column for magnitude of foldchange
+  #data.df$FC <- paste0("less than ", 2^logfc.thr, "-fold")
+  #data.df$FC[(data.df$logFC < -1*logfc.thr | data.df$logFC > logfc.thr)] <- paste0("more than ", 2^logfc.thr, "-fold")
+
+  # Filtering data.df to label points
+  filtdat <- data.df[ data.df[[property.to.plot]] < property.thr & abs(data.df$logFC) > logfc.thr, ]
+  cat("    ", nrow(filtdat), "point(s) labelled...\n")
+  if (nrow(filtdat) > numlab) {
+    cat("     Restricting to", numlab, "...\n")
+    ix <- sort(filtdat[,property.to.plot], index=T)$ix
+    filtdat <- filtdat[ix[1:numlab], ][order(ix[1:numlab]), ]
+  }
+
+  # Constructing the plot
+  volcano.plot <- ggplot(data.df, aes(x = data.df$logFC, y = -log10(data.df[,property.to.plot]),
+                                      color = data.df[[name.of.legend]]))
+
+  volcano.plot <- volcano.plot + geom_point(alpha=0.4, size=1.75)
+  volcano.plot <- volcano.plot + theme_bw(base_size = 10)
+
+  volcano.plot <- volcano.plot + theme(panel.border = element_blank(),
+                                       axis.line = element_line(color='black'),
+                                       panel.grid.major = element_line(size = 0.2),
+                                       panel.grid.minor = element_line(size = 0.2))
+
+  volcano.plot <- volcano.plot + xlab(x.axis.name) + ylab(y.axis.name)
+  volcano.plot <- volcano.plot + labs(color = name.of.legend)
+
+  #volcano.plot <- volcano.plot + scale_color_manual(values=c("#0066FF", "#CC0000"))
+  volcano.plot <- volcano.plot + scale_x_continuous(breaks = scales::pretty_breaks(n=6)) + scale_y_continuous(breaks = scales::pretty_breaks(n=8))
+
+  volcano.plot <- volcano.plot + geom_hline(aes(yintercept=-log10(property.thr)), colour="red", linetype="dashed")
+  volcano.plot <- volcano.plot + geom_vline(aes(xintercept=logfc.thr), colour="red", linetype="dashed")
+  volcano.plot <- volcano.plot + geom_vline(aes(xintercept=-logfc.thr), colour="red", linetype="dashed")
+
+  volcano.plot <- volcano.plot + ggtitle(main, subtitle = subtitle.name) +
+    theme(plot.title = element_text(hjust = 0.5)) +
+    theme(plot.subtitle = element_text(hjust = 0.5)) #hjust 0.5 for centering
+
+  volcano.plot <- volcano.plot + geom_text(data=data.df, aes(x=floor(min(data.df$logFC)), y=-log10(property.thr)), label = line_label_text, nudge_x=0.5, nudge_y=max(-log10(data.df[,property.to.plot]))/60, size=3.5, color="red")
+  volcano.plot <- volcano.plot + geom_text(x=0, y=-0.7, label="two-fold FC", size=3, color="red") #currently not displayed?
+
+  if (point.lab && nrow(filtdat)>0) {
+
+    volcano.plot <- volcano.plot + geom_text_repel(
+      data = filtdat,
+      aes(x= filtdat$logFC, y = -log10(filtdat[[property.to.plot]]), label = filtdat[[sym.col]]),
+      size = 3,
+      colour = "gray30",
+      box.padding = unit(0.35, "lines"),
+      point.padding = unit(0.3, "lines"),
+      show.legend = F
+    )
+
+  }
+
+  return(volcano.plot)
+}
+
 #' Function to generate a Volcano plot using `ggplot2`
 #' @export
 diff_expr_volcano_plot <-
-		function(d3, id, sym.col="gene_symbol", main=NULL, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE)
-{
-	pv.col <- names(d3)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
-	fdr.col <- names(d3)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
-	g.l <- list()
-	cat("  Volcano plot of FDR values...\n")
-	## Updated: using ggplot2
-	if (point.lab) {
-		cont.dat.fdr <- d3[, c(id, sym.col, "logFC", pv.col, fdr.col)]
-		if (any(cont.dat.fdr$gene_symbol=="") || any(is.na(cont.dat.fdr$gene_symbol))) {
-			repl <- which(cont.dat.fdr$gene_symbol==""|is.na(cont.dat.fdr$gene_symbol))
-			cont.dat.fdr[repl, sym.col] <- cont.dat.fdr[repl, as.character(id)]
-		}
-	} else {
-		cont.dat.fdr <- d3[, c(id, "logFC", pv.col, fdr.col)]
-	}
-	cont.dat.fdr$fdr <- cont.dat.fdr[[fdr.col]]
-	cont.dat.fdr$`FDR-Values` <- "not signif."
-	cont.dat.fdr$`FDR-Values`[cont.dat.fdr$fdr<fdr.thr] <- paste0("signif. (FDR<", fdr.thr, ")")
-	cont.dat.fdr$FC <- paste0("less than ", 2^logfc.thr, "-fold")
-	cont.dat.fdr$FC[(cont.dat.fdr$logFC < -1*logfc.thr | cont.dat.fdr$logFC > logfc.thr)] <- paste0("more than ", 2^logfc.thr, "-fold")
-	filtdat <- cont.dat.fdr[cont.dat.fdr$fdr < fdr.thr, ]
-	cat("    ", nrow(filtdat), "point(s) labelled...\n")
-	if (nrow(filtdat)>numlab) {
-		cat("     Restricting to", numlab, "...\n")
-		ix <- sort(filtdat$fdr, index=T)$ix
-		filtdat <- filtdat[ix[1:numlab], ][order(ix[1:numlab]), ]
-	}
-	gfdr <- ggplot(cont.dat.fdr, aes(x=logFC, y=-log10(fdr), color=`FDR-Values`, fill=`FDR-Values`, size=FC))
-	gfdr <- gfdr + geom_point(alpha=0.4)
-	gfdr <- gfdr + scale_color_manual(values=c("#0066FF", "#CC0000"))
-	gfdr <- gfdr + geom_hline(aes(yintercept=-log10(0.05)), colour="red", linetype="dashed")
-	gfdr <- gfdr + geom_vline(aes(xintercept=1), colour="red", linetype="dashed")
-	gfdr <- gfdr + geom_vline(aes(xintercept=-1), colour="red", linetype="dashed")
-	gfdr <- gfdr + theme_bw(base_size = 10)
-	gfdr <- gfdr + ggtitle(main, "(FDR)")
-	gfdr <- gfdr + geom_text(data=cont.dat.fdr, aes(x=floor(min(logFC)), y=-log10(0.05)), label="q=0.05", nudge_x=-1.5, nudge_y=max(-log10(cont.dat.fdr$fdr))/60, size=3, color="red")
-	gfdr <- gfdr + geom_text(x=0, y=-0.7, label="two-fold FC", size=3, color="red")
-	if (point.lab && nrow(filtdat)>0) {
-		gfdr <- gfdr + geom_text_repel(
-				data = filtdat,
-				aes(label = filtdat[[sym.col]]),
-				size = 5,
-				box.padding = unit(0.35, "lines"),
-				point.padding = unit(0.3, "lines"),
-				show.legend = F
-		)
-	}
-	print(gfdr)
-	g.l[["FDR"]] <- gfdr
-#			plot(d3$logFC, -log10(d3$FDR), col=ifelse(d3$FDR<0.05, "red", "black"), main="FDR volcano plot", xlab="log2FC", ylab="-log10(FDR)")
-#dev.off()
+  function(d3, id, sym.col="gene_symbol", main=NULL, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE)
+  {
+    pv.col <- names(d3)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
+    fdr.col <- names(d3)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
 
-#png(paste(out.dir,"/",analysis.name,".Pvalue.volcano_plot.png",sep=""),width=1280,height=960,res=150)
-	## Volcano plot of P-values
-	cat("  Volcano plot of P -values...\n")
-	## Updated: using ggplot2
-	if (point.lab) {
-		cont.dat <- d3[, c(id, sym.col, "logFC", pv.col, fdr.col)]
-		if (any(cont.dat$gene_symbol=="") || any(is.na(cont.dat$gene_symbol))) {
-			repl <- which(cont.dat$gene_symbol==""|is.na(cont.dat$gene_symbol))
-			cont.dat[repl, sym.col] <- cont.dat[repl, as.character(id)]
-		}
-	} else {
-		cont.dat <- d3[, c(id, "logFC", pv.col, fdr.col)]
-	}
-	cont.dat$pval <- cont.dat[[pv.col]]
-	cont.dat$`P-Values` <- "not signif."
-	cont.dat$`P-Values`[cont.dat$pval<p.thr] <- paste0("signif. (P<", p.thr, ")")
-	cont.dat$FC <- paste0("less than ", 2^logfc.thr, "-fold")
-	cont.dat$FC[(cont.dat$logFC < -1*logfc.thr | cont.dat$logFC > logfc.thr)] <- paste0("more than ", 2^logfc.thr, "-fold")
-	filtdat <- cont.dat[cont.dat$pval < p.thr, ]
-	cat("    ", nrow(filtdat), "point(s) labelled...\n")
-	if (nrow(filtdat)>numlab) {
-		cat("     Restricting to", numlab, "...\n")
-		ix <- sort(filtdat$pval, index=T)$ix
-		filtdat <- filtdat[ix[1:numlab], ][order(ix[1:numlab]), ]
-	}
-	g <- ggplot(cont.dat, aes(x=logFC, y=-log10(pval), color=`P-Values`, fill=`P-Values`, size=FC))
-	g <- g + geom_point(alpha=0.4)
-	g <- g + scale_color_manual(values=c("#0066FF", "#CC0000"))
-	g <- g + geom_hline(aes(yintercept=-log10(0.05)), colour="red", linetype="dashed")
-	g <- g + geom_vline(aes(xintercept=1), colour="red", linetype="dashed")
-	g <- g + geom_vline(aes(xintercept=-1), colour="red", linetype="dashed")
-	g <- g + theme_bw(base_size = 10)
-	g <- g + ggtitle(main, "(P-values)")
-	g <- g + geom_text(data=cont.dat, aes(x=floor(min(logFC)), y=-log10(0.05)), label="p=0.05", nudge_x=-1.5, nudge_y=max(-log10(cont.dat$pval))/60, size=3, color="red")
-	g <- g + geom_text(x=0, y=-0.7, label="two-fold FC", size=3, color="red")
-	if (point.lab && nrow(filtdat)>0) {
-		g <- g + geom_text_repel(
-				data = filtdat,
-				aes(label = filtdat[[sym.col]]),
-				size = 5,
-				box.padding = unit(0.35, "lines"),
-				point.padding = unit(0.3, "lines"),
-				show.legend = F
-		)
-	}
-#			pdf(file.path(home, "differential_expression/chemosensitive_vs_chemoresistant_volcano.pdf"), width=12, height=12)
-	print(g)
-	g.l[["Pval"]] <- g
-	return(g.l)
-#			dev.off()
-#			plot(d3$logFC, -log10(d3$PValue), col=ifelse(d3$PValue<0.01,"red","black"), main="P-value volcano plot", xlab="log2FC", ylab="-log10(Pvalue)")
-#dev.off()
-}
+    if (point.lab) {
+      cont.dat <- d3[, c(id, sym.col, "logFC", pv.col, fdr.col)]
+      if (any(cont.dat$gene_symbol=="") || any(is.na(cont.dat$gene_symbol))) {
+        repl <- which(cont.dat$gene_symbol==""|is.na(cont.dat$gene_symbol))
+        cont.dat[repl, sym.col] <- cont.dat[repl, as.character(id)]
+      }
+    } else {
+      cont.dat <- d3[, c(id, "logFC", pv.col, fdr.col)]
+    }
+
+
+    g.l <- list()
+    g.l[["FDR"]] = prepare_volcano_of_given_property(data.df = cont.dat,
+                                                     property.to.plot = 'fdr',
+                                                     property.column = fdr.col,
+                                                     property.thr = fdr.thr,
+                                                     logfc.thr = logfc.thr,
+                                                     main = main,
+                                                     numlab = numlab,
+                                                     point.lab = TRUE,
+                                                     sym.col = sym.col)
+
+    g.l[["Pval"]] = prepare_volcano_of_given_property(data.df = cont.dat,
+                                                      property.to.plot = 'p',
+                                                      property.column = pv.col,
+                                                      property.thr = p.thr,
+                                                      logfc.thr = logfc.thr,
+                                                      main = main,
+                                                      numlab = numlab,
+                                                      point.lab = TRUE,
+                                                      sym.col = sym.col)
+
+
+
+    return(g.l)
+
+  }
 
 #' Function to generate a histogram of the P-Value distribution
 #' @export

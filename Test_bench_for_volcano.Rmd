@@ -66,7 +66,7 @@ diff_expr_volcano_plot <-
 				colour = "gray30",
 				box.padding = unit(0.35, "lines"),
 				point.padding = unit(0.3, "lines"),
-				show.legend = F
+				show.legend = FALSE
 		)
 	}
 	print(gfdr)
@@ -150,17 +150,19 @@ graphs = diff_expr_volcano_plot(d3, id=id, sym.col=sym.col, main=main, p.thr=p.t
     
 #Simplified and edited version with a subfunction:
 ```{r}
-prepare_volcano_of_given_property = function(data, property.to.plot, property.column,
+prepare_volcano_of_given_property = function(data.df, property.to.plot, property.column,
                                              property.thr, logfc.thr, main, 
                                              numlab, point.lab, sym.col){
   
-  data[,property.to.plot] <- data[[property.column]]
+  data.df[,property.to.plot] <- data.df[[property.column]]
   
   #formatted names to use in plot texts:
   property.formatted.name = toupper(property.to.plot)
   name.of.legend = paste0(property.formatted.name, "-values")
   legend.treshold.tag = paste0("signif. (", property.formatted.name) 
   subtitle.name = paste("(",")", sep=name.of.legend )
+  x.axis.name = "Logarithmic fold change"
+  y.axis.name = paste(property.formatted.name, "change 10", sep = " ")
   line.label.tag = "p" #except if we have FDR-values:
   if(property.to.plot == "fdr" ){
     line.label.tag = "q"
@@ -168,15 +170,15 @@ prepare_volcano_of_given_property = function(data, property.to.plot, property.co
   line_label_text = paste(line.label.tag, property.thr, sep = "=")
     
   #Constructing new bivalue column for legend values
-  data[,name.of.legend] <- "not signif."
-  data[,name.of.legend][data[,property.to.plot] < property.thr] <- paste(legend.treshold.tag, fdr.thr, sep="<")
+  data.df[,name.of.legend] <- "not signif."
+  data.df[,name.of.legend][data.df[,property.to.plot] < property.thr] <- paste(legend.treshold.tag, fdr.thr, sep="<")
   
   #Adding another bivalue column for magnitude of foldchange
-  data$FC <- paste0("less than ", 2^logfc.thr, "-fold")
-  data$FC[(data$logFC < -1*logfc.thr | data$logFC > logfc.thr)] <- paste0("more than ", 2^logfc.thr, "-fold")
+  data.df$FC <- paste0("less than ", 2^logfc.thr, "-fold")
+  data.df$FC[(data.df$logFC < -1*logfc.thr | data.df$logFC > logfc.thr)] <- paste0("more than ", 2^logfc.thr, "-fold")
   
-  #Filtering data to color points
-  filtdat <- data[ data[,property.to.plot] < property.thr, ]
+  #Filtering data.df to color points
+  filtdat <- data.df[ data.df[,property.to.plot] < property.thr, ]
   print(dim(filtdat))
   cat("    ", nrow(filtdat), "point(s) labelled...\n")
   if (nrow(filtdat) > numlab) {
@@ -187,15 +189,16 @@ prepare_volcano_of_given_property = function(data, property.to.plot, property.co
   print(dim(filtdat))
   
   
-  volcano.plot <- ggplot(data, aes(x = data$logFC, y = -log10(data[,property.to.plot]), 
-                                   color = data[,name.of.legend], fill=data[,name.of.legend]))
+  volcano.plot <- ggplot(data.df, aes(x = data.df$logFC, y = -log10(data.df[,property.to.plot]), 
+                                   color = data.df[[name.of.legend]]))
  
-  
   volcano.plot <- volcano.plot + geom_point(alpha=0.4, size=1.75)
   
+  volcano.plot <- volcano.plot + xlab(x.axis.name) + ylab(y.axis.name)
+  volcano.plot <- volcano.plot + labs(color = name.of.legend) #guides(color=guide_legend(legend.name))
  
   #volcano.plot <- volcano.plot + scale_color_manual(values=c("#0066FF", "#CC0000"))
-  volcano.plot <- volcano.plot + scale_x_continuous(breaks = scales::pretty_breaks(n=10)) + scale_y_continuous(breaks = scales::pretty_breaks(n=10))
+  #volcano.plot <- volcano.plot + scale_x_continuous(breaks = scales::pretty_breaks(n=10)) + scale_y_continuous(breaks = scales::pretty_breaks(n=10))
   
   volcano.plot <- volcano.plot + theme_bw(base_size = 10)
     
@@ -209,19 +212,22 @@ prepare_volcano_of_given_property = function(data, property.to.plot, property.co
       theme(plot.title = element_text(hjust = 0.5)) + 
       theme(plot.subtitle = element_text(hjust = 0.5))
     
-    volcano.plot <- volcano.plot + geom_text(data=data, aes(x=floor(min(data$logFC)), y=-log10(property.thr)), label = line_label_text, nudge_x=-1.5, nudge_y=max(-log10(data[,property.to.plot]))/60, size=3, color="red")
+    volcano.plot <- volcano.plot + geom_text(data=data.df, aes(x=floor(min(data.df$logFC)), y=-log10(property.thr)), label = line_label_text, nudge_x=-1.5, nudge_y=max(-log10(data.df[,property.to.plot]))/60, size=3, color="red")
     volcano.plot <- volcano.plot + geom_text(x=0, y=-0.7, label="two-fold FC", size=3, color="red")
     
+    print(volcano.plot)
+    
   if (point.lab && nrow(filtdat)>0) {
-   
+  print(filtdat$logFC)
+    print(filtdat[[property.to.plot]])
       volcano.plot <- volcano.plot + geom_text_repel(
         data = filtdat,
-        aes(label = filtdat[[sym.col]]),
-        size = 3,
-        colour = "gray30",
-        box.padding = unit(0.35, "lines"),
-        point.padding = unit(0.3, "lines"),
-        show.legend = F
+        aes(x= filtdat$logFC, y = -log10(filtdat[[property.to.plot]]), label = filtdat[[sym.col]]),
+            size = 3,
+            colour = "gray30",
+            box.padding = unit(0.35, "lines"),
+            point.padding = unit(0.3, "lines"),
+            show.legend = F
       )
       print(volcano.plot)
     }
@@ -231,7 +237,7 @@ prepare_volcano_of_given_property = function(data, property.to.plot, property.co
   
 ```
 
-    ```{r}
+```{r}
 diff_expr_volcano_plot <-
   function(d3, id, sym.col="gene_symbol", main=NULL, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE)
   {
@@ -250,7 +256,7 @@ diff_expr_volcano_plot <-
     
     
    g.l <- list()
-   g.l[["FDR"]] = prepare_volcano_of_given_property(data = cont.dat, 
+   g.l[["FDR"]] = prepare_volcano_of_given_property(data.df = cont.dat, 
                                                      property.to.plot = 'fdr', 
                                                      property.column = fdr.col, 
                                                      property.thr = fdr.thr, 
@@ -260,7 +266,7 @@ diff_expr_volcano_plot <-
                                                     point.lab = TRUE,
                                                     sym.col = sym.col)
    
-   # g.l[["Pval"]] = prepare_volcano_of_given_property(data = cont.dat, 
+   # g.l[["Pval"]] = prepare_volcano_of_given_property(data.df = cont.dat, 
    #                                                   property.to.plot = 'p', 
    #                                                   property.column = pv.col, 
    #                                                   property.thr = pv.thr, 
@@ -278,7 +284,19 @@ diff_expr_volcano_plot <-
 
 
 ``` 
-```{r}
+```{r fig.width = 6, fig.height=6}
+#Test data
+d3=read.table("Test_data_to_volcano.tsv")
+
+#Setting values:
+id="ID"
+sym.col="gene_symbol"
+main="Test volcano plot"
+p.thr = 0.05
+fdr.thr=0.05
+logfc.thr=1
+numlab=15
+
 graphs = diff_expr_volcano_plot(d3, id=id, sym.col=sym.col, main=main, p.thr=p.thr, fdr.thr=fdr.thr, logfc.thr=logfc.thr, numlab=numlab, point.lab=TRUE)
 graphs
 

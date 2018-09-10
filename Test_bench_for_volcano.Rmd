@@ -178,7 +178,7 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot, property
   data.df$FC[(data.df$logFC < -1*logfc.thr | data.df$logFC > logfc.thr)] <- paste0("more than ", 2^logfc.thr, "-fold")
   
   # Filtering data.df to color points
-  filtdat <- data.df[ data.df[[property.to.plot]] < property.thr, ]
+  filtdat <- data.df[ data.df[[property.to.plot]] < property.thr & abs(data.df$logFC) > logfc.thr, ]
   cat("    ", nrow(filtdat), "point(s) labelled...\n")
   if (nrow(filtdat) > numlab) {
     cat("     Restricting to", numlab, "...\n")
@@ -194,13 +194,15 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot, property
   volcano.plot <- volcano.plot + theme_bw(base_size = 10) 
   
    volcano.plot <- volcano.plot + theme(panel.border = element_blank(),
-       axis.line = element_line(color='black'))
+       axis.line = element_line(color='black'), 	
+        panel.grid.major = element_line(size = 0.2),
+       panel.grid.minor = element_line(size = 0.2))
   
   volcano.plot <- volcano.plot + xlab(x.axis.name) + ylab(y.axis.name)
   volcano.plot <- volcano.plot + labs(color = name.of.legend)
  
   #volcano.plot <- volcano.plot + scale_color_manual(values=c("#0066FF", "#CC0000"))
-  #volcano.plot <- volcano.plot + scale_x_continuous(breaks = scales::pretty_breaks(n=10)) + scale_y_continuous(breaks = scales::pretty_breaks(n=10))
+  volcano.plot <- volcano.plot + scale_x_continuous(breaks = scales::pretty_breaks(n=6)) + scale_y_continuous(breaks = scales::pretty_breaks(n=6))
   
   volcano.plot <- volcano.plot + geom_hline(aes(yintercept=-log10(property.thr)), colour="red", linetype="dashed")
   volcano.plot <- volcano.plot + geom_vline(aes(xintercept=logfc.thr), colour="red", linetype="dashed")
@@ -210,7 +212,7 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot, property
       theme(plot.title = element_text(hjust = 0.5)) + 
       theme(plot.subtitle = element_text(hjust = 0.5)) #hjust 0.5 for centering 
     
-    volcano.plot <- volcano.plot + geom_text(data=data.df, aes(x=floor(min(data.df$logFC)), y=-log10(property.thr)), label = line_label_text, nudge_x=-1, nudge_y=max(-log10(data.df[,property.to.plot]))/60, size=4, color="red")
+    volcano.plot <- volcano.plot + geom_text(data=data.df, aes(x=floor(min(data.df$logFC)), y=-log10(property.thr)), label = line_label_text, nudge_x=0.5, nudge_y=max(-log10(data.df[,property.to.plot]))/70, size=4, color="red")
     volcano.plot <- volcano.plot + geom_text(x=0, y=-0.7, label="two-fold FC", size=3, color="red")
     
   if (point.lab && nrow(filtdat)>0) {
@@ -261,17 +263,17 @@ diff_expr_volcano_plot <-
                                                     point.lab = TRUE,
                                                     sym.col = sym.col)
    
-   # g.l[["Pval"]] = prepare_volcano_of_given_property(data.df = cont.dat, 
-   #                                                   property.to.plot = 'p', 
-   #                                                   property.column = pv.col, 
-   #                                                   property.thr = pv.thr, 
-   #                                                   logfc.thr = logfc.thr,
-   #                                                   main = main, 
-   #                                                   numlab = numlab,
-   #                                                   point.lab = TRUE,
-   #                                                   sym.col = sym.col)
-   #  
-   #  
+   g.l[["Pval"]] = prepare_volcano_of_given_property(data.df = cont.dat,
+                                                     property.to.plot = 'p',
+                                                     property.column = pv.col,
+                                                     property.thr = p.thr,
+                                                     logfc.thr = logfc.thr,
+                                                     main = main,
+                                                     numlab = numlab,
+                                                     point.lab = TRUE,
+                                                     sym.col = sym.col)
+
+
     
     return(g.l)
     
@@ -279,7 +281,7 @@ diff_expr_volcano_plot <-
 
 
 ``` 
-```{r fig.width = 6, fig.height=6}
+```{r fig.width = 8, fig.height=10}
 #Test data
 d3=read.table("Test_data_to_volcano.tsv")
 

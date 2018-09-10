@@ -770,6 +770,8 @@ diff_expr_PCA_ggbiplot <-
 diff_expr_PCA_ggplot <-
 		function(PCA, samp.name=NULL, groups, grp.nam=NULL, PC=c(1,2), main=NULL)
 {
+		  ellipse=TRUE #TODO: add this to parameters
+
 	cat("    Preparing data...")
 	if (is.null(samp.name)) {
 		samp.n <- rownames(PCA$x)
@@ -788,9 +790,14 @@ diff_expr_PCA_ggplot <-
 	g <- ggplot(data=dataGG, aes(PCx, PCy, color=Condition))
 	g <- g + geom_point()
 	g <- g + ggtitle(paste0("PCA (", main, ")"))
-	g <- g + labs(x=paste0("PC", PC[1], ", VarExp:", round(percentVar[PC[1]], 4)),
-			y=paste0("PC", PC[2], ", VarExp:", round(percentVar[PC[2]], 4)))
+	g <- g + labs(x=paste0("PC", PC[1], ": ", round(percentVar[PC[1]], 4), "% variance explained"),
+			y=paste0("PC", PC[2], ": ", round(percentVar[PC[2]], 4), "% variance explained"))
 	g <- g + scale_colour_brewer(name=grp.nam, type="qual", palette=2)
+
+	if( ellipse ){
+	g = g + stat_ellipse(type = "t") #assumes a multivariate t-distribution
+	}
+
 	if (is.null(samp.name)) {
 		g <- g + geom_text_repel(aes(label=Sample),
 				data=dataGG,

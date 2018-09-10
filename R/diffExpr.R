@@ -794,6 +794,14 @@ diff_expr_PCA_ggplot <-
 			y=paste0("PC", PC[2], ": ", round(percentVar[PC[2]], 4), "% variance explained"))
 	g <- g + scale_colour_brewer(name=grp.nam, type="qual", palette=2)
 
+	g <- g + geom_point(alpha=0.4, size=1.75)
+	g <- g + theme_bw(base_size = 10)
+
+	g <- g + theme(panel.border = element_blank(),
+	                                     axis.line = element_line(color='black'),
+	                                     panel.grid.major = element_line(size = 0.2),
+	                                     panel.grid.minor = element_line(size = 0.2))
+
 	if( ellipse ){
 	g = g + stat_ellipse(type = "t") #assumes a multivariate t-distribution
 	}

@@ -159,7 +159,7 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot, property
   # Formatted names to use in plot texts:
   property.formatted.name = toupper(property.to.plot)
   name.of.legend = paste0(property.formatted.name, "-values")
-  legend.treshold.tag = paste0("signif. (", property.formatted.name) 
+  legend.treshold.tag = paste0("signif. (", property.formatted.name, "<", property.thr, " & ", "logFC>", logfc.thr, ")") 
   subtitle.name = paste("(",")", sep=name.of.legend )
   x.axis.name = "Logarithmic fold change"
   y.axis.name = paste(property.formatted.name, "change 10", sep = " ")
@@ -171,8 +171,7 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot, property
     
   # Constructing new bivalue column for legend values
   data.df[[name.of.legend]] <- "not signif."
-  #data.df[[name.of.legend]][data.df[[property.to.plot]] < property.thr] <- paste(legend.treshold.tag, fdr.thr, sep="<")
-  data.df[[name.of.legend]][data.df[[property.to.plot]] < property.thr & abs(data.df$logFC) > logfc.thr] <- paste(legend.treshold.tag, fdr.thr, sep="<")
+  data.df[[name.of.legend]][data.df[[property.to.plot]] < property.thr & abs(data.df$logFC) > logfc.thr] <- legend.treshold.tag
   
   # Adding another bivalue column for magnitude of foldchange
   data.df$FC <- paste0("less than ", 2^logfc.thr, "-fold")

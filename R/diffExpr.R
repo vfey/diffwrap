@@ -770,7 +770,7 @@ diff_expr_PCA_ggbiplot <-
 diff_expr_PCA_ggplot <-
 		function(PCA, samp.name=NULL, groups, grp.nam=NULL, PC=c(1,2), main=NULL)
 {
-		  ellipse=TRUE #TODO: add this to parameters
+		  ellipse=TRUE #TODO: add this to parameters?
 
 	cat("    Preparing data...")
 	if (is.null(samp.name)) {
@@ -788,15 +788,13 @@ diff_expr_PCA_ggplot <-
 	}
 	cat("done\n    Plotting...")
 	g <- ggplot(data=dataGG, aes(PCx, PCy, color=Condition))
-	g <- g + geom_point()
-	g <- g + ggtitle(paste0("PCA (", main, ")"))
+	g <- g + geom_point(size = 1.5)
+	g <- g + ggtitle(paste0("PCA (", main, ")")) + theme(plot.title = element_text(hjust = 0.5))
 	g <- g + labs(x=paste0("PC", PC[1], ": ", round(percentVar[PC[1]], 4), "% variance explained"),
 			y=paste0("PC", PC[2], ": ", round(percentVar[PC[2]], 4), "% variance explained"))
 	g <- g + scale_colour_brewer(name=grp.nam, type="qual", palette=2)
 
-	g <- g + geom_point(alpha=0.4, size=1.75)
 	g <- g + theme_bw(base_size = 10)
-
 	g <- g + theme(panel.border = element_blank(),
 	                                     axis.line = element_line(color='black'),
 	                                     panel.grid.major = element_line(size = 0.2),

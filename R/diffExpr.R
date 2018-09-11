@@ -768,9 +768,10 @@ diff_expr_PCA_ggbiplot <-
 #' Function to generate an ordinary two-dimensional PCA plot using `ggplot2`
 #' @export
 diff_expr_PCA_ggplot <-
-		function(PCA, samp.name=NULL, groups, grp.nam=NULL, PC=c(1,2), main=NULL)
+		function(PCA, samp.name=NULL, groups, grp.nam=NULL, PC=c(1,2), main=NULL, ellipse = TRUE, label.samples = TRUE,
+		         geom.point.size = 2, label.font.size = 5)
 {
-		  ellipse=TRUE #TODO: add this to parameters?
+
 
 	cat("    Preparing data...")
 	if (is.null(samp.name)) {
@@ -788,8 +789,8 @@ diff_expr_PCA_ggplot <-
 	}
 	cat("done\n    Plotting...")
 	g <- ggplot(data=dataGG, aes(PCx, PCy, color=Condition))
-	g <- g + geom_point(size = 1.5)
-	g <- g + ggtitle(paste0("PCA (", main, ")")) + theme(plot.title = element_text(hjust = 0.5))
+	g <- g + geom_point(size = geom.point.size)
+	g <- g + ggtitle(paste0("PCA (", main, ")"))
 	g <- g + labs(x=paste0("PC", PC[1], ": ", round(percentVar[PC[1]], 4), "% variance explained"),
 			y=paste0("PC", PC[2], ": ", round(percentVar[PC[2]], 4), "% variance explained"))
 	g <- g + scale_colour_brewer(name=grp.nam, type="qual", palette=2)
@@ -800,17 +801,19 @@ diff_expr_PCA_ggplot <-
 	                                     panel.grid.major = element_line(size = 0.2),
 	                                     panel.grid.minor = element_line(size = 0.2))
 
-	if( ellipse ){
+	if ( ellipse ){
 	g = g + stat_ellipse(type = "t") #assumes a multivariate t-distribution
 	}
 
+	if (label.samples){
 	if (is.null(samp.name)) {
 		g <- g + geom_text_repel(aes(label=Sample),
 				data=dataGG,
-				size = 5,
+				size = label.font.size,
 				box.padding = unit(0.35, "lines"),
 				point.padding = unit(0.3, "lines"),
 				show.legend = F)
+	}
 	}
 	print(g)
 	cat("done\n")

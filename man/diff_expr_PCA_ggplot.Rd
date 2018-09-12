@@ -5,7 +5,9 @@
 \title{Function to generate an ordinary two-dimensional PCA plot using `ggplot2`}
 \usage{
 diff_expr_PCA_ggplot(PCA, samp.name = NULL, groups, grp.nam = NULL,
-  PC = c(1, 2), main = NULL)
+  PC = c(1, 2), main = NULL, ellipse = TRUE,
+  ellipse.mapping.groups = NULL, label.samples = TRUE,
+  geom.point.size = 2, label.font.size = 5, plot.ellipse.legend = NA)
 }
 \description{
 Function to generate an ordinary two-dimensional PCA plot using `ggplot2`

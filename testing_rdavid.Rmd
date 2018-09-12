@@ -1,0 +1,108 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+library("RDAVIDWebService")
+library(readxl)
+```
+
+```{r}
+sign_DEGS = data.frame(readxl::read_excel("DEGresults_Mreg_UKR_vs_Mreg_Kiel_SIGN_withGOann.xlsx", skip = 1))
+all_DEGS = data.frame(readxl::read_excel("DEGresults_Mreg_UKR_vs_Mreg_Kiel_FULL.xlsx", skip = 1))
+```
+
+```{r}
+
+#if problems, see e.g. 
+#https://stackoverflow.com/questions/31480579/r-david-webservice-sudden-transport-error-301-error-moved-permanently
+david<-DAVIDWebService$new(email="meeri.pekkarinen@geneviatechnologies.com", url="https://david.ncifcrf.gov/webservice/services/DAVIDWebService.DAVIDWebServiceHttpSoap12Endpoint/")
+
+```
+```{r}
+# Defining foreground and background gene lists.
+# The foreground list should be contained within the background list.
+
+# > getIdTypes(david)
+#  [1] "AFFYMETRIX_3PRIME_IVT_ID" "AFFYMETRIX_EXON_ID"       "AGILENT_CHIP_ID"          "AGILENT_ID"              
+#  [5] "AGILENT_OLIGO_ID"         "APHIDBASE_ID"             "BEEBASE_ID"               "BEETLEBASE_ID"           
+#  [9] "BGD_ID"                   "CGNC_ID"                  "CRYPTODB_ID"              "DICTYBASE_ID"            
+# [13] "ENSEMBL_GENE_ID"          "ENSEMBL_TRANSCRIPT_ID"    "ENTREZ_GENE_ID"           "FLYBASE_GENE_ID"         
+# [17] "GENBANK_ACCESSION"        "GENOMIC_GI_ACCESSION"     "GENPEPT_ACCESSION"        "LOCUS_TAG"               
+# [21] "MGI_ID"                   "MIRBASE_ID"               "MRNA_GI_ACCESSION"        "NASONIABASE_ID"          
+# [25] "PROTEIN_GI_ACCESSION"     "PSEUDOCAP_ID"             "REFSEQ_MRNA"              "REFSEQ_PROTEIN"          
+# [29] "RGD_ID"                   "SGD_ID"                   "TAIR_ID"                  "UNIGENE"                 
+# [33] "UNIPROT_ACCESSION"        "UNIPROT_ID"               "VECTORBASE_ID"            "WORMBASE_GENE_ID"        
+# [37] "
+
+#getTimeOut(david)
+#[1] 30000        #Proved too small for at least the list of over 20 000 BG-genes
+
+setTimeOut(david, 60000)
+
+# Defining foreground and background gene lists.
+# The foreground list should be contained within the background list.
+FG <- addList(david, sign_DEGS$Ensembl.ID, idType="ENSEMBL_GENE_ID", listName="isClass", listType="Gene")
+BG <- addList(david, all_DEGS$Ensembl.ID, idType="ENSEMBL_GENE_ID", listName="all", listType="Background")
+
+#> FG$inDavid
+#[1] 0.8197142
+
+#> BG$inDavid
+#[1] 0.7692232
+
+```
+```{r}
+setAnnotationCategories(david, "GOTERM_BP_ALL")
+FuncAnnotChart <- getFunctionalAnnotationChart(david)
+colnames(FuncAnnotChart)
+termCluster<-getClusterReport(david, type="Term")
+```
+```{r}
+dim(FuncAnnotChart)
+#head(FuncAnnotChart[order(FuncAnnotChart$Benjamini), c("Term", "PValue", "Benjamini" )], 20)
+filtered_FuncAnnotChart = FuncAnnotChart[FuncAnnotChart$Benjamini < 0.05,]
+dim(filtered_FuncAnnotChart)
+
+filtered_FuncAnnotChart = filtered_FuncAnnotChart[order(filtered_FuncAnnotChart$Benjamini),]
+write.table(filtered_FuncAnnotChart, file="GOBP_DAVID_Mreg_UKR_vs_Mreg_Kiel_filtered.tsv", row.names = TRUE,
+         col.names = TRUE)
+```
+
+```{r, fig.height=6, fig.width=6}
+head(summary(termCluster), 20)
+#max(summary(termCluster)$Enrichment)
+#[1] 4.751006
+#min(summary(termCluster)$Enrichment)
+#[1] 9.891927e-12
+
+for( i in 1:dim(summary(termCluster))[1]){
+  if(summary(termCluster)$Members[i] > 10 && summary(termCluster)$Members[i] < 20 && summary(termCluster)$Enrichment[i] > 1.5){
+    clustNumber<-i
+    print(plot2D(termCluster, clustNumber))
+  }
+}
+```
+
+```{r, fig.height=10, fig.width=10}
+for( i in 1:dim(summary(termCluster))[1]){
+  if(summary(termCluster)$Members[i] > 10 && summary(termCluster)$Members[i] < 20 && summary(termCluster)$Enrichment[i] > 1.5){
+    clustNumber<-i
+     davidGODag<-DAVIDGODag(members(termCluster)[[clustNumber]], pvalueCutoff=0.05, "BP")
+     print(plotGOTermGraph(g=goDag(davidGODag), r=davidGODag, max.nchar=40, node.shape="ellipse"))
+     dev.off()
+  }
+}
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+

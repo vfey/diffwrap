@@ -772,7 +772,6 @@ diff_expr_PCA_ggplot <-
 		         geom.point.size = 2, label.font.size = 5)
 {
 
-
 	cat("    Preparing data...")
 	if (is.null(samp.name)) {
 		samp.n <- rownames(PCA$x)
@@ -784,17 +783,22 @@ diff_expr_PCA_ggplot <-
 
 	percentVar <- round(100*PCA$sdev^2/sum(PCA$sdev^2), 1)
 	dataGG <- data.frame(PCx=PCA$x[, PC[1]], PCy=PCA$x[, PC[2]], Condition=groups, Sample=samp.n)
+
+	#Additional grouping for ellipses if provided
+	if (!is.null(ellipse.mapping.groups)){
+	  dataGG$Ellipse = ellipse.mapping.groups
+	}
+
 	if (is.null(grp.nam)) {
 		grp.nam <- "Group"
 	}
 	cat("done\n    Plotting...")
+
 	g <- ggplot(data=dataGG, aes(PCx, PCy, color=Condition))
 	g <- g + geom_point(size = geom.point.size)
-	#g <- g + ggtitle(paste0("PCA (", main, ")"))
 	g <- g + labs(x=paste0("PC", PC[1], ": ", round(percentVar[PC[1]], 4), "% variance explained"),
 			y=paste0("PC", PC[2], ": ", round(percentVar[PC[2]], 4), "% variance explained"))
 	g <- g + scale_colour_brewer(name=grp.nam, type="qual", palette=2)
-
 	g <- g + theme_bw(base_size = 10)
 	g <- g + theme(panel.border = element_blank(),
 	                                     axis.line = element_line(color='black'),
@@ -802,10 +806,15 @@ diff_expr_PCA_ggplot <-
 	                                     panel.grid.minor = element_line(size = 0.2))
 
 	if ( ellipse ){
-	g = g + stat_ellipse(mapping = ellipse.mapping.groups, type = "t") #assumes a multivariate t-distribution
+	  if(is.null(ellipse.mapping.groups)){   # using default mapping
+	    g = g + stat_ellipse(type = "t")     # assumes a multivariate t-distribution
+	  }
+	  else{
+	    g = g + stat_ellipse(mapping = aes(PCx, PCy, linetype = Ellipse), type = "t", inherit.aes = FALSE)
+	  }
 	}
 
-	if (label.samples){
+	if (label.samples) {
 
 	  if (is.null(samp.name)) {
 		  g <- g + geom_text_repel(aes(label=Sample),

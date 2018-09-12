@@ -7,7 +7,7 @@ This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute
 
 Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
 
-```{r}
+```{r include=FALSE}
 library("RDAVIDWebService")
 library(readxl)
 ```
@@ -58,8 +58,10 @@ BG <- addList(david, all_DEGS$Ensembl.ID, idType="ENSEMBL_GENE_ID", listName="al
 
 ```
 ```{r}
-setAnnotationCategories(david, "GOTERM_BP_ALL")
-FuncAnnotChart <- getFunctionalAnnotationChart(david)
+setAnnotationCategories(david, c("GOTERM_BP_FAT", "KEGG_PATHWAY")) #one or more Term types can be given.
+#GOTERM_BP_FAT is more specific option than GOTERM_BP_ALL!
+
+FuncAnnotChart <- getFunctionalAnnotationChart(david, threshold=0.05, count=3L) #PValue < 0.05, at least 3 genes
 colnames(FuncAnnotChart)
 termCluster<-getClusterReport(david, type="Term")
 ```
@@ -70,7 +72,7 @@ filtered_FuncAnnotChart = FuncAnnotChart[FuncAnnotChart$Benjamini < 0.05,]
 dim(filtered_FuncAnnotChart)
 
 filtered_FuncAnnotChart = filtered_FuncAnnotChart[order(filtered_FuncAnnotChart$Benjamini),]
-write.table(filtered_FuncAnnotChart, file="GOBP_DAVID_Mreg_UKR_vs_Mreg_Kiel_filtered.tsv", row.names = TRUE,
+write.table(filtered_FuncAnnotChart, file="GOBP_DAVID_Mreg_UKR_vs_Mreg_Kiel_filtered.xls", row.names = FALSE,
          col.names = TRUE)
 ```
 

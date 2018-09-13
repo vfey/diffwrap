@@ -72,7 +72,10 @@ filtered_FuncAnnotChart = FuncAnnotChart[FuncAnnotChart$Benjamini < 0.05,]
 dim(filtered_FuncAnnotChart)
 
 filtered_FuncAnnotChart = filtered_FuncAnnotChart[order(filtered_FuncAnnotChart$Benjamini),]
-write.table(filtered_FuncAnnotChart, file="GOBP_DAVID_Mreg_UKR_vs_Mreg_Kiel_filtered.xls", row.names = FALSE,
+
+#Saving GO-terms only:
+write.table(filtered_FuncAnnotChart[filtered_FuncAnnotChart$Category == "GOTERM_BP_FAT",], 
+            file="GOBP_DAVID_Mreg_UKR_vs_Mreg_Kiel_filtered.xls", row.names = FALSE,
          col.names = TRUE)
 ```
 

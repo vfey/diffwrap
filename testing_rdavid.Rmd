@@ -10,6 +10,7 @@ Try executing this chunk by clicking the *Run* button within the chunk or by pla
 ```{r include=FALSE}
 library("RDAVIDWebService")
 library(readxl)
+library(medseqr)
 ```
 
 ```{r}
@@ -72,7 +73,22 @@ filtered_FuncAnnotChart = FuncAnnotChart[FuncAnnotChart$Benjamini < 0.05,]
 dim(filtered_FuncAnnotChart)
 
 filtered_FuncAnnotChart = filtered_FuncAnnotChart[order(filtered_FuncAnnotChart$Benjamini),]
-write.table(filtered_FuncAnnotChart, file="GOBP_DAVID_Mreg_UKR_vs_Mreg_Kiel_filtered.xls", row.names = FALSE,
+
+#Replacing ENSMBL IDS with symbolic names if found (otherwise ENSEMBL ID is kept)
+for( i in 1:dim(filtered_FuncAnnotChart)[1]){ 
+  genes = unlist(strsplit(filtered_FuncAnnotChart$Genes[i], split = ", "))
+  syms = convertId2(genes, "Human")
+  syms[is.na(syms)] = genes[is.na(syms)]
+  new_names = paste(syms,collapse=", ")
+  filtered_FuncAnnotChart$Genes[i] = new_names
+}
+
+#filtering out lines with Large Gene sets:
+filtered_FuncAnnotChart = filtered_FuncAnnotChart[filtered_FuncAnnotChart$Count <= 500,]
+
+#Saving GO-terms only:
+write.table(filtered_FuncAnnotChart[filtered_FuncAnnotChart$Category == "GOTERM_BP_FAT",], 
+            file="GOBP_DAVID_Mreg_UKR_vs_Mreg_Kiel_filtered.xls", row.names = FALSE,
          col.names = TRUE)
 ```
 

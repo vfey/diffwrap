@@ -768,71 +768,71 @@ diff_expr_PCA_ggbiplot <-
 #' Function to generate an ordinary two-dimensional PCA plot using `ggplot2`
 #' @export
 diff_expr_PCA_ggplot <-
-  function(PCA, samp.name=NULL, groups, grp.nam=NULL, PC=c(1,2), main=NULL, ellipse = TRUE, ellipse.mapping.groups = NULL, label.samples = TRUE,
-           geom.point.size = 2, label.font.size = 5, plot.ellipse.legend=NA)
-  {
-
-    cat("    Preparing data...")
-    if (is.null(samp.name)) {
-      samp.n <- rownames(PCA$x)
-    } else if (is.na(samp.name)) {
-      samp.n <- ""
-    } else {
-      stop("samp.name can only be 'NULL' to use the row names of the principal components matrix or 'NA' to be empty.")
-    }
-
-    percentVar <- round(100*PCA$sdev^2/sum(PCA$sdev^2), 1)
-    dataGG <- data.frame(PCx=PCA$x[, PC[1]], PCy=PCA$x[, PC[2]], Condition=groups, Sample=samp.n)
-
-    #Additional grouping for ellipses if provided
-    if (ellipse && !is.null(ellipse.mapping.groups)) {
-      dataGG$Ellipse <- ellipse.mapping.groups
-    } else {
-      dataGG$Ellipse <- groups
-    }
-    if (is.null(grp.nam)) {
-      grp.nam <- "Group"
-    }
-    cat("done\n    Plotting...\n")
-    g <- ggplot(data=dataGG, aes(PCx, PCy, color=Condition))
-    g <- g + geom_point(size = geom.point.size)
-    g <- g + ggtitle(paste0("PCA (", main, ")"))
-    g <- g + labs(x=paste0("PC", PC[1], ": ", round(percentVar[PC[1]], 4), "% variance explained"),
-                  y=paste0("PC", PC[2], ": ", round(percentVar[PC[2]], 4), "% variance explained"))
-    g <- g + scale_colour_brewer(name=grp.nam, type="qual", palette=3, direction=1)
-    g <- g + theme_bw(base_size = 10)
-    if (length(levels(dataGG$Condition))+length(levels(dataGG$Ellipse)) > 10) {
-      g <- g + theme(panel.background = element_rect(fill = "#f4f4f4")) # allows a maximum of 12 colours
-    }
-
-    g <- g + theme(panel.border = element_blank(),
-                   axis.line = element_line(color='black'),
-                   panel.grid.major = element_line(size = 0.2),
-                   panel.grid.minor = element_line(size = 0.2))
-
-    if ( ellipse ) {
-      cat("     Adding ellipse...\n")
-      if (identical(dataGG$Condition, dataGG$Ellipse)) {
-        g = g + stat_ellipse(type="t", show.legend=plot.ellipse.legend) #assumes a multivariate t-distribution
-      } else {
-        g = g + stat_ellipse(mapping = aes(PCx, PCy, linetype=Ellipse), type = "t", inherit.aes = F, show.legend=plot.ellipse.legend)
-      }
-    }
-
-    if (label.samples){
-      if (is.null(samp.name)) {
-        g <- g + geom_text_repel(aes(label=Sample),
-                                 data=dataGG,
-                                 size = label.font.size,
-                                 box.padding = unit(0.35, "lines"),
-                                 point.padding = unit(0.3, "lines"),
-                                 show.legend = F)
-      }
-    }
-    print(g)
-    cat("done\n")
-    return(g)
-  }
+		function(PCA, samp.name=NULL, groups, grp.nam=NULL, PC=c(1,2), main=NULL, ellipse = TRUE, ellipse.mapping.groups = NULL, label.samples = TRUE,
+				geom.point.size = 2, label.font.size = 5, plot.ellipse.legend=NA)
+{
+	
+	cat("    Preparing data...")
+	if (is.null(samp.name)) {
+		samp.n <- rownames(PCA$x)
+	} else if (is.na(samp.name)) {
+		samp.n <- ""
+	} else {
+		stop("samp.name can only be 'NULL' to use the row names of the principal components matrix or 'NA' to be empty.")
+	}
+	
+	percentVar <- round(100*PCA$sdev^2/sum(PCA$sdev^2), 1)
+	dataGG <- data.frame(PCx=PCA$x[, PC[1]], PCy=PCA$x[, PC[2]], Condition=groups, Sample=samp.n)
+	
+	#Additional grouping for ellipses if provided
+	if (ellipse && !is.null(ellipse.mapping.groups)) {
+		dataGG$Ellipse <- ellipse.mapping.groups
+	} else {
+		dataGG$Ellipse <- groups
+	}
+	if (is.null(grp.nam)) {
+		grp.nam <- "Group"
+	}
+	cat("done\n    Plotting...\n")
+	g <- ggplot(data=dataGG, aes(PCx, PCy, color=Condition))
+	g <- g + geom_point(size = geom.point.size)
+	g <- g + ggtitle(paste0("PCA (", main, ")"))
+	g <- g + labs(x=paste0("PC", PC[1], ": ", round(percentVar[PC[1]], 4), "% variance explained"),
+			y=paste0("PC", PC[2], ": ", round(percentVar[PC[2]], 4), "% variance explained"))
+	g <- g + scale_colour_brewer(name=grp.nam, type="qual", palette=3, direction=1) # allows a maximum of 12 colours
+	g <- g + theme_bw(base_size = 10) # if more than 10 groups yellow will be used which is not easily readable on white bg, so change bg to grey
+	if (length(levels(dataGG$Condition))+length(levels(dataGG$Ellipse)) > 10) {
+		g <- g + theme(panel.background = element_rect(fill = "#f4f4f4"))
+	}
+	
+	g <- g + theme(panel.border = element_blank(),
+			axis.line = element_line(color='black'),
+			panel.grid.major = element_line(size = 0.2),
+			panel.grid.minor = element_line(size = 0.2))
+	
+	if ( ellipse ) {
+		cat("     Adding ellipse...\n")
+		if (identical(dataGG$Condition, dataGG$Ellipse)) {
+			g = g + stat_ellipse(type="t", show.legend=plot.ellipse.legend) #assumes a multivariate t-distribution
+		} else {
+			g = g + stat_ellipse(mapping = aes(PCx, PCy, linetype=Ellipse), type = "t", inherit.aes = F, show.legend=plot.ellipse.legend)
+		}
+	}
+	
+	if (label.samples){
+		if (is.null(samp.name)) {
+			g <- g + geom_text_repel(aes(label=Sample),
+					data=dataGG,
+					size = label.font.size,
+					box.padding = unit(0.35, "lines"),
+					point.padding = unit(0.3, "lines"),
+					show.legend = F)
+		}
+	}
+	print(g)
+	cat("done\n")
+	return(g)
+}
 
 #' Function to generate a 3D scatterplot
 #' @export

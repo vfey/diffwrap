@@ -10,7 +10,8 @@ Try executing this chunk by clicking the *Run* button within the chunk or by pla
 ```{r include=FALSE}
 library("RDAVIDWebService")
 library(readxl)
-library(medseqr)
+library(readr)
+#library(medseqr)
 ```
 
 ```{r}
@@ -116,6 +117,24 @@ for( i in 1:dim(summary(termCluster))[1]){
      dev.off()
   }
 }
+```
+## Comparing the results with clusterProfiler
+```{r}
+clustProf_result = data.frame(readxl::read_excel("oraGOBP_clusterProfiler_Mreg_UKR_vs_Mreg_Kiel.xlsx"))
+
+david_result = read_excel("GOBP_DAVID_Mreg_UKR_vs_Mreg_Kiel_filtered2.xlsx")
+
+```
+
+```{r}
+GO_terms = sapply(strsplit(as.character(david_result$Term),'~'), "[", 1)
+descriptions = sapply(strsplit(as.character(david_result$Term),'~'), "[", 2)
+common_terms = intersect(GO_terms, clustProf_result$Term.ID)
+
+common_david_result = david_result[which( GO_terms %in% common_terms ),]
+unique_david_result = david_result[is.na(match(GO_terms, common_terms)),] #match() set indices of missingterms as "NA"
+
+venn(list(GO_terms,clustProf_result$Term.ID), c("DAVID", "ClusterProfiler"))
 ```
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.

@@ -1,6 +1,5 @@
 library("RDAVIDWebService")
 
-
 doDavidEnrichmentAnalysis = function(background.ensembl.ids,
                                      foregroung.ensembl.ids,
                                      email.address,

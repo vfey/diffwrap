@@ -1,8 +1,8 @@
 Package: diffr
 Type: Package
 Title: Differential Expression Analysis of RNA-Seq Data
-Version: 0.1-22
-Date: 2018-09-07
+Version: 0.1-23
+Date: 2018-09-19
 Authors@R: person("Vidal", "Fey", email = "vidal.fey@geneviatechnologies.com", role = c("aut", "cre"))
 Author: Vidal Fey <vidal.fey@geneviatechnologies.com>
 Description: This package provides functionality for differential expression analysis of read counts from mRNA sequencing data or miRNA expression values

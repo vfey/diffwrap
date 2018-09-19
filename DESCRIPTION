@@ -1,7 +1,7 @@
 Package: diffr
 Type: Package
 Title: Differential Expression Analysis of RNA-Seq Data
-Version: 0.1-23
+Version: 0.1-24
 Date: 2018-09-19
 Authors@R: person("Vidal", "Fey", email = "vidal.fey@geneviatechnologies.com", role = c("aut", "cre"))
 Author: Vidal Fey <vidal.fey@geneviatechnologies.com>

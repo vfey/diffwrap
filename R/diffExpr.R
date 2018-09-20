@@ -195,6 +195,15 @@ diffExpr <-
 			spn <- spn[match(colnames(d), spn$SampleNames), ]
 			if (identical(as.character(spn$SampleNames), colnames(d))) {
 				sample.plot.names <- as.character(spn[, sample.plot.names])
+				if (length(sample.plot.names)>4) {
+					spr <- paste0(paste(sQuote(sample.plot.names)[1:4], collapse=", "), "(, truncated...)\n")
+				} else {
+					spr <- paste0(paste(sQuote(sample.plot.names), collapse=", "), "(, truncated...)\n")
+				}
+				cat("  Using pretty labels for MDS plot:", spr)
+			} else {
+				cat("  NOTE: Sanity check for pretty names failed. Falling back to column names...\n")
+				sample.plot.names <- as.character(spn$SampleNames)
 			}
 		}
 		diff_expr_mds_plot(d, groups=groups, n=n, sample.plot.names=sample.plot.names, analysis.name=analysis.name, do.pdf=TRUE, out.dir=out.dir)
@@ -204,9 +213,9 @@ diffExpr <-
 	if (is.null(design)) {
 		design <- diff_expr_make_design(samp.info, groups, pairs, block)
 	} else {
-		grp.col <- grep(paste0("^", grp.name), colnames(design))
+		grp.col <- grep(paste0("^", grp.nam), colnames(design))
 		if (length(grp.col)) {
-			colnames(design)[grp.col] <- sub(paste0("^", grp.name), "groups", colnames(design)[grp.col])
+			colnames(design)[grp.col] <- sub(paste0("^", grp.nam), "groups", colnames(design)[grp.col])
 		}
 	}
 	if (length(grep(":", colnames(design)))) {

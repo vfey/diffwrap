@@ -195,6 +195,15 @@ diffExpr <-
 			spn <- spn[match(colnames(d), spn$SampleNames), ]
 			if (identical(as.character(spn$SampleNames), colnames(d))) {
 				sample.plot.names <- as.character(spn[, sample.plot.names])
+				if (length(sample.plot.names)>4) {
+					spr <- paste0(paste(sQuote(sample.plot.names)[1:4], collapse=", "), "(, truncated...)\n")
+				} else {
+					spr <- paste0(paste(sQuote(sample.plot.names), collapse=", "), "(, truncated...)\n")
+				}
+				cat("  Using pretty labels for MDS plot:", spr)
+			} else {
+				cat("  NOTE: Sanity check for pretty names failed. Falling back to column names...\n")
+				sample.plot.names <- as.character(spn$SampleNames)
 			}
 		}
 		diff_expr_mds_plot(d, groups=groups, n=n, sample.plot.names=sample.plot.names, analysis.name=analysis.name, do.pdf=TRUE, out.dir=out.dir)
@@ -204,9 +213,9 @@ diffExpr <-
 	if (is.null(design)) {
 		design <- diff_expr_make_design(samp.info, groups, pairs, block)
 	} else {
-		grp.col <- grep(paste0("^", grp.name), colnames(design))
+		grp.col <- grep(paste0("^", grp.nam), colnames(design))
 		if (length(grp.col)) {
-			colnames(design)[grp.col] <- sub(paste0("^", grp.name), "groups", colnames(design)[grp.col])
+			colnames(design)[grp.col] <- sub(paste0("^", grp.nam), "groups", colnames(design)[grp.col])
 		}
 	}
 	if (length(grep(":", colnames(design)))) {
@@ -624,7 +633,7 @@ diff_expr_extract_contrasts <-
 			pdf(file.path(out.dir, paste(analysis.name, contr, "_plots.pdf", sep="_")), width=11, height=8.5)
 			par(mar = c(6,6,5,3))
 			cat(" MA-plot...\n")
-			out.l$MAplots[[contr]] <- diff_expr_ma_plot(d3, contr, p.thr, fdr.thr, logfc.thr, numlab, out.dir, analysis.name, point.lab, biom.attributes, font.size, lists)
+			out.l$MAplots[[contr]] <- diff_expr_ma_plot(d3, contr, id.col, sym.col, p.thr, fdr.thr, logfc.thr, numlab, out.dir, analysis.name, point.lab, biom.attributes, font.size, lists)
 
 			## Volcano plot
 			cat(" Volcano plot...\n")
@@ -1156,6 +1165,16 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot = c("fdr"
 }
 
 #' Function to generate a Volcano plot using `ggplot2`
+#' @description `diff_expr_volcano_plot` generates two Volcano plots highlighing genes that are differentially expressed beyond custom thresholds for siginificance (set by parameters `p.thr` and fdr.thr`) and differential expression level (set by parameter `logfc.thr`).
+#' @param d3 \code{data.frame}. Data frame containing all necessary columns to generate a Volcano plot with gene labels (at least p-values, FDR values, log-ratios and gene symbols or other IDs)
+#' @param id \code{character}. Name of the gene ID column. Can be the same as `sym.col` but usually refers to an additional column with, e.g., Ensembl Gene IDs.
+#' @param sym.col \code{character}. Name of column with gene symbols, e.g., HGNC Symbols.
+#' @param main \code{character}. Main plot title. (Will be complemented with additional information, e.g., 'FDR' when labelling according to and FDR threshold.)
+#' @param p.thr \code{numeric}. Plotted values with a P-Value below this threshold will be labelled in the P-Value plot.
+#' @param fdr.thr \code{numeric}. Plotted values with a FDR below this threshold will be labelled in the FDR plot.
+#' @param logfc.thr \code{numeric}. Plotted (`abs`olute) values above this threshold will have bigger dots.
+#' @param numlab \code{numeric}. Maximum number of labels per plot. Supersedes numbers calculated based on `p.thr` and `fdr.thr`.
+#' @param point.lab \code{logical}. Should points be labelled, at all?
 #' @export
 diff_expr_volcano_plot <-
   function(d3, id, sym.col="gene_symbol", main=NULL, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE)

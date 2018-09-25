@@ -89,6 +89,14 @@ NULL
 #' @param bayes.trend \code{logical}. Should an intensity-trend be allowed for the prior variance? Passed to 'limma::eBayes'.
 #' @param bayes.robust \code{logical}. Should the estimation of df.prior and var.prior be robustified against outlier sample variances? Passed to 'limma::eBayes'.
 #' @param sym.col \code{character}. Name of the column in the query result with gene symbols
+#' @param ellipse \code{logical}. Should an ellipse be plottrd around samples belonging to the same sample group?
+#' @param ellipse.mapping.groups \code{character} vector of group names for ellipse drawing.
+#' @param label.samples \code{logical}. Should points in appropriate QC plots be labelled. So far, applies only to PCA ggplot.
+#' @param geom.point.size \code{numeric}. Size of points in appropriate QC plots. So far, applies only to PCA ggplot.
+#' @param label.font.size \code{numeric}. Font size used for point labels in appropriate QC plots. So far, applies only to PCA ggplot.
+#' @param plot.ellipse.legend \code{logical}. Should a legend be addded for ellipses in PCA plots? NA, the default, includes
+#'     if any aesthetics are mapped. FALSE never includes, and TRUE always includes. It can also be a named logical vector to finely select
+#'     the aesthetics to display.
 #'
 #' @details For experiemtal desgins involving comparisons within as well as between subjects inter-subject needs to be computed.
 #'     In this case, the column specified in the 'pairs' argument must assign the subjects to the treatment/tissue/etc groups.
@@ -110,6 +118,7 @@ diffExpr <-
 				host="www.ensembl.org", biom.filter="ensembl_gene_id", biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"), sym.col="hgnc_symbol",
 				rm.dups=FALSE, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE, min.samp=NULL, strict = TRUE, disp=c("gene", "trend", "common"), do.voom=FALSE,
 				voom.fun=voom, norm.method=c("tmm", "quantile"), bayes.trend=FALSE, bayes.robust=FALSE, n=500, gene.selection="common", ellipse=TRUE,
+				ellipse.mapping.groups=NULL, label.samples=TRUE, geom.point.size=2, label.font.size = 5, plot.ellipse.legend=NA,
 				circle=TRUE, varname.size=0, var.axes=FALSE, samp.lab=TRUE, PC=c(1,2,3), type=c("both", "uncorrected", "pseudo-corrected"), font.size=5,
 				plots=TRUE, lists=TRUE)
 {
@@ -277,8 +286,11 @@ diffExpr <-
 			} else {
 				type.plot <- "uncorrected, normalised DGEList"
 			}
-			out.l <- diff_expr_QC_plots(counts=normcnt, samp.info=samp.info, control=control, out.l=out.l, grp.nam=grp.nam, PC=PC, ellipse=ellipse, circle=circle, varname.size=varname.size,
-					var.axes=var.axes, samp.lab=samp.lab, pairs=pairs, pairs.name=pairs_col, gene.selection=gene.selection, n=n, type=type.plot, analysis.name=analysis.name, out.dir=out.dir)
+			out.l <- diff_expr_QC_plots(counts=normcnt, samp.info=samp.info, control=control, out.l=out.l, grp.nam=grp.nam, PC=PC,
+					ellipse=ellipse, ellipse.mapping.groups=ellipse.mapping.groups, label.samples=label.samples, geom.point.size=geom.point.size,
+					label.font.size = label.font.size, plot.ellipse.legend=plot.ellipse.legend, circle=circle, varname.size=varname.size,
+					var.axes=var.axes, samp.lab=samp.lab, pairs=pairs, pairs.name=pairs_col, gene.selection=gene.selection, n=n, type=type.plot,
+					analysis.name=analysis.name, out.dir=out.dir)
 		}
 
 		if (!block && !is.null(pairs) && (type %in% c("both", "pseudo-corrected"))) {
@@ -288,8 +300,11 @@ diffExpr <-
 			cat("   Calculating pseudo-counts...\n")
 			pseudo.counts <- diff_expr_pseudo_counts(design=design, d=d, pairs=pairs, disp=disp, do.cpm=TRUE)
 			cat("   done\n")
-			out.l <- diff_expr_QC_plots(counts=pseudo.counts, samp.info=samp.info, control=control, out.l=out.l, grp.nam=grp.nam, PC=PC, ellipse=ellipse, circle=circle, varname.size=varname.size,
-					var.axes=var.axes, samp.lab=samp.lab, pairs=pairs, pairs.name=pairs_col, gene.selection=gene.selection, n=n, type="pseudo-corrected, normalised DGEList", analysis.name=analysis.name, out.dir=out.dir)
+			out.l <- diff_expr_QC_plots(counts=pseudo.counts, samp.info=samp.info, control=control, out.l=out.l, grp.nam=grp.nam, PC=PC,
+					ellipse=ellipse, ellipse.mapping.groups=ellipse.mapping.groups, label.samples=label.samples, geom.point.size=geom.point.size,
+					label.font.size = label.font.size, plot.ellipse.legend=plot.ellipse.legend, circle=circle, varname.size=varname.size,
+					var.axes=var.axes, samp.lab=samp.lab, pairs=pairs, pairs.name=pairs_col, gene.selection=gene.selection, n=n,
+					type="pseudo-corrected, normalised DGEList", analysis.name=analysis.name, out.dir=out.dir)
 		}
 	}
 

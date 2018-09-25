@@ -7,8 +7,9 @@
 #' Main wrapper function for QC plots
 #' @export
 diff_expr_QC_plots <-
-		function(counts, samp.info, control, out.l, grp.nam=NULL, PC=c(1,2,3), ellipse=TRUE, circle=TRUE, varname.size=0, var.axes=FALSE, samp.lab=TRUE, pairs=NULL,
-				pairs.name=NULL, gene.selection="common", n=500, type=NULL, analysis.name=NULL, out.dir=NULL)
+		function(counts, samp.info, control, out.l, grp.nam=NULL, PC=c(1,2,3), ellipse=TRUE, ellipse.mapping.groups=NULL, label.samples=TRUE,
+				geom.point.size=2, label.font.size = 5, plot.ellipse.legend=NA, circle=TRUE, varname.size=0, var.axes=FALSE, samp.lab=TRUE,
+				pairs=NULL, pairs.name=NULL, gene.selection="common", n=500, type=NULL, analysis.name=NULL, out.dir=NULL)
 {
 	cat("  Doing PCA...\n")
 	PCA <- diff_expr_PCA(counts=counts, n=n)
@@ -28,11 +29,15 @@ diff_expr_QC_plots <-
 	pdf(pdf_file, width=11, height=11)
 	main <- paste(type, analysis.name)
 	cat("   MDS ggplot...\n")
-	out.l$QCplots[["MDS"]] <- diff_expr_ggplot_mds(counts=counts, samp.name=samp.name, groups=groups, grp.nam=grp.nam, pairs=pairs, pairs.name=pairs.name, gene.selection=gene.selection, dim.plot=PC[1:2], main=main)
+	out.l$QCplots[["MDS"]] <- diff_expr_ggplot_mds(counts=counts, samp.name=samp.name, groups=groups, grp.nam=grp.nam, pairs=pairs,
+			pairs.name=pairs.name, gene.selection=gene.selection, dim.plot=PC[1:2], main=main)
 	cat("   done.\n   PCA ggbiplot...\n")
-	out.l$QCplots[["PCAbiplot"]] <- diff_expr_PCA_ggbiplot(PCA=PCA, groups=groups, grp.nam=grp.nam, ellipse=ellipse, circle=circle, varname.size=varname.size, var.axes=var.axes, main=main)
+	out.l$QCplots[["PCAbiplot"]] <- diff_expr_PCA_ggbiplot(PCA=PCA, groups=groups, grp.nam=grp.nam, ellipse=ellipse, circle=circle,
+			varname.size=varname.size, var.axes=var.axes, main=main)
 	cat("   done.\n   PCA ggplot...\n")
-	out.l$QCplots[["PCAlabelledPlot"]] <- diff_expr_PCA_ggplot(PCA=PCA, samp.name=samp.name_pca, groups=groups, grp.nam=grp.nam, PC=c(1,2), main=main)
+	out.l$QCplots[["PCAlabelledPlot"]] <- diff_expr_PCA_ggplot(PCA=PCA, samp.name=samp.name_pca, groups=groups, grp.nam=grp.nam, PC=c(1,2), main=main,
+			ellipse=ellipse, ellipse.mapping.groups=ellipse.mapping.groups, label.samples=label.samples, geom.point.size=geom.point.size,
+			label.font.size = label.font.size, plot.ellipse.legend=plot.ellipse.legend)
 	cat("   done.\n   PCA 3d scatterplot...\n")
 	diff_expr_3d_scatterplot(PCA=PCA, samp.name=samp.name_pca, groups=groups, grp.nam=grp.nam, PC=PC[1:3], main=main)
 	cat("   done.\n   PCA cluster dendrogram...\n")
@@ -131,8 +136,10 @@ diff_expr_PCA_ggplot <-
 		samp.n <- rownames(PCA$x)
 	} else if (is.na(samp.name)) {
 		samp.n <- ""
+	} else if (identical(rownames(PCA$x), names(samp.name))) {
+		samp.n <- samp.name
 	} else {
-		stop("samp.name can only be 'NULL' to use the row names of the principal components matrix or 'NA' to be empty.")
+		stop("If not a named character vector of the same length and with identical names as 'rownames(PCA$x)' 'samp.name' can only be 'NULL' to use the row names of the principal components matrix or 'NA' to be empty.")
 	}
 	
 	percentVar <- round(100*PCA$sdev^2/sum(PCA$sdev^2), 1)
@@ -174,7 +181,7 @@ diff_expr_PCA_ggplot <-
 	}
 	
 	if (label.samples){
-		if (is.null(samp.name)) {
+		if (!is.na(samp.name)) {
 			g <- g + geom_text_repel(aes(label=Sample),
 					data=dataGG,
 					size = label.font.size,

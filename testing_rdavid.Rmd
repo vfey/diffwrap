@@ -1,0 +1,319 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r include=FALSE}
+library("RDAVIDWebService")
+library(readxl)
+library(readr)
+#library(medseqr)
+```
+
+```{r}
+sign_DEGS = data.frame(readxl::read_excel("DEGresults_Mreg_UKR_vs_Mreg_Kiel_SIGN_withGOann.xlsx", skip = 1))
+all_DEGS = data.frame(readxl::read_excel("DEGresults_Mreg_UKR_vs_Mreg_Kiel_FULL.xlsx", skip = 1))
+```
+
+```{r}
+
+#if problems, see e.g. 
+#https://stackoverflow.com/questions/31480579/r-david-webservice-sudden-transport-error-301-error-moved-permanently
+david<-DAVIDWebService$new(email="meeri.pekkarinen@geneviatechnologies.com", url="https://david.ncifcrf.gov/webservice/services/DAVIDWebService.DAVIDWebServiceHttpSoap12Endpoint/")
+
+```
+```{r}
+# Defining foreground and background gene lists.
+# The foreground list should be contained within the background list.
+
+# > getIdTypes(david)
+#  [1] "AFFYMETRIX_3PRIME_IVT_ID" "AFFYMETRIX_EXON_ID"       "AGILENT_CHIP_ID"          "AGILENT_ID"              
+#  [5] "AGILENT_OLIGO_ID"         "APHIDBASE_ID"             "BEEBASE_ID"               "BEETLEBASE_ID"           
+#  [9] "BGD_ID"                   "CGNC_ID"                  "CRYPTODB_ID"              "DICTYBASE_ID"            
+# [13] "ENSEMBL_GENE_ID"          "ENSEMBL_TRANSCRIPT_ID"    "ENTREZ_GENE_ID"           "FLYBASE_GENE_ID"         
+# [17] "GENBANK_ACCESSION"        "GENOMIC_GI_ACCESSION"     "GENPEPT_ACCESSION"        "LOCUS_TAG"               
+# [21] "MGI_ID"                   "MIRBASE_ID"               "MRNA_GI_ACCESSION"        "NASONIABASE_ID"          
+# [25] "PROTEIN_GI_ACCESSION"     "PSEUDOCAP_ID"             "REFSEQ_MRNA"              "REFSEQ_PROTEIN"          
+# [29] "RGD_ID"                   "SGD_ID"                   "TAIR_ID"                  "UNIGENE"                 
+# [33] "UNIPROT_ACCESSION"        "UNIPROT_ID"               "VECTORBASE_ID"            "WORMBASE_GENE_ID"        
+# [37] "
+
+#getTimeOut(david)
+#[1] 30000        #Proved too small for at least the list of over 20 000 BG-genes
+
+setTimeOut(david, 60000)
+
+# Defining foreground and background gene lists.
+# The foreground list should be contained within the background list.
+FG <- addList(david, sign_DEGS$Ensembl.ID, idType="ENSEMBL_GENE_ID", listName="isClass", listType="Gene")
+BG <- addList(david, all_DEGS$Ensembl.ID, idType="ENSEMBL_GENE_ID", listName="all", listType="Background")
+
+#> FG$inDavid
+#[1] 0.8197142
+
+#> BG$inDavid
+#[1] 0.7692232
+
+```
+```{r}
+#setAnnotationCategories(david, c("GOTERM_BP_FAT", "KEGG_PATHWAY")) #one or more Term types can be given.
+#GOTERM_BP_FAT is more specific option than GOTERM_BP_ALL!
+
+
+setAnnotationCategories(david, "GOTERM_BP_FAT")
+FuncAnnotChart <- getFunctionalAnnotationChart(david, threshold=0.05, count=3L) #PValue < 0.05, at least 3 genes
+colnames(FuncAnnotChart)
+termCluster<-getClusterReport(david, type="Term")
+```
+```{r}
+dim(FuncAnnotChart)
+#head(FuncAnnotChart[order(FuncAnnotChart$Benjamini), c("Term", "PValue", "Benjamini" )], 20)
+filtered_FuncAnnotChart = FuncAnnotChart[FuncAnnotChart$Benjamini < 0.05,]
+dim(filtered_FuncAnnotChart)
+
+filtered_FuncAnnotChart = filtered_FuncAnnotChart[order(filtered_FuncAnnotChart$Benjamini),]
+
+#Replacing ENSMBL IDS with symbolic names if found (otherwise ENSEMBL ID is kept)
+for( i in 1:dim(filtered_FuncAnnotChart)[1]){ 
+  genes = unlist(strsplit(filtered_FuncAnnotChart$Genes[i], split = ", "))
+  syms = convertId2(genes, "Human")
+  syms[is.na(syms)] = genes[is.na(syms)]
+  new_names = paste(syms,collapse=", ")
+  filtered_FuncAnnotChart$Genes[i] = new_names
+}
+
+#filtering out lines with Large Gene sets:
+filtered_FuncAnnotChart = filtered_FuncAnnotChart[filtered_FuncAnnotChart$Count <= 500,]
+
+#Saving GO-terms only:
+write.table(filtered_FuncAnnotChart[filtered_FuncAnnotChart$Category == "GOTERM_BP_FAT",], 
+            file="GOBP_DAVID_Mreg_UKR_vs_Mreg_Kiel_filtered.xls", row.names = FALSE,
+         col.names = TRUE)
+```
+
+```{r, fig.height=6, fig.width=6}
+head(summary(termCluster), 20)
+#max(summary(termCluster)$Enrichment)
+#[1] 4.751006
+#min(summary(termCluster)$Enrichment)
+#[1] 9.891927e-12
+
+for( i in 1:dim(summary(termCluster))[1]){
+  if(summary(termCluster)$Members[i] > 10 && summary(termCluster)$Members[i] < 20 && summary(termCluster)$Enrichment[i] > 1.5){
+    clustNumber<-i
+    print(plot2D(termCluster, clustNumber))
+  }
+}
+```
+
+```{r, fig.height=10, fig.width=10}
+for( i in 1:dim(summary(termCluster))[1]){
+  if(summary(termCluster)$Members[i] > 10 && summary(termCluster)$Members[i] < 20 && summary(termCluster)$Enrichment[i] > 1.5){
+    clustNumber<-i
+     davidGODag<-DAVIDGODag(members(termCluster)[[clustNumber]], pvalueCutoff=0.05, "BP")
+     print(plotGOTermGraph(g=goDag(davidGODag), r=davidGODag, max.nchar=40, node.shape="ellipse"))
+     dev.off()
+  }
+}
+```
+## Comparing the results with clusterProfiler
+```{r}
+clustProf_result = data.frame(readxl::read_excel("oraGOBP_clusterProfiler_Mreg_UKR_vs_Mreg_Kiel.xlsx"))
+
+david_result = read_excel("GOBP_DAVID_Mreg_UKR_vs_Mreg_Kiel_filtered2.xlsx")
+
+```
+
+```{r}
+GO_terms = sapply(strsplit(as.character(david_result$Term),'~'), "[", 1)
+descriptions = sapply(strsplit(as.character(david_result$Term),'~'), "[", 2)
+common_terms = intersect(GO_terms, clustProf_result$Term.ID)
+
+common_david_result = david_result[which( GO_terms %in% common_terms ),]
+unique_david_result = david_result[is.na(match(GO_terms, common_terms)),] #match() set indices of missingterms as "NA"
+
+library(venn)
+venn(list(GO_terms,clustProf_result$Term.ID), c("DAVID", "ClusterProfiler"))
+```
+```{r}
+library("RDAVIDWebService")
+
+# #Setting up the david interface (probably wiser to do outside a function:
+#   david <- DAVIDWebService$new(email= email.address, url = url.address)
+# 
+# 
+#   setTimeOut(david, time.out.value)
+# 
+#   #Setting up gene lists /ensembl_ids):
+#   FG <- addList(david, foregroung.ensembl.ids, idType="ENSEMBL_GENE_ID", listName="isClass", listType="Gene")
+#   BG <- addList(david, background.ensembl.ids, idType="ENSEMBL_GENE_ID", listName="all", listType="Background")
+
+doDavidEnrichmentAnalysis = function(BG,
+                                     FG,
+                                     david,
+                                     annotation.category = "GOTERM_BP_FAT",
+                                     pval.thr = 0.05,
+                                     max.gene.set.size = '',
+                                     save.result.table = FALSE){
+
+
+  
+
+  cat(FG$inDavid, " of the foreground genes in DAVID ")
+  cat(BG$inDavid, " of the foreground genes in DAVID ")
+
+  setAnnotationCategories(david, annotation.category)
+  FuncAnnotChart <- getFunctionalAnnotationChart(david, threshold=0.05, count=3L) #PValue < 0.05, at least 3 genes
+  print(dim(FuncAnnotChart))
+  
+  #Filtering and ordering the result based on adjusted p-value
+  filtered_FuncAnnotChart = FuncAnnotChart[FuncAnnotChart$Benjamini < pval.thr,]
+  filtered_FuncAnnotChart = filtered_FuncAnnotChart[order(filtered_FuncAnnotChart$Benjamini),]
+
+  #filtering out lines with Large Gene sets:
+  if(max.gene.set.size != ''){
+    filtered_FuncAnnotChart = filtered_FuncAnnotChart[filtered_FuncAnnotChart$Count <= max.gene.set.size,]
+  }
+
+  # ##Requires medseqr!! Replacing ENSMBL IDS with symbolic names if found (otherwise ENSEMBL ID is kept)
+  # for( i in 1:dim(filtered_FuncAnnotChart)[1]){
+  #   genes = unlist(strsplit(filtered_FuncAnnotChart$Genes[i], split = ", "))
+  #   syms = convertId2(genes, "Human")
+  #   syms[is.na(syms)] = genes[is.na(syms)]
+  #   new_names = paste(syms,collapse="/") #writing with /-separator (easier to read from file later)
+  #   filtered_FuncAnnotChart$Genes[i] = new_names
+  # }
+  #
+
+  #splitting the Term-column of original output into two columns
+  GO_terms = sapply(strsplit(as.character(filtered_FuncAnnotChart$Term),'~'), "[", 1)
+  descriptions = sapply(strsplit(as.character(filtered_FuncAnnotChart$Term),'~'), "[", 2)
+
+  result.table = data.frame(Term = GO_terms,
+                            Description = descriptions)
+  result.table = cbind(result.table, filtered_FuncAnnotChart[, colnames(filtered_FuncAnnotChart) != "Term"])
+
+  result.table = result.table[, c(1:2, 4, 8:10, 6, 13, 7)] #Taking only most interesting columns
+
+  if(save.result.table){
+    filename=paste0("DAVID.", annotation.category,".enrichment_table.xls" )
+    write.table(filtered_FuncAnnotChart,
+                file = result.table, row.names = FALSE,
+                col.names = TRUE)
+  }
+  return(filtered_FuncAnnotChart) # or would the result.table be better?
+}
+
+```
+```{r}
+doDavidEnrichmentAnalysis(BG=BG, FG=FG,
+                              david=david,
+                              annotation.category = "GOTERM_BP_FAT",
+                              pval.thr = 0.05,
+                              max.gene.set.size = '',
+                              save.result.table = FALSE)
+```
+
+```{r}
+doDavidEnrichmentAnalysis = function(background.ensembl.ids,
+                                     foregroung.ensembl.ids,
+                                     email.address,
+                                     url.address = "https://david.ncifcrf.gov/webservice/services/DAVIDWebService.DAVIDWebServiceHttpSoap12Endpoint/",
+                                     time.out.value = 60000,
+                                     annotation.category = "GOTERM_BP_FAT",
+                                     pval.thr = 0.05,
+                                     max.gene.set.size = '',
+                                     save.result.table = FALSE){
+
+
+  #Setting up the david interface (probably wiser to do outside a function:
+  david <- DAVIDWebService$new(email= email.address, url = url.address)
+
+
+  setTimeOut(david, time.out.value)
+
+  #Setting up gene lists /ensembl_ids):
+  FG <- addList(david, foregroung.ensembl.ids, idType="ENSEMBL_GENE_ID", listName="isClass", listType="Gene")
+  BG <- addList(david, background.ensembl.ids, idType="ENSEMBL_GENE_ID", listName="all", listType="Background")
+
+  cat(FG$inDavid, " of the foreground genes in DAVID")
+  cat(BG$inDavid, " of the foreground genes in DAVID")
+
+  setAnnotationCategories(david, annotation.category)
+  FuncAnnotChart <- getFunctionalAnnotationChart(david) #, threshold=pval.thr, count=3L) #PValue < 0.05, at least 3 genes
+
+  #Filtering and ordering the result based on adjusted p-value
+  filtered_FuncAnnotChart = FuncAnnotChart[FuncAnnotChart$Benjamini < pval.thr,]
+  filtered_FuncAnnotChart = filtered_FuncAnnotChart[order(filtered_FuncAnnotChart$Benjamini),]
+
+  #filtering out lines with Large Gene sets:
+  if(max.gene.set.size != ''){
+    filtered_FuncAnnotChart = filtered_FuncAnnotChart[filtered_FuncAnnotChart$Count <= max.gene.set.size,]
+  }
+
+  # ##Requires medseqr!! Replacing ENSMBL IDS with symbolic names if found (otherwise ENSEMBL ID is kept)
+  # for( i in 1:dim(filtered_FuncAnnotChart)[1]){
+  #   genes = unlist(strsplit(filtered_FuncAnnotChart$Genes[i], split = ", "))
+  #   syms = convertId2(genes, "Human")
+  #   syms[is.na(syms)] = genes[is.na(syms)]
+  #   new_names = paste(syms,collapse="/") #writing with /-separator (easier to read from file later)
+  #   filtered_FuncAnnotChart$Genes[i] = new_names
+  # }
+  #
+
+  #splitting the Term-column of original output into two columns
+  GO_terms = sapply(strsplit(as.character(filtered_FuncAnnotChart$Term),'~'), "[", 1)
+  descriptions = sapply(strsplit(as.character(filtered_FuncAnnotChart$Term),'~'), "[", 2)
+
+  result.table = data.frame(Term = GO_terms,
+                            Description = descriptions)
+  result.table = cbind(result.table, filtered_FuncAnnotChart[, colnames(filtered_FuncAnnotChart) != "Term"])
+
+  result.table = result.table[, c(1:2, 4, 8:10, 6, 13, 7)] #Taking only most interesting columns
+
+  if(save.result.table){
+    filename=paste0("DAVID.", annotation.category,".enrichment_table.xls" )
+    write.table(filtered_FuncAnnotChart,
+                file = result.table, row.names = FALSE,
+                col.names = TRUE)
+  }
+  return(filtered_FuncAnnotChart) # or would the result.table be better?
+}
+
+
+test = doDavidEnrichmentAnalysis(background.ensembl.ids = sign_DEGS$Ensembl.ID, 
+                                     foregroung.ensembl.ids = all_DEGS$Ensembl.ID, 
+                                     email.address = "meeri.pekkarinen@geneviatechnologies.com", 
+                                     url.address = "https://david.ncifcrf.gov/webservice/services/DAVIDWebService.DAVIDWebServiceHttpSoap12Endpoint/",
+                                     time.out.value = 60000, 
+                                     annotation.category = "GOTERM_BP_FAT",
+                                     pval.thr = 0.05,
+                                     max.gene.set.size = 500,
+                                     save.result.table = FALSE)
+  
+```
+
+```{r}
+GO_terms = sapply(strsplit(as.character(filtered_FuncAnnotChart$Term),'~'), "[", 1)
+  descriptions = sapply(strsplit(as.character(filtered_FuncAnnotChart$Term),'~'), "[", 2)
+  
+  result.table = data.frame(Term = GO_terms,
+                            Description = descriptions)
+  result.table = cbind(result.table, filtered_FuncAnnotChart[, colnames(filtered_FuncAnnotChart) != "Term"])
+  
+ head(result.table)
+
+  result.table = result.table[, c(1:2, 4, 8:10, 6, 13, 7)] 
+   head(result.table)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+

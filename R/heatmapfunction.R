@@ -99,7 +99,9 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
                            show_colnames = T, show_rownames = T,
                            cluster_rows = row.clust, cluster_cols = col.clust,
                            legend = legend.fl, border_color = "white",
-                           scale = scale.fl, color = colour, breaks = breaks.hm,legend == TR)
+                           scale = scale.fl, color = colour, breaks = breaks.hm, 
+                           cellwidth = cell.size, cellheight = cell.size, fontsize = font.size,
+                           fontsize_row = cell.size, fontsize_col = cell.size, silent = TRUE)
     
   }
   else {
@@ -249,7 +251,7 @@ sample_class = as.data.frame(sample_class)
 
 
 my_pheatmap = diffr_pheatmap(expr.mat = data_heatmap, clinical.mat = sample_class,
-                             scale.fl = "row", biserial.fl = TRUE)
+                             scale.fl = "none", biserial.fl = TRUE)
 my_pheatmap$regular
 # 
 # b = as.data.frame(readxl::read_excel("pharmaxis_annotation.xlsx"))

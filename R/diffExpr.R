@@ -1160,20 +1160,6 @@ diff_expr_pval_hist_plot <-
 	hist(d3[[pv.col]],breaks=20, xlab="P Value", ylab="Frequency", main="P-value distribution")
 }
 
-
-#' Function to generate a heatmap
-#' @export
-diff_expr_pval_hist_plot <-
-  function(expr.mat, clinical.mat, legend.fl = TRUE, row.clust = TRUE, col.clust = TRUE, biserial.fl = FALSE)
-  {
-    if(!missing(clinical.mat)) {
-      pheatmap(expr.mat,
-               show_colnames = T, show_rownames = T, cluster_rows = T, cluster_cols = T, legend = legend.fl,
-               border_color = "white", scale = "row", annotation = clinical.mat, annotation_row = correlation_group)
-    }
-
-  }
-
 #function by: Kamil Slowikowski, https://github.com/slowkow/slowkow.com/blob/master/_rmd/2017-02-16-heatmap-tutorial.R,
 #defines quantile breaks to be used for changing the palette of the heatmap
 
@@ -1275,7 +1261,9 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
                            show_colnames = T, show_rownames = T,
                            cluster_rows = row.clust, cluster_cols = col.clust,
                            legend = legend.fl, border_color = "white",
-                           scale = scale.fl, color = colour, breaks = breaks.hm,legend == TR)
+                           scale = scale.fl, color = colour, breaks = breaks.hm, 
+                           cellwidth = cell.size, cellheight = cell.size, fontsize = font.size,
+                           fontsize_row = cell.size, fontsize_col = cell.size, silent = TRUE)
     
   }
   else {

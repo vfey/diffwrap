@@ -7,8 +7,9 @@
 #' Main wrapper function for QC plots
 #' @export
 diff_expr_QC_plots <-
-		function(counts, samp.info, control, out.l, grp.nam=NULL, PC=c(1,2,3), ellipse=TRUE, ellipse.mapping.groups=NULL, label.samples=TRUE,
-				geom.point.size=2, label.font.size = 5, plot.ellipse.legend=NA, circle=TRUE, varname.size=0, var.axes=FALSE, samp.lab=TRUE,
+		function(counts, samp.info, control, out.l, grp.nam=NULL, PC=c(1,2,3), sample.plot.names=NULL,
+				ellipse=TRUE, ellipse.mapping.groups=NULL, ellipse.grp.nam=NULL, label.samples=TRUE,
+				geom.point.size=2, label.font.size = 5, plot.ellipse.legend=NA, circle=TRUE, varname.size=0, var.axes=FALSE,
 				pairs=NULL, pairs.name=NULL, gene.selection="common", n=500, type=NULL, analysis.name=NULL, out.dir=NULL)
 {
 	cat("  Doing PCA...\n")
@@ -16,10 +17,6 @@ diff_expr_QC_plots <-
 	cat("  done\n")
 	groups <- relevel(samp.info$Groups, ref=control)
 	samp.name <- samp.info$SampleNames
-	samp.name_pca <- NA
-	if (samp.lab) {
-		samp.name_pca <- NULL
-	}
 	main <- paste(type, analysis.name, sep="_")
 	main <- gsub("\\.{1,}", "_", make.names(main))
 	out.l$QCplots <- list()
@@ -35,11 +32,11 @@ diff_expr_QC_plots <-
 	out.l$QCplots[["PCAbiplot"]] <- diff_expr_PCA_ggbiplot(PCA=PCA, groups=groups, grp.nam=grp.nam, ellipse=ellipse, circle=circle,
 			varname.size=varname.size, var.axes=var.axes, main=main)
 	cat("   done.\n   PCA ggplot...\n")
-	out.l$QCplots[["PCAlabelledPlot"]] <- diff_expr_PCA_ggplot(PCA=PCA, samp.name=samp.name_pca, groups=groups, grp.nam=grp.nam, PC=c(1,2), main=main,
-			ellipse=ellipse, ellipse.mapping.groups=ellipse.mapping.groups, label.samples=label.samples, geom.point.size=geom.point.size,
-			label.font.size = label.font.size, plot.ellipse.legend=plot.ellipse.legend)
+	out.l$QCplots[["PCAlabelledPlot"]] <- diff_expr_PCA_ggplot(PCA=PCA, samp.name=sample.plot.names, groups=groups, grp.nam=grp.nam, PC=c(1,2),
+			main=main, ellipse=ellipse, ellipse.mapping.groups=ellipse.mapping.groups, ellipse.grp.nam=ellipse.grp.nam, label.samples=label.samples,
+			geom.point.size=geom.point.size, label.font.size = label.font.size, plot.ellipse.legend=plot.ellipse.legend)
 	cat("   done.\n   PCA 3d scatterplot...\n")
-	diff_expr_3d_scatterplot(PCA=PCA, samp.name=samp.name_pca, groups=groups, grp.nam=grp.nam, PC=PC[1:3], main=main)
+	diff_expr_3d_scatterplot(PCA=PCA, samp.name=sample.plot.names, groups=groups, grp.nam=grp.nam, PC=PC[1:3], main=main)
 	cat("   done.\n   PCA cluster dendrogram...\n")
 	diff_expr_dendro_plot(counts=counts, groups=groups, grp.nam=grp.nam, main=main)
 	cat("   done.\n")
@@ -127,33 +124,43 @@ diff_expr_PCA_ggbiplot <-
 #' Function to generate an ordinary two-dimensional PCA plot using `ggplot2`
 #' @export
 diff_expr_PCA_ggplot <-
-		function(PCA, samp.name=NULL, groups, grp.nam=NULL, PC=c(1,2), main=NULL, ellipse = TRUE, ellipse.mapping.groups = NULL, label.samples = TRUE,
-				geom.point.size = 2, label.font.size = 5, plot.ellipse.legend=NA)
+		function(PCA, samp.name=NULL, groups, grp.nam=NULL, PC=c(1,2), main=NULL, ellipse = TRUE, ellipse.mapping.groups=NULL, ellipse.grp.nam=NULL,
+				label.samples = TRUE, geom.point.size = 2, label.font.size = 5, plot.ellipse.legend=NA)
 {
 	
 	cat("    Preparing data...")
 	if (is.null(samp.name)) {
 		samp.n <- rownames(PCA$x)
-	} else if (is.na(samp.name)) {
+	} else if (length(samp.name)==1 && is.na(samp.name)) {
 		samp.n <- ""
 	} else if (identical(rownames(PCA$x), names(samp.name))) {
 		samp.n <- samp.name
 	} else {
-		stop("If not a named character vector of the same length and with identical names as 'rownames(PCA$x)' 'samp.name' can only be 'NULL' to use the row names of the principal components matrix or 'NA' to be empty.")
+		samp.n <- NULL
+		warning("If not a named character vector of the same length and with identical names as 'rownames(PCA$x)' 'samp.name' can only be 'NULL' to use the row names of the principal components matrix or 'NA' to be empty.")
 	}
 	
 	percentVar <- round(100*PCA$sdev^2/sum(PCA$sdev^2), 1)
-	dataGG <- data.frame(PCx=PCA$x[, PC[1]], PCy=PCA$x[, PC[2]], Condition=groups, Sample=samp.n)
+	dataGG <- data.frame(PCx=PCA$x[, PC[1]], PCy=PCA$x[, PC[2]], Condition=groups, Sample = { if (!is.null(samp.n)) { samp.n } else { "" }})
+	
+	if (is.null(grp.nam)) {
+		grp.nam <- "Group"
+	}
+	if (is.null(ellipse.grp.nam)) {
+		eg <- "Ellipse"
+	}
 	
 	#Additional grouping for ellipses if provided
 	if (ellipse && !is.null(ellipse.mapping.groups)) {
 		dataGG$Ellipse <- ellipse.mapping.groups
+		eg <- ellipse.grp.nam
 	} else {
 		dataGG$Ellipse <- groups
+		eg <- grp.nam
 	}
-	if (is.null(grp.nam)) {
-		grp.nam <- "Group"
-	}
+	## determine minimum group size to generate feedback on potentially missing ellipses
+	grp.size <- plyr::daply(dataGG, .(Ellipse), nrow)
+	
 	cat("done\n    Plotting...\n")
 	g <- ggplot(data=dataGG, aes(PCx, PCy, color=Condition))
 	g <- g + geom_point(size = geom.point.size)
@@ -172,16 +179,21 @@ diff_expr_PCA_ggplot <-
 			panel.grid.minor = element_line(size = 0.2))
 	
 	if ( ellipse ) {
-		cat("     Adding ellipse...\n")
-		if (identical(dataGG$Condition, dataGG$Ellipse)) {
-			g = g + stat_ellipse(type="t", show.legend=plot.ellipse.legend) #assumes a multivariate t-distribution
+		if (min(grp.size<4)) {
+			cat("    # NOTE: Too few samples in one or more groups. Some or all ellipses may not be plotted.\n")
+		}
+		cat("     Adding ellipse...\n     Using", sQuote(eg), "for ellipse mapping\n")
+		if (is.null(ellipse.mapping.groups)) {
+			cat("      Plotting ellipses around main sample groups...\n")
+			g <- g + stat_ellipse(type="t", show.legend=plot.ellipse.legend) #assumes a multivariate t-distribution
 		} else {
-			g = g + stat_ellipse(mapping = aes(PCx, PCy, linetype=Ellipse), type = "t", inherit.aes = F, show.legend=plot.ellipse.legend)
+			cat("      Plotting ellipses around second factor groups...\n")
+			g <- g + stat_ellipse(mapping = aes(PCx, PCy, linetype=Ellipse), type = "t", inherit.aes = F, show.legend=plot.ellipse.legend)
 		}
 	}
 	
 	if (label.samples){
-		if (!is.na(samp.name)) {
+		if (!is.null(samp.n)) {
 			g <- g + geom_text_repel(aes(label=Sample),
 					data=dataGG,
 					size = label.font.size,
@@ -202,11 +214,14 @@ diff_expr_3d_scatterplot <-
 {
 	cat("    Preparing data...")
 	if (is.null(samp.name)) {
-		samp.name <- rownames(PCA$x)
+		samp.n <- rownames(PCA$x)
 	} else if (is.na(samp.name)) {
-		samp.name <- ""
+		samp.n <- ""
+	} else if (identical(rownames(PCA$x), names(samp.name))) {
+		samp.n <- samp.name
 	} else {
-		stop("samp.name can only be 'NULL' to use the row names of the principal components matrix or 'NA' to be empty.")
+		samp.n <- NULL
+		warning("If not a named character vector of the same length and with identical names as 'rownames(PCA$x)' 'samp.name' can only be 'NULL' to use the row names of the principal components matrix or 'NA' to be empty.")
 	}
 	
 	percentVar <- round(100*PCA$sdev^2/sum(PCA$sdev^2), 1)
@@ -231,7 +246,7 @@ diff_expr_3d_scatterplot <-
 	cat("     point labels...\n")
 	s3d.coords <- s3d$xyz.convert(dat[,1:3])
 	text(s3d.coords$x, s3d.coords$y,     # x and y coordinates
-			labels=samp.name,       # text to plot
+			labels=samp.n,       # text to plot
 			pos=4, cex=.5)                  # shrink text 50% and place to right of points)
 # add the legend
 	cat("     legend...\n")

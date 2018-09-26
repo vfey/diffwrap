@@ -90,7 +90,8 @@ NULL
 #' @param bayes.robust \code{logical}. Should the estimation of df.prior and var.prior be robustified against outlier sample variances? Passed to 'limma::eBayes'.
 #' @param sym.col \code{character}. Name of the column in the query result with gene symbols
 #' @param ellipse \code{logical}. Should an ellipse be plottrd around samples belonging to the same sample group?
-#' @param ellipse.mapping.groups \code{character} vector of group names for ellipse drawing.
+#' @param ellipse.mapping.groups \code{character} The name of the column in 'samp.info' with group names for ellipse drawing. If \code{NULL} (default)
+#'     will use the \code{groups} column. If 'samp.info' is not supplied vector of groups.
 #' @param label.samples \code{logical}. Should points in appropriate QC plots be labelled. So far, applies only to PCA ggplot.
 #' @param geom.point.size \code{numeric}. Size of points in appropriate QC plots. So far, applies only to PCA ggplot.
 #' @param label.font.size \code{numeric}. Font size used for point labels in appropriate QC plots. So far, applies only to PCA ggplot.
@@ -119,7 +120,7 @@ diffExpr <-
 				rm.dups=FALSE, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE, min.samp=NULL, strict = TRUE, disp=c("gene", "trend", "common"), do.voom=FALSE,
 				voom.fun=voom, norm.method=c("tmm", "quantile"), bayes.trend=FALSE, bayes.robust=FALSE, n=500, gene.selection="common", ellipse=TRUE,
 				ellipse.mapping.groups=NULL, label.samples=TRUE, geom.point.size=2, label.font.size = 5, plot.ellipse.legend=NA,
-				circle=TRUE, varname.size=0, var.axes=FALSE, samp.lab=TRUE, PC=c(1,2,3), type=c("both", "uncorrected", "pseudo-corrected"), font.size=5,
+				circle=TRUE, varname.size=0, var.axes=FALSE, PC=c(1,2,3), type=c("both", "uncorrected", "pseudo-corrected"), font.size=5,
 				plots=TRUE, lists=TRUE)
 {
 	## initial checks
@@ -168,10 +169,11 @@ diffExpr <-
 	## standardize samp.info
 	### needs to be a data.frame with (at least) two columns: 'SampleNames' and 'Groups'
 	### if a data.frame is provided by the 'samp.info' argument the columns are renamed to meet that convention
-	#### save Groups name first
+	#### save Groups name and ellipse mapping groups name first
+	ellipse.grp.nam <- ellipse.mapping.groups
 	grp.nam <- groups
 	#### reformat samp.info data frame
-	samp.info <- diff_expr_get_samp_info(samp.info, samples, groups)
+	samp.info <- diff_expr_get_samp_info(samp.info, samples, groups, ellipse.mapping.groups)
 
 	## make control group first levels to ensure it becomes the '(Intercept)'
 	cat("  Setting control group...\n")
@@ -179,6 +181,10 @@ diffExpr <-
 		control <- paste0("group_", control)
 	}
 	groups <- relevel(samp.info$Groups, ref=control)
+	
+	#### extract vector of ellipse group names from samp.info 
+	ellipse.mapping.groups <- samp.info$Ellipse
+	
 
 	if (is.null(analysis.name)) {
 		analysis.name <- paste0(paste(levels(groups)[1:2], collapse="_"), "_")
@@ -214,6 +220,7 @@ diffExpr <-
 				cat("  NOTE: Sanity check for pretty names failed. Falling back to column names...\n")
 				sample.plot.names <- as.character(spn$SampleNames)
 			}
+			names(sample.plot.names) <- colnames(d)
 		}
 		diff_expr_mds_plot(d, groups=groups, n=n, sample.plot.names=sample.plot.names, analysis.name=analysis.name, do.pdf=TRUE, out.dir=out.dir)
 	}
@@ -287,10 +294,11 @@ diffExpr <-
 				type.plot <- "uncorrected, normalised DGEList"
 			}
 			out.l <- diff_expr_QC_plots(counts=normcnt, samp.info=samp.info, control=control, out.l=out.l, grp.nam=grp.nam, PC=PC,
-					ellipse=ellipse, ellipse.mapping.groups=ellipse.mapping.groups, label.samples=label.samples, geom.point.size=geom.point.size,
-					label.font.size = label.font.size, plot.ellipse.legend=plot.ellipse.legend, circle=circle, varname.size=varname.size,
-					var.axes=var.axes, samp.lab=samp.lab, pairs=pairs, pairs.name=pairs_col, gene.selection=gene.selection, n=n, type=type.plot,
-					analysis.name=analysis.name, out.dir=out.dir)
+					sample.plot.names=sample.plot.names,
+					ellipse=ellipse, ellipse.mapping.groups=ellipse.mapping.groups, ellipse.grp.nam=ellipse.grp.nam, label.samples=label.samples,
+					geom.point.size=geom.point.size, label.font.size = label.font.size, plot.ellipse.legend=plot.ellipse.legend, circle=circle,
+					varname.size=varname.size, var.axes=var.axes, pairs=pairs, pairs.name=pairs_col, gene.selection=gene.selection, n=n,
+					type=type.plot, analysis.name=analysis.name, out.dir=out.dir)
 		}
 
 		if (!block && !is.null(pairs) && (type %in% c("both", "pseudo-corrected"))) {
@@ -301,9 +309,10 @@ diffExpr <-
 			pseudo.counts <- diff_expr_pseudo_counts(design=design, d=d, pairs=pairs, disp=disp, do.cpm=TRUE)
 			cat("   done\n")
 			out.l <- diff_expr_QC_plots(counts=pseudo.counts, samp.info=samp.info, control=control, out.l=out.l, grp.nam=grp.nam, PC=PC,
-					ellipse=ellipse, ellipse.mapping.groups=ellipse.mapping.groups, label.samples=label.samples, geom.point.size=geom.point.size,
+					sample.plot.names=sample.plot.names, ellipse=ellipse, ellipse.mapping.groups=ellipse.mapping.groups,
+					ellipse.grp.nam=ellipse.grp.nam, label.samples=label.samples, geom.point.size=geom.point.size,
 					label.font.size = label.font.size, plot.ellipse.legend=plot.ellipse.legend, circle=circle, varname.size=varname.size,
-					var.axes=var.axes, samp.lab=samp.lab, pairs=pairs, pairs.name=pairs_col, gene.selection=gene.selection, n=n,
+					var.axes=var.axes, pairs=pairs, pairs.name=pairs_col, gene.selection=gene.selection, n=n,
 					type="pseudo-corrected, normalised DGEList", analysis.name=analysis.name, out.dir=out.dir)
 		}
 	}

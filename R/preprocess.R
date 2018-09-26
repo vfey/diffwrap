@@ -23,7 +23,7 @@ diff_expr_get_samp_info <-
 		samp.info$SampleNames <- edgeR::dropEmptyLevels(as.factor(samp.info$SampleNames))
 		samp.info$Groups <- edgeR::dropEmptyLevels(as.factor(samp.info$Groups))
 		if (!is.null(ellipse.mapping.groups)) {
-			samp.info$Groups <- edgeR::dropEmptyLevels(as.factor(samp.info$Ellipse))
+			samp.info$Ellipse <- edgeR::dropEmptyLevels(as.factor(samp.info$Ellipse))
 		}
 	} else {
 		samp.info <- data.frame(SampleNames=samples, Groups=groups, Ellipse={ if (is.null(ellipse.mapping.groups)) { groups } else { ellipse.mapping.groups } })

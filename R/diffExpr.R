@@ -140,6 +140,9 @@ diffExpr <-
 		if (length(groups) == 1) {
 			stop("Need more than 1 groups!")
 		}
+		if (!is.null(ellipse.mapping.groups) && length(ellipse.mapping.groups)!=length(groups)) {
+			stop("Ellipse mapping groups factor needs to be of same length as groups factor")
+		} 
 	} else {
 		if (is.null(samples) || length(samples) > 1) {
 			stop("Need name of colum containing sample names!")

@@ -254,6 +254,8 @@ diff_expr_volcano_plot <-
 			point.lab = TRUE,
 			sym.col = sym.col)
 	
+	print(g.l[["Pval"]])
+	print(g.l[["FDR"]])
 	
 	
 	return(g.l)

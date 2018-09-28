@@ -163,7 +163,7 @@ diffExpr <-
 	}
 	# checking for content in existing output folder
 	if (file.exists(out.dir)) {
-		if (length(grep(dir(out.dir)))) {
+		if (length(dir(out.dir))) {
 			cat("  Output directory exists and is not empty! Found:\n")
 			found <- dir(out.dir, include.dirs = TRUE)
 			print(found)

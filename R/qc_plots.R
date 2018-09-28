@@ -10,7 +10,7 @@ diff_expr_QC_plots <-
 		function(counts, samp.info, control, out.l, grp.nam=NULL, PC=c(1,2,3), sample.plot.names=NULL,
 				ellipse=TRUE, ellipse.mapping.groups=NULL, ellipse.grp.nam=NULL, label.samples=TRUE,
 				geom.point.size=2, label.font.size = 5, plot.ellipse.legend=NA, circle=TRUE, varname.size=0, var.axes=FALSE,
-				pairs=NULL, pairs.name=NULL, gene.selection="common", n=500, type=NULL, analysis.name=NULL, out.dir=NULL)
+				pairs=NULL, pairs.name=NULL, gene.selection="common", n=500, type=NULL, analysis.name=NULL, out.dir=".")
 {
 	cat("  Doing PCA...\n")
 	PCA <- diff_expr_PCA(counts=counts, n=n)
@@ -48,7 +48,7 @@ diff_expr_QC_plots <-
 #' Function to generate a MDS plot using `limma::plotMDS`
 #' @export
 diff_expr_mds_plot <-
-		function(d, groups, n=500, sample.plot.names=NULL, analysis.name=NULL, do.pdf=FALSE, out.dir=NULL)
+		function(d, groups, n=500, sample.plot.names=NULL, analysis.name=NULL, do.pdf=FALSE, out.dir=".")
 {
 	if (!is.null(sample.plot.names)) {
 		cat("  *** Using custom sample labels: ***\n  ", head(sample.plot.names), "\n")

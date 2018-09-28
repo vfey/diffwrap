@@ -75,7 +75,7 @@ NULL
 #'    Most sub-functions are exported and can be called by the user, as well, if desired.
 #'    These functions may be applicable to different kinds of data/input, rely, however,
 #'    on the conventions set for this package.
-#' @param expr.file \code{character}. Vector of input file paths
+#' @param expr.file \code{character} or \code{list}. String or vector or list of input file paths
 #' @param samp.info \code{data.frame}. samp.info object containing information of the project's sample sheet
 #' @param control \code{character}. Name of the control group
 #' @param design \code{matrix}. design matrix
@@ -114,14 +114,14 @@ NULL
 #'
 #' @export
 diffExpr <-
-		function(expr.file="mature_miRNA_expression.xls", samp.info, control, design=NULL, samples=NULL, sample.plot.names=NULL, groups=NULL, pairs=NULL, block=FALSE, contrasts=NULL, out.dir=NULL,
-				analysis.name=NULL, biomart=FALSE, biom.data.set="hsapiens_gene_ensembl", biom.mart=c("ensembl", "snp", "funcgen", "vega", "pride", "plants"),
-				host="www.ensembl.org", biom.filter="ensembl_gene_id", biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"), sym.col="hgnc_symbol",
-				rm.dups=FALSE, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE, min.samp=NULL, strict = TRUE, disp=c("gene", "trend", "common"), do.voom=FALSE,
-				voom.fun=voom, norm.method=c("tmm", "quantile"), bayes.trend=FALSE, bayes.robust=FALSE, n=500, gene.selection="common", ellipse=TRUE,
-				ellipse.mapping.groups=NULL, label.samples=TRUE, geom.point.size=2, label.font.size = 5, plot.ellipse.legend=NA,
-				circle=TRUE, varname.size=0, var.axes=FALSE, PC=c(1,2,3), type=c("both", "uncorrected", "pseudo-corrected"), font.size=5,
-				plots=TRUE, lists=TRUE)
+		function(expr.file="mature_miRNA_expression.xls", samp.info, control, design=NULL, samples=NULL, sample.plot.names=NULL, groups=NULL, pairs=NULL,
+				block=FALSE, contrasts=NULL, out.dir=NULL, project.dir=".", analysis.name=NULL, biomart=FALSE, biom.data.set="hsapiens_gene_ensembl",
+				biom.mart=c("ensembl", "snp", "funcgen", "vega", "pride", "plants"), host="www.ensembl.org", biom.filter="ensembl_gene_id",
+				biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"), sym.col="hgnc_symbol", rm.dups=FALSE, p.thr=0.05, fdr.thr=0.05, logfc.thr=1,
+				numlab=15, point.lab=TRUE, min.samp=NULL, strict = TRUE, disp=c("gene", "trend", "common"), do.voom=FALSE, voom.fun=voom,
+				norm.method=c("tmm", "quantile"), bayes.trend=FALSE, bayes.robust=FALSE, n=500, gene.selection="common", ellipse=TRUE,
+				ellipse.mapping.groups=NULL, label.samples=TRUE, geom.point.size=2, label.font.size = 5, plot.ellipse.legend=NA, circle=TRUE, varname.size=0,
+				var.axes=FALSE, PC=c(1,2,3), type=c("both", "uncorrected", "pseudo-corrected"), font.size=5, plots=TRUE, lists=TRUE)
 {
 	## initial checks
 	if (missing(expr.file) || !is.character(unlist(expr.file))) {
@@ -154,7 +154,38 @@ diffExpr <-
 			stop("'samp.info' needs to be a data.frame object containing at least two columns: 'SampleNames' and 'Groups' (the actual names can be provided\nby the 'samples' and 'groups' arguments, repsectively.)")
 		}
 	}
-
+	
+	# setting standard ouput folder
+	if (is.null(out.dir)) {
+		cat("No output folder set. Using default\n")
+		out.dir <- file.path(normalizePath(project.dir), "differential_expression")
+	}
+	# checking for content in existing output folder
+	if (file.exists(out.dir)) {
+		if (length(grep(dir(out.dir)))) {
+			cat("  Output directory exists and is not empty! Found:\n")
+			found <- dir(out.dir, include.dirs = TRUE)
+			print(found)
+			out.dir <- paste(out.dir, "new",
+					gsub("-", "", unlist(strsplit(as.character(Sys.time()), " "))[1]),
+					gsub(":", "", unlist(strsplit(as.character(Sys.time()), " "))[2]),
+					sep = "_")
+			cat("  Creating new output folder", sQuote(out.dir), "...")
+		} else {
+			cat("  Output folder exists and is empty.\n")
+		}
+	}
+	# creating output folder if not existing
+	if (!file.exists(out.dir)) {
+		cat("  Output directory does not exist. Creating...\n")
+		if (!dry.run) {
+			dir.create(out.dir)
+		} else {
+			cat(" ~~DRY RUN~~\n")
+		}
+	}
+	cat("  Saving output to", out.dir, "\n")
+	
 	if (block) {
 		do.voom <- TRUE
 		cat("*** Using 'blocked' design (i.e., samples are measured _in blocks_). Enforcing 'voom'! ***\n")

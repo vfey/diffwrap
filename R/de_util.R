@@ -62,7 +62,7 @@ diff_expr_fit <-
 #' Function to extract contrasts and generate top tables and plots
 #' @export
 diff_expr_extract_contrasts <-
-		function(contrasts=NULL, fit, fit2=NULL, normcnt, out.l, do.voom=TRUE, out.dir=NULL,
+		function(contrasts=NULL, fit, fit2=NULL, normcnt, out.l, do.voom=TRUE, out.dir=".",
 				analysis.name=NULL, biomart=FALSE, biom.data.set="hsapiens_gene_ensembl", biom.mart=c("ensembl", "snp", "funcgen", "vega", "pride", "plants"),
 				host="www.ensembl.org", biom.filter="ensembl_gene_id", biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"), sym.col="hgnc_symbol",
 				rm.dups=FALSE, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE, font.size=5, plots=TRUE, lists=TRUE)

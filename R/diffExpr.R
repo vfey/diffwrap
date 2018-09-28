@@ -121,7 +121,8 @@ diffExpr <-
 				numlab=15, point.lab=TRUE, min.samp=NULL, strict = TRUE, disp=c("gene", "trend", "common"), do.voom=FALSE, voom.fun=voom,
 				norm.method=c("tmm", "quantile"), bayes.trend=FALSE, bayes.robust=FALSE, n=500, gene.selection="common", ellipse=TRUE,
 				ellipse.mapping.groups=NULL, label.samples=TRUE, geom.point.size=2, label.font.size = 5, plot.ellipse.legend=NA, circle=TRUE, varname.size=0,
-				var.axes=FALSE, PC=c(1,2,3), type=c("both", "uncorrected", "pseudo-corrected"), font.size=5, plots=TRUE, lists=TRUE)
+				var.axes=FALSE, PC=c(1,2,3), type=c("both", "uncorrected", "pseudo-corrected"), font.size=5, plots=TRUE, lists=TRUE,
+				dry.run=FALSE)
 {
 	## initial checks
 	if (missing(expr.file) || !is.character(unlist(expr.file))) {

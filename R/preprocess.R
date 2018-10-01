@@ -7,7 +7,7 @@
 #' Function to standardize `samp.info` sample information data frame
 #' @export
 diff_expr_get_samp_info <-
-		function(samp.info, samples, groups)
+		function(samp.info, samples, groups, ellipse.mapping.groups=NULL)
 {
 	if (!is.null(samp.info)) {
 		cat("Using user-provided sample information...\n")
@@ -15,14 +15,24 @@ diff_expr_get_samp_info <-
 		names(samp.info)[names(samp.info) == samples] <- "SampleNames"
 		cat("  Renaming groups column...\n")
 		names(samp.info)[names(samp.info) == groups] <- "Groups"
+		if (!is.null(ellipse.mapping.groups)) {
+			cat("  Renaming ellipse mapping column...\n")
+			names(samp.info)[names(samp.info) == ellipse.mapping.groups] <- "Ellipse"
+		}
 		cat("  Factorizing columns... \n")
 		samp.info$SampleNames <- edgeR::dropEmptyLevels(as.factor(samp.info$SampleNames))
 		samp.info$Groups <- edgeR::dropEmptyLevels(as.factor(samp.info$Groups))
+		if (!is.null(ellipse.mapping.groups)) {
+			samp.info$Ellipse <- edgeR::dropEmptyLevels(as.factor(samp.info$Ellipse))
+		}
 	} else {
-		samp.info <- data.frame(SampleNames=samples, Groups=groups)
+		samp.info <- data.frame(SampleNames=samples, Groups=groups, Ellipse={ if (is.null(ellipse.mapping.groups)) { groups } else { ellipse.mapping.groups } })
 	}
 	if (is.numeric(samp.info$Groups)) {
 		samp.info$Groups <- paste0("group_", samp.info$Groups)
+	}
+	if (is.numeric(samp.info$Ellipse)) {
+		samp.info$Ellipse <- paste0("ellipse_group_", samp.info$Ellipse)
 	}
 	cat("  Reordering by sample names...\n")
 	samp.info <- samp.info[order(samp.info$SampleNames), ]

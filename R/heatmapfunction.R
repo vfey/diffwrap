@@ -77,21 +77,33 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
   #initially the breaks parameter is set to NA
   breaks.hm = NA
   
-  #calcualte min-max breaks. 
+  #calcualte min-max breaks
+  # palette.length <- 100
+  # colour = colorRampPalette(rev(brewer.pal(n = 11, name = color.blind.pal)))(palette.length)
+  # # length(breaks) == length(paletteLength) + 1
+  # # use floor and ceiling to deal with even/odd length pallettelengths
+  # mat.breaks <- c(seq(min(expr.mat), 0, length.out=ceiling(palette.length/2) + 1), 
+  #               seq(max(expr.mat)/palette.length, max(expr.mat), length.out=floor(palette.length/2)))
+  # 
   mat.breaks <- seq(min(expr.mat), max(expr.mat), by = 0.05) 
-  colour = colorRampPalette(rev(brewer.pal(n = 11, name = color.blind.pal)))(length(mat.breaks) + 1)
+  
+  colour = colorRampPalette(rev(brewer.pal(n = 11, name = color.blind.pal)))(length(mat.breaks) - 1)
  
   #change the colours of the matrix based on quantile breaks, the default is above
   if (quantile.breaks.fl) {
     mat.breaks = quantile.breaks(as.matrix(expr.mat), n = 11)
     colour = colorRampPalette(rev(brewer.pal(n = 11, name = color.blind.pal)))(length(mat.breaks) - 1)
   }
+  cat("mat.breaks")
+  print(mat.breaks)
+  cat("colour")
+  print(colour)
   
   #for the non-scaled case, if "use.breaks" is mentioned, then use breaks to create the heatmap, by default it only use breaks for colours and allows heatmap to do the breaks automatically
   if (scale.fl == "none") {
     breaks.hm = mat.breaks
     }
-  
+
   p = NULL
   if (missing(clinical.mat)) {
     
@@ -191,12 +203,15 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
   
   #correlogram scale and breaks
   mat.breaks.correl = seq(-1, 1, by = 0.05)
-  colour.correl = colorRampPalette(rev(brewer.pal(n = 11, name = color.blind.pal)))(length(mat.breaks.correl) + 1)
+  colour.correl = colorRampPalette(rev(brewer.pal(n = 11, name = color.blind.pal)))(length(mat.breaks.correl) - 1)
   
   #define new clustering distance
   dissimilarity <- 1 - cor.mat
   dist.clust <- as.dist(dissimilarity)
   
+  if (scale.fl != "none") {
+      mat.breaks.correl = NA
+  }
   sign.stars = NULL
   p.cor = NULL
   if (signif.stars.fl) {
@@ -215,14 +230,15 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
                                fontsize_row = cell.size, fontsize_col = cell.size, silent = TRUE)
     
   }
-  else {
+  else {print("mat.breaks.correl")
+        print(mat.breaks.correl)
     p.cor = pheatmap::pheatmap(as.matrix(corr_hmap$r),
                                show_colnames = T, show_rownames = T,
                                cluster_rows = T, cluster_cols = T,
                                legend = legend.fl, border_color = "white",
                                scale = scale.fl, color = colour.correl,
                                clustering_distance_rows = dist.clust, clustering_distance_cols = dist.clust,
-                               display_numbers = FALSE,
+                               display_numbers = FALSE,breaks = mat.breaks.correl,
                                cellwidth = cell.size, cellheight = cell.size, fontsize = font.size,
                                fontsize_row = cell.size, fontsize_col = cell.size, silent = TRUE)
   }
@@ -237,28 +253,3 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
   return(heatmap.list)
 }
 
-
-
-data_heatmap = read.table("./heatmap_data.tsv",
-                          stringsAsFactors = F,
-                          header = T)
-data_heatmap = as.data.frame(data_heatmap)
-
-sample_class =  read.table("./sample_class.tsv",
-                           stringsAsFactors = F,
-                           header = T)
-sample_class = as.data.frame(sample_class)
-
-
-my_pheatmap = diffr_pheatmap(expr.mat = data_heatmap, clinical.mat = sample_class,
-                             scale.fl = "none", biserial.fl = TRUE)
-my_pheatmap$regular
-# 
-# b = as.data.frame(readxl::read_excel("pharmaxis_annotation.xlsx"))
-# a = as.data.frame(readxl::read_excel("pharmaxis_data.xlsx"))
-# row.names(a)  = c("LOXL3","LOXL1","LOXL4","LOX","AOC3","LOXL2")
-# row.names(b) = colnames(a)
-# 
-# my_pheat = diffr_pheatmap(expr.mat = a, clinical.mat = b,
-#                           scale.fl = "none", biserial.fl = TRUE, signif.stars.fl = TRUE, cell.size = 8, font.size = 10)
-# my_pheat$regular

@@ -254,6 +254,7 @@ diff_expr_volcano_plot <-
 			point.lab = TRUE,
 			sym.col = sym.col)
 	
+	#Printing the plots so they can be stored into pdf-file when this function is called
 	print(g.l[["Pval"]])
 	print(g.l[["FDR"]])
 	

@@ -1,3 +1,11 @@
 .Rproj.user
 .Rhistory
 .RData
+.project
+.DS_Store
+.settings
+/Test_bench_for_volcano.Rmd
+/Test_bench_for_volcano.nb.html
+/Test_data_to_volcano.tsv
+/testing_rdavid.Rmd
+/testing_rdavid.nb.html

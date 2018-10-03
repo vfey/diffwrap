@@ -78,17 +78,17 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
   breaks.hm = NA
   
   #calcualte min-max breaks
-  # palette.length <- 100
-  # colour = colorRampPalette(rev(brewer.pal(n = 11, name = color.blind.pal)))(palette.length)
+  palette.length <- 100
+  colour = colorRampPalette(rev(brewer.pal(n = 11, name = color.blind.pal)))(palette.length)
   # # length(breaks) == length(paletteLength) + 1
   # # use floor and ceiling to deal with even/odd length pallettelengths
-  # mat.breaks <- c(seq(min(expr.mat), 0, length.out=ceiling(palette.length/2) + 1), 
-  #               seq(max(expr.mat)/palette.length, max(expr.mat), length.out=floor(palette.length/2)))
-  # 
-  mat.breaks <- seq(min(expr.mat), max(expr.mat), by = 0.05) 
+  mat.breaks <- c(seq(min(expr.mat), 0, length.out=ceiling(palette.length/2) + 1),
+                 seq(max(expr.mat)/palette.length, max(expr.mat), length.out=floor(palette.length/2)))
+
+  mat.breaks <- seq(min(expr.mat), max(expr.mat), by = 0.05)
   
   colour = colorRampPalette(rev(brewer.pal(n = 11, name = color.blind.pal)))(length(mat.breaks) - 1)
- 
+  
   #change the colours of the matrix based on quantile breaks, the default is above
   if (quantile.breaks.fl) {
     mat.breaks = quantile.breaks(as.matrix(expr.mat), n = 11)
@@ -252,4 +252,3 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
   }
   return(heatmap.list)
 }
-

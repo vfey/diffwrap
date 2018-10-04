@@ -131,7 +131,8 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot = c("fdr"
 	# Formatted names to use in plot texts:
 	property.formatted.name = toupper(property.to.plot)
 	name.of.legend = paste0(property.formatted.name, "-values")
-	legend.treshold.tag = paste0("signif. (", property.formatted.name, "<", property.thr, " & ", "logFC>", logfc.thr, ")")
+	legend.treshold.tag = paste0("signif. (", property.formatted.name, "<", property.thr, ")")
+	#legend.treshold.tag = paste0("signif. (", property.formatted.name, "<", property.thr, " & ", "logFC>", logfc.thr, ")")
 	subtitle.name = paste("(",")", sep=name.of.legend )
 	x.axis.name = "Logarithmic fold change"
 	y.axis.name = paste0("-log10(", property.formatted.name, ")")
@@ -143,11 +144,12 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot = c("fdr"
 	
 	# Constructing new bivalue column for coloring the points and displaying legend
 	data.df[[name.of.legend]] <- "not signif."
-	data.df[[name.of.legend]][data.df[[property.to.plot]] < property.thr & abs(data.df$logFC) > logfc.thr] <- legend.treshold.tag
+	data.df[[name.of.legend]][data.df[[property.to.plot]] < property.thr] <- legend.treshold.tag
+	#data.df[[name.of.legend]][data.df[[property.to.plot]] < property.thr & abs(data.df$logFC) > logfc.thr] <- legend.treshold.tag
 	
 	# Adding another bivalue column for magnitude of foldchange
-	#data.df$FC <- paste0("less than ", 2^logfc.thr, "-fold")
-	#data.df$FC[(data.df$logFC < -1*logfc.thr | data.df$logFC > logfc.thr)] <- paste0("more than ", 2^logfc.thr, "-fold")
+	data.df$FC <- paste0("less than ", 2^logfc.thr, "-fold")
+	data.df$FC[(data.df$logFC < -1*logfc.thr | data.df$logFC > logfc.thr)] <- paste0("more than ", 2^logfc.thr, "-fold")
 	
 	# Filtering data.df to label points
 	filtdat <- data.df[ data.df[[property.to.plot]] < property.thr & abs(data.df$logFC) > logfc.thr, ]
@@ -159,10 +161,9 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot = c("fdr"
 	}
 	
 	# Constructing the plot
-	volcano.plot <- ggplot(data.df, aes(x = data.df$logFC, y = -log10(data.df[,property.to.plot]),
-					color = data.df[[name.of.legend]]))
-	
-	volcano.plot <- volcano.plot + geom_point(alpha=0.4, size=1.75)
+	volcano.plot <- ggplot(data.df, aes(x = data.df$logFC, y = -log10(data.df[,property.to.plot]), alpha = data.df$FC))# ,
+	volcano.plot <- volcano.plot + geom_point(inherit.aes= TRUE, aes(color = data.df[[name.of.legend]]), size = 1.75) 
+	volcano.plot <- volcano.plot + scale_alpha_discrete(range = c(0.05, 0.6))
 	volcano.plot <- volcano.plot + theme_bw(base_size = 10)
 	
 	volcano.plot <- volcano.plot + theme(panel.border = element_blank(),
@@ -171,7 +172,7 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot = c("fdr"
 			panel.grid.minor = element_line(size = 0.2))
 	
 	volcano.plot <- volcano.plot + xlab(x.axis.name) + ylab(y.axis.name)
-	volcano.plot <- volcano.plot + labs(color = name.of.legend)
+	volcano.plot <- volcano.plot + labs(color = name.of.legend, alpha="FC")
 	
 	#volcano.plot <- volcano.plot + scale_color_manual(values=c("#0066FF", "#CC0000"))
 	volcano.plot <- volcano.plot + scale_x_continuous(breaks = scales::pretty_breaks(n=6)) + scale_y_continuous(breaks = scales::pretty_breaks(n=8))
@@ -184,12 +185,12 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot = c("fdr"
 			theme(plot.title = element_text(hjust = 0.5)) +
 			theme(plot.subtitle = element_text(hjust = 0.5)) #hjust 0.5 for centering
 	
-	volcano.plot <- volcano.plot + geom_text(data=data.df, aes(x=floor(min(data.df$logFC)), y=-log10(property.thr)), label = line_label_text, nudge_x=0.5, nudge_y=max(-log10(data.df[,property.to.plot]))/60, size=3.5, color="red")
+	volcano.plot <- volcano.plot + geom_text(inherit.aes= FALSE, data=data.df, aes(x=floor(min(data.df$logFC)), y=-log10(property.thr)), label = line_label_text, nudge_x=0.5, nudge_y=max(-log10(data.df[,property.to.plot]))/60, size=3.5, color="red")
 	#volcano.plot <- volcano.plot + geom_text(x=0, y=0, label="two-fold FC", size=3, color="red") # TO DO: FIND GOOD POSITION, USE VARIABLE (fold change can sometimes be other than 2-fold?)
 	
 	if (point.lab && nrow(filtdat)>0) {
 		
-		volcano.plot <- volcano.plot + geom_text_repel(
+		volcano.plot <- volcano.plot + geom_text_repel(inherit.aes= FALSE,
 				data = filtdat,
 				aes(x= filtdat$logFC, y = -log10(filtdat[[property.to.plot]]), label = filtdat[[sym.col]]),
 				size = 3,

@@ -185,7 +185,7 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot = c("fdr"
 			theme(plot.subtitle = element_text(hjust = 0.5)) #hjust 0.5 for centering
 	
 	volcano.plot <- volcano.plot + geom_text(data=data.df, aes(x=floor(min(data.df$logFC)), y=-log10(property.thr)), label = line_label_text, nudge_x=0.5, nudge_y=max(-log10(data.df[,property.to.plot]))/60, size=3.5, color="red")
-	volcano.plot <- volcano.plot + geom_text(x=0, y=-0.7, label="two-fold FC", size=3, color="red") #currently not displayed?
+	#volcano.plot <- volcano.plot + geom_text(x=0, y=0, label="two-fold FC", size=3, color="red") # TO DO: FIND GOOD POSITION, USE VARIABLE (fold change can sometimes be other than 2-fold?)
 	
 	if (point.lab && nrow(filtdat)>0) {
 		

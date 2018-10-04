@@ -172,7 +172,7 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot = c("fdr"
 			panel.grid.minor = element_line(size = 0.2))
 	
 	volcano.plot <- volcano.plot + xlab(x.axis.name) + ylab(y.axis.name)
-	volcano.plot <- volcano.plot + labs(color = name.of.legend, alpha="FC")
+	volcano.plot <- volcano.plot + labs(color = name.of.legend, alpha="Fold change") 
 	
 	#volcano.plot <- volcano.plot + scale_color_manual(values=c("#0066FF", "#CC0000"))
 	volcano.plot <- volcano.plot + scale_x_continuous(breaks = scales::pretty_breaks(n=6)) + scale_y_continuous(breaks = scales::pretty_breaks(n=8))

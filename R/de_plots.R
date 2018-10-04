@@ -163,7 +163,7 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot = c("fdr"
 	# Constructing the plot
 	volcano.plot <- ggplot(data.df, aes(x = data.df$logFC, y = -log10(data.df[,property.to.plot]), alpha = data.df$FC))# ,
 	volcano.plot <- volcano.plot + geom_point(inherit.aes= TRUE, aes(color = data.df[[name.of.legend]]), size = 1.75) 
-	volcano.plot <- volcano.plot + scale_alpha_discrete(range = c(0.05, 0.6))
+	volcano.plot <- volcano.plot + scale_alpha_discrete(range = c(0.04, 0.5))
 	volcano.plot <- volcano.plot + theme_bw(base_size = 10)
 	
 	volcano.plot <- volcano.plot + theme(panel.border = element_blank(),

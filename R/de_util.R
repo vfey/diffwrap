@@ -67,23 +67,46 @@ diff_expr_fit <-
 diffr_expr_generate_cleaned_de_table_output <-
   function(contrast, annotated.normcnt, out.dir=".", samp.name.and.group.key, analysis.name=NULL, filtered.lists = TRUE,  fdr.thr=0.05, logfc.thr=1 )
 {
+    cat("Generating a cleaned version of expression table...\n")
     DE.out <- paste(analysis.name, contrast, "differential_expression_clean.tsv", sep="_")
-    cat("   Saving cleanded DE-list to", DE.out, "...\n")
-    
-    group1 = unlist(strsplit(contrast, split="-",fixed = TRUE))[1]
-    group2 = unlist(strsplit(contrast, split="-",fixed = TRUE))[2]
+  
+    group1 <- unlist(strsplit(contrast, split="-",fixed = TRUE))[1]
+    group2 <- unlist(strsplit(contrast, split="-",fixed = TRUE))[2]
    
-    contrast.samples = rownames(samp.name.and.group.key)[samp.name.and.group.key$group == group1 | samp.name.and.group.key$group == group2]
-    not.contrast.samples = rownames(samp.name.and.group.key)[!(samp.name.and.group.key$group == group1 | samp.name.and.group.key$group == group2)]
+    contrast.samples <- rownames(samp.name.and.group.key)[samp.name.and.group.key$group == group1 | samp.name.and.group.key$group == group2]
+    not.contrast.samples <- rownames(samp.name.and.group.key)[!(samp.name.and.group.key$group == group1 | samp.name.and.group.key$group == group2)]
     
-    annotated.normcnt = annotated.normcnt[,!colnames(annotated.normcnt) %in% not.contrast.samples]
+    annotated.normcnt <- annotated.normcnt[,!colnames(annotated.normcnt) %in% not.contrast.samples]
     
-    #cleaned.colnames = gsub("ReadsPerGene.out", "", colnames(annotated.normcnt))
-    
+    cleaned.colnames <- gsub("ReadsPerGene.out", "", colnames(annotated.normcnt))
+    #print(cleaned.colnames)
+    colnames(annotated.normcnt) <- cleaned.colnames 
+    cat("   Samples outside the contrast were removed...\n")
     
     if (filtered.lists) {
-      cat("     Filtering the list by fdr <", fdr.thr, "and logfc > ", logfc.thr , "...\n")
+      cat("     Filtering the DE list to be saved by fdr <", fdr.thr, "and logfc > ", logfc.thr , "...\n")
+      fdr.col <- names(annotated.normcnt)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(annotated.normcnt)))]
+      fc.col <- names(annotated.normcnt)[grep("^logfc$|fold$", tolower(names(annotated.normcnt)))]
+      
+      #print(fdr.col)
+      #print(fc.col)
+      
+      nrow.before.filtering <- nrow(annotated.normcnt)
+      
+      annotated.normcnt <- annotated.normcnt[(annotated.normcnt[[fdr.col]] < fdr.thr &
+                                 abs(annotated.normcnt[[fc.col]]) > logfc.thr),]
+      
+      nrow.removed <- nrow.before.filtering - nrow(annotated.normcnt)
+      cat("       ", nrow.removed, "unsignifcant genes were filtered out...\n")
+      cat("        The dimensions of the table to be saved:", dim(annotated.normcnt), "...\n")
+      
+      
+      DE.out <- paste("filtered", DE.out, sep="_")
     }
+    
+    cat("   Saving cleanded DE-list to", DE.out, "...\n")
+    write.table(annotated.normcnt, file.path(out.dir, DE.out), sep="\t", quote=FALSE, row.names=FALSE)
+
 }
         
 #' Function to extract contrasts and generate top tables and plots

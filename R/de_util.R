@@ -1,4 +1,4 @@
-# Functions for erforming differential expression analysis
+# Functions for performing differential expression analysis
 # 
 # Author: vidal
 ###############################################################################
@@ -147,6 +147,9 @@ diff_expr_extract_contrasts <-
 		if (lists) {
 			DE.out <- paste(analysis.name, contr, "differential_expression.tsv", sep="_")
 			cat("Saving list to", DE.out, "...\n")
+			pv.col <- names(d3)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
+			cat("The result table is ordered in increasing order by column ", pv.col, "...\n")
+			d3 = d3[order(d3[[pv.col]]),]
 			write.table(d3, file.path(out.dir, DE.out), sep="\t", quote=FALSE, row.names=FALSE)
 		}
 		

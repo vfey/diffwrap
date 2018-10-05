@@ -61,13 +61,20 @@ diff_expr_fit <-
 
 
 
-#' Function to generate an output table with only most relevant columns
+#' Helper function to generate an output table with only most relevant columns
+##' @param samp.name.and.group.key \code{data.frame}. Sample names as rownames, groups in 1st column
 #' @export
 diffr_expr_generate_cleaned_de_table_output <-
-  function(contrast, annotated.normcnt, out.dir=".", analysis.name=NULL, filtered.lists = TRUE,  fdr.thr=0.05, logfc.thr=1 )
+  function(contrast, annotated.normcnt, out.dir=".", samp.name.and.group.key, analysis.name=NULL, filtered.lists = TRUE,  fdr.thr=0.05, logfc.thr=1 )
 {
     DE.out <- paste(analysis.name, contrast, "differential_expression_clean.tsv", sep="_")
     cat("   Saving cleanded DE-list to", DE.out, "...\n")
+    
+    group1 = unlist(strsplit(contrast, split="-",fixed = TRUE))[1]
+    group2 = unlist(strsplit(contrast, split="-",fixed = TRUE))[2]
+   
+    contrast.samples = rownames(samp.name.and.group.key)[samp.name.and.group.key$group == group1 | samp.name.and.group.key$group == group2]
+    
     
     if (filtered.lists) {
       cat("     Filtering the list by fdr <", fdr.thr, "and logfc > ", logfc.thr , "...\n")
@@ -100,9 +107,7 @@ diff_expr_extract_contrasts <-
 		# which means contrasts are inherent to the design and only need to be extracted
 		cn <- contrasts
 	}
-	print("***")
-	print(cn)
-	print("***")
+
 	out.l$MAplots <- list()
 	out.l$volcanoPlots <- list()
 	for (contr in cn) {
@@ -170,7 +175,7 @@ diff_expr_extract_contrasts <-
 			d3 = d3[order(d3[[pv.col]]),]
 			write.table(d3, file.path(out.dir, DE.out), sep="\t", quote=FALSE, row.names=FALSE)
 		
-			diffr_expr_generate_cleaned_de_table_output(contrast=contr, annotated.normcnt=d3, out.dir,
+			diffr_expr_generate_cleaned_de_table_output(contrast=contr, annotated.normcnt=d3, samp.name.and.group.key = fit$samples, out.dir,
 			                                            analysis.name, filtered.lists = TRUE, fdr.thr=fdr.thr, logfc.thr=logfc.thr)
 			}
 		

@@ -62,7 +62,7 @@ diff_expr_fit <-
 
 
 #' Helper function to generate an output table with only most relevant columns
-##' @param samp.name.and.group.key \code{data.frame}. Sample names as rownames, groups in 1st column
+##' @param samp.name.and.group.key \code{data.frame}. Sample names (matching with annotated.normcnt cols) as rownames, groups in 1st column
 #' @export
 diffr_expr_generate_cleaned_de_table_output <-
   function(contrast, annotated.normcnt, out.dir=".", samp.name.and.group.key, analysis.name=NULL, filtered.lists = TRUE,  fdr.thr=0.05, logfc.thr=1 )
@@ -74,6 +74,11 @@ diffr_expr_generate_cleaned_de_table_output <-
     group2 = unlist(strsplit(contrast, split="-",fixed = TRUE))[2]
    
     contrast.samples = rownames(samp.name.and.group.key)[samp.name.and.group.key$group == group1 | samp.name.and.group.key$group == group2]
+    not.contrast.samples = rownames(samp.name.and.group.key)[!(samp.name.and.group.key$group == group1 | samp.name.and.group.key$group == group2)]
+    
+    annotated.normcnt = annotated.normcnt[,!colnames(annotated.normcnt) %in% not.contrast.samples]
+    
+    #cleaned.colnames = gsub("ReadsPerGene.out", "", colnames(annotated.normcnt))
     
     
     if (filtered.lists) {

@@ -59,13 +59,28 @@ diff_expr_fit <-
 	}
 }
 
+
+
+#' Function to generate an output table with only most relevant columns
+#' @export
+diffr_expr_generate_cleaned_de_table_output <-
+  function(contrast, normcnt, out.dir=".", analysis.name=NULL, filtered.lists = TRUE, p.thr=0.05, fdr.thr=0.05, logfc.thr=1 )
+{
+    DE.out <- paste(analysis.name, contrast, "differential_expression_clean.tsv", sep="_")
+    cat("Saving list to", DE.out, "...\n")
+    
+    if (filtered.lists) {
+      cat("Filtering the list by fdr <", fdr.thr, "and logfc > ", logfc.thr , "...\n")
+    }
+}
+        
 #' Function to extract contrasts and generate top tables and plots
 #' @export
 diff_expr_extract_contrasts <-
 		function(contrasts=NULL, fit, fit2=NULL, normcnt, out.l, do.voom=TRUE, out.dir=".",
 				analysis.name=NULL, biomart=FALSE, biom.data.set="hsapiens_gene_ensembl", biom.mart=c("ensembl", "snp", "funcgen", "vega", "pride", "plants"),
 				host="www.ensembl.org", biom.filter="ensembl_gene_id", biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"), sym.col="hgnc_symbol",
-				rm.dups=FALSE, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE, font.size=5, plots=TRUE, lists=TRUE)
+				rm.dups=FALSE, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE, font.size=5, plots=TRUE, lists=TRUE, filtered.lists = TRUE)
 {
 	if (!length(grep("contrasts", names(out.l)))) {
 		out.l$contrasts <- list()
@@ -151,7 +166,10 @@ diff_expr_extract_contrasts <-
 			cat("The result table is ordered in increasing order by column ", pv.col, "...\n")
 			d3 = d3[order(d3[[pv.col]]),]
 			write.table(d3, file.path(out.dir, DE.out), sep="\t", quote=FALSE, row.names=FALSE)
-		}
+		
+			diffr_expr_generate_cleaned_de_table_output(contrast=contr, normcnt=d3, out.dir,
+			                                            analysis.name, filtered.lists = TRUE, p.thr, fdr.thr)
+			}
 		
 		# Create a graphical summary, such as an M (log-fold change) versus A (log-average expression) plot, here showing the
 		# genes selected as differentially expressed (with a 5% false discovery rate)

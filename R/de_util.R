@@ -64,13 +64,13 @@ diff_expr_fit <-
 #' Function to generate an output table with only most relevant columns
 #' @export
 diffr_expr_generate_cleaned_de_table_output <-
-  function(contrast, normcnt, out.dir=".", analysis.name=NULL, filtered.lists = TRUE, p.thr=0.05, fdr.thr=0.05, logfc.thr=1 )
+  function(contrast, annotated.normcnt, out.dir=".", analysis.name=NULL, filtered.lists = TRUE,  fdr.thr=0.05, logfc.thr=1 )
 {
     DE.out <- paste(analysis.name, contrast, "differential_expression_clean.tsv", sep="_")
-    cat("Saving list to", DE.out, "...\n")
+    cat("   Saving cleanded DE-list to", DE.out, "...\n")
     
     if (filtered.lists) {
-      cat("Filtering the list by fdr <", fdr.thr, "and logfc > ", logfc.thr , "...\n")
+      cat("     Filtering the list by fdr <", fdr.thr, "and logfc > ", logfc.thr , "...\n")
     }
 }
         
@@ -100,6 +100,9 @@ diff_expr_extract_contrasts <-
 		# which means contrasts are inherent to the design and only need to be extracted
 		cn <- contrasts
 	}
+	print("***")
+	print(cn)
+	print("***")
 	out.l$MAplots <- list()
 	out.l$volcanoPlots <- list()
 	for (contr in cn) {
@@ -167,8 +170,8 @@ diff_expr_extract_contrasts <-
 			d3 = d3[order(d3[[pv.col]]),]
 			write.table(d3, file.path(out.dir, DE.out), sep="\t", quote=FALSE, row.names=FALSE)
 		
-			diffr_expr_generate_cleaned_de_table_output(contrast=contr, normcnt=d3, out.dir,
-			                                            analysis.name, filtered.lists = TRUE, p.thr, fdr.thr)
+			diffr_expr_generate_cleaned_de_table_output(contrast=contr, annotated.normcnt=d3, out.dir,
+			                                            analysis.name, filtered.lists = TRUE, fdr.thr=fdr.thr, logfc.thr=logfc.thr)
 			}
 		
 		# Create a graphical summary, such as an M (log-fold change) versus A (log-average expression) plot, here showing the

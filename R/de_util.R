@@ -154,7 +154,7 @@ diff_expr_extract_contrasts <-
 		# genes selected as differentially expressed (with a 5% false discovery rate)
 		if (plots) {
 			cat("Plotting...\n")
-			pdf(file.path(out.dir, paste(analysis.name, contr, "_plots.pdf", sep="_")), width=11, height=8.5)
+			pdf(file.path(out.dir, paste(analysis.name, contr, "_plots.pdf", sep="_")), width=15, height=15)
 			par(mar = c(6,6,5,3))
 			cat(" MA-plot...\n")
 			out.l$MAplots[[contr]] <- diff_expr_ma_plot(d3, contr, id.col, sym.col, p.thr, fdr.thr, logfc.thr, numlab, out.dir, analysis.name, point.lab, biom.attributes, font.size, lists)

@@ -172,7 +172,6 @@ diff_expr_extract_contrasts <-
 			out.l$heatmapPlots[[contr]] <- pheatmap_plots(d3, id, sym.col="gene_symbol", samp.info = samp.info, samples, groups, main=NULL, p.thr=0.05, fdr.thr=0.05, logfc.thr=1)
 			
 			dev.off()
-			
 			cat("done\n")
 		}
 	}

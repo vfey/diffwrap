@@ -27,6 +27,75 @@ reorderFactors <- function(df, column = "my_column_name",
 }
 
 
+# Function: correlogram_pheatmap
+#
+# Author: Bogdan Iancu - Genevia Technologies Oy
+#
+# Arguments:
+#         expr.mat  = differential expression matrix in  (genes, samples) format 
+#         
+
+# Output: pheatmap object that represents a correlogram
+#
+#
+correlogram_pheatmap = function(expr.mat, scale.fl = "none", legend.fl = TRUE, 
+                                row.clust = TRUE, col.clust = TRUE,
+                                signif.stars.fl = FALSE, cell.size = 8, 
+                                font.size = 10, color.blind.pal = "PuOr", main.correl = "Correlogram") {
+  #calculate the correlation matrix using Hmisc package
+  
+  corr_hmap = Hmisc::rcorr(expr.mat)
+  cor.mat = as.matrix(corr_hmap$r)
+  pv.mat = as.matrix(corr_hmap$P)
+  
+  #correlogram scale and breaks
+  mat.breaks.correl = seq(-1, 1, by = 0.05)
+  colour.correl = colorRampPalette(rev(brewer.pal(n = 11, name = color.blind.pal)))(length(mat.breaks.correl) - 1)
+  
+  #define new clustering distance
+  dissimilarity <- 1 - cor.mat
+  dist.clust <- as.dist(dissimilarity)
+  
+  if (scale.fl != "none") {
+    mat.breaks.correl = NA
+  }
+  sign.stars = NULL
+  p.cor = NULL
+  if (signif.stars.fl) {
+    # define significance levels
+    sign.stars <- ifelse(pv.mat < .001, "***", ifelse(pv.mat < .01, "** ", ifelse(pv.mat < .05, "* ", " ")))
+    sign.stars <- ifelse(is.na(sign.stars),"",sign.stars)
+    #build the correlogram using pheatmap
+    p.cor = pheatmap::pheatmap(as.matrix(corr_hmap$r),
+                               show_colnames = T, show_rownames = T,
+                               cluster_rows = T, cluster_cols = T,
+                               legend = legend.fl, border_color = "white",
+                               scale = scale.fl, color = colour.correl,
+                               clustering_distance_rows = dist.clust, clustering_distance_cols = dist.clust,
+                               display_numbers = sign.stars, number_color = "#FFFF00", breaks = mat.breaks.correl,
+                               cellwidth = cell.size, cellheight = cell.size, fontsize = font.size,
+                               fontsize_row = cell.size, fontsize_col = cell.size, silent = TRUE, main = main.correl)
+    
+  }
+  else {print("mat.breaks.correl")
+    print(mat.breaks.correl)
+    p.cor = pheatmap::pheatmap(as.matrix(corr_hmap$r),
+                               show_colnames = T, show_rownames = T,
+                               cluster_rows = T, cluster_cols = T,
+                               legend = legend.fl, border_color = "white",
+                               scale = scale.fl, color = colour.correl,
+                               clustering_distance_rows = dist.clust, clustering_distance_cols = dist.clust,
+                               display_numbers = FALSE,breaks = mat.breaks.correl,
+                               cellwidth = cell.size, cellheight = cell.size, fontsize = font.size,
+                               fontsize_row = cell.size, fontsize_col = cell.size, silent = TRUE, main = main.correl)
+  }
+  
+  return(p.cor)
+}
+
+
+
+
 # Function: diffr_pheatmap()
 #
 # Author: Bogdan Iancu - Genevia Technologies Oy
@@ -61,6 +130,8 @@ reorderFactors <- function(df, column = "my_column_name",
 #
 #
 #
+
+
 #' @export
 diffr_pheatmap = function(expr.mat, clinical.mat,
                           scale.fl = "none", legend.fl = TRUE, 
@@ -83,8 +154,8 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
   # # length(breaks) == length(paletteLength) + 1
   # # use floor and ceiling to deal with even/odd length pallettelengths
   mat.breaks <- c(seq(min(expr.mat), 0, length.out=ceiling(palette.length/2) + 1),
-                 seq(max(expr.mat)/palette.length, max(expr.mat), length.out=floor(palette.length/2)))
-
+                  seq(max(expr.mat)/palette.length, max(expr.mat), length.out=floor(palette.length/2)))
+  
   mat.breaks <- seq(min(expr.mat), max(expr.mat), by = 0.05)
   
   colour = colorRampPalette(rev(brewer.pal(n = 11, name = color.blind.pal)))(length(mat.breaks) - 1)
@@ -94,16 +165,16 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
     mat.breaks = quantile.breaks(as.matrix(expr.mat), n = 11)
     colour = colorRampPalette(rev(brewer.pal(n = 11, name = color.blind.pal)))(length(mat.breaks) - 1)
   }
-  cat("mat.breaks")
-  print(mat.breaks)
-  cat("colour")
-  print(colour)
+  #cat("mat.breaks")
+  #print(mat.breaks)
+  #cat("colour")
+  #print(colour)
   
   #for the non-scaled case, if "use.breaks" is mentioned, then use breaks to create the heatmap, by default it only use breaks for colours and allows heatmap to do the breaks automatically
   if (scale.fl == "none") {
     breaks.hm = mat.breaks
-    }
-
+  }
+  
   p = NULL
   if (missing(clinical.mat)) {
     
@@ -137,7 +208,7 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
     }
     #if biserial flag is TRUE it calculates the biserial correlation based on the first column of the annotation file
     if (!biserial.fl) {
-
+      
       p = pheatmap::pheatmap(expr.mat,
                              show_colnames = T, show_rownames = T,
                              cluster_rows = row.clust, cluster_cols = col.clust,
@@ -145,8 +216,8 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
                              scale = scale.fl, color = colour,annotation_color = anno.color,
                              annotation = clinical.mat, breaks = breaks.hm,
                              cellwidth = cell.size, cellheight = cell.size, fontsize = font.size,
-                             fontsize_row = cell.size, fontsize_col = cell.size, silent = TRUE)
-     
+                             fontsize_row = cell.size, fontsize_col = cell.size, silent = TRUE, main = "Heatmap of genes over samples")
+      
     }
     else {
       
@@ -157,7 +228,7 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
                              scale = scale.fl, color = colour, annotation_color = anno.color,
                              annotation = clinical.mat, breaks = breaks.hm,
                              cellwidth = cell.size, cellheight = cell.size, fontsize = font.size,
-                             fontsize_row = cell.size, fontsize_col = cell.size, silent = TRUE)
+                             fontsize_row = cell.size, fontsize_col = cell.size, silent = TRUE, main = "Heatmap of genes over samples")
       
       
       #get the annotation that will be transformed into a categorial variable
@@ -180,7 +251,7 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
       anno.correl$Correlation = as.factor(anno.correl$Correlation)
       anno.correl = reorderFactors(anno.correl,"Correlation", c("-1<r<=-0.75","-0.75<r<=-0.5","-0.5<r<=-0.25","-0.25<r<=0", "0<r<=0.25","0.25<r<=0.5","0.5<r<=0.75"))
       
-    
+      
       #build the heatmap with biserial correlation annotation
       p.biserial = pheatmap::pheatmap(expr.mat,
                                       show_colnames = T, show_rownames = T,
@@ -194,61 +265,17 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
     
   }
   
-  
-  #calculate the correlation matrix using Hmisc package
   t_data_heat_map = t(expr.mat)
-  corr_hmap = Hmisc::rcorr(t_data_heat_map)
-  cor.mat = as.matrix(corr_hmap$r)
-  pv.mat = as.matrix(corr_hmap$P)
-  
-  #correlogram scale and breaks
-  mat.breaks.correl = seq(-1, 1, by = 0.05)
-  colour.correl = colorRampPalette(rev(brewer.pal(n = 11, name = color.blind.pal)))(length(mat.breaks.correl) - 1)
-  
-  #define new clustering distance
-  dissimilarity <- 1 - cor.mat
-  dist.clust <- as.dist(dissimilarity)
-  
-  if (scale.fl != "none") {
-      mat.breaks.correl = NA
-  }
-  sign.stars = NULL
-  p.cor = NULL
-  if (signif.stars.fl) {
-    # define significance levels
-    sign.stars <- ifelse(pv.mat < .001, "***", ifelse(pv.mat < .01, "** ", ifelse(pv.mat < .05, "* ", " ")))
-    sign.stars <- ifelse(is.na(sign.stars),"",sign.stars)
-    #build the correlogram using pheatmap
-    p.cor = pheatmap::pheatmap(as.matrix(corr_hmap$r),
-                               show_colnames = T, show_rownames = T,
-                               cluster_rows = T, cluster_cols = T,
-                               legend = legend.fl, border_color = "white",
-                               scale = scale.fl, color = colour.correl,
-                               clustering_distance_rows = dist.clust, clustering_distance_cols = dist.clust,
-                               display_numbers = sign.stars, number_color = "#FFFF00", breaks = mat.breaks.correl,
-                               cellwidth = cell.size, cellheight = cell.size, fontsize = font.size,
-                               fontsize_row = cell.size, fontsize_col = cell.size, silent = TRUE)
-    
-  }
-  else {print("mat.breaks.correl")
-        print(mat.breaks.correl)
-    p.cor = pheatmap::pheatmap(as.matrix(corr_hmap$r),
-                               show_colnames = T, show_rownames = T,
-                               cluster_rows = T, cluster_cols = T,
-                               legend = legend.fl, border_color = "white",
-                               scale = scale.fl, color = colour.correl,
-                               clustering_distance_rows = dist.clust, clustering_distance_cols = dist.clust,
-                               display_numbers = FALSE,breaks = mat.breaks.correl,
-                               cellwidth = cell.size, cellheight = cell.size, fontsize = font.size,
-                               fontsize_row = cell.size, fontsize_col = cell.size, silent = TRUE)
-  }
   
   #create the heatmap list and populate it
   heatmap.list = list()
   heatmap.list[["regular"]] = p
-  heatmap.list[["correlogram"]] = p.cor
+  heatmap.list[["correlogram"]] = correlogram_pheatmap(t_data_heat_map, scale.fl = scale.fl, signif.stars.fl = signif.stars.fl, main.correl = "Gene Correlogram")
+  heatmap.list[["correlogram.sample"]] = correlogram_pheatmap(as.matrix(expr.mat), scale.fl = scale.fl, signif.stars.fl = signif.stars.fl, cell.size =10, font.size = 12, main.correl = "Sample Correlogram")
+  
   if (biserial.fl) {
     heatmap.list[["biserial.cor"]] = p.biserial
   }
   return(heatmap.list)
 }
+

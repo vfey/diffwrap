@@ -14,48 +14,39 @@
 pheatmap_plots <-
   function(d3, id, sym.col="gene_symbol", samp.info = samp.info, samples, groups, main=NULL, p.thr=0.05, fdr.thr=0.05, logfc.thr=1)
   {
+    #print(samples)
+    #print(groups)
+    #print(d3)
     
-    # initial checks
-    if ((missing(id) || !id %in% names(d3)) && (!sym.col %in% names(d3))) {
-      stop("Need at least one ID column, i.e., one of 'id' or 'sym.col'.")
-    }
-    ## if ID column exists and symbol column is missing and different from ID column, create symbol column from ID column
-    if (!missing(id) && id %in% names(d3) && !sym.col %in% names(d3) && sym.col != id) {
-      d3[[sym.col]] <- id
-    }
-    
-    #data for testing reasons
-    # samp.info = read.table("sampInfo_MAAKE_final.tsv",sep="\t", header=T, stringsAsFactor=F)
-    # d3 = read.table("MAAKE_contrast_Ctrl-OAB_dry_differential_expression.tsv", sep = "\t", header = TRUE)
-    # colnames(d3)[4:33] = gsub("X", "", colnames(d3)[4:33])
-    # sym.col="gene_symbol"
-    # samp.info$SampleName = gsub("-", ".", samp.info$SampleName)
-    # samples = "SampleName"
-    # groups = "Treatment"
-    # 
     #set rownames to gene_symbol names
     rownames(d3) = as.character(d3[,sym.col])
-   
+    
     # find columns with P-Values or FDR values
     pv.col = names(d3)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
     fdr.col = names(d3)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
     
     g.l = list()
     cat("Heatmap plots...\n")
-    
+    #cat(pv.col)
+    #cat(fdr.col)
     #make two data frames for significant p-values and significant adj.p.values
     dat.sign.pv = d3[d3[[pv.col]] < 0.05,]
     dat.sign.fdr = d3[d3[[fdr.col]] < 0.05,]
+    #print(dat.sign.pv)
+    #print(samp.info)
     
-    #select only the columns representing the samples 
-    dat.sign.pv = dat.sign.pv[samp.info[,samples]]
-     
-    dat.sign.fdr = dat.sign.fdr[samp.info[,samples]]
+    #select only the columns representing the samples
+    samp.names = as.character(samp.info[,"SampleNames"])
+    #print(samp.names)    
+    
+    dat.sign.pv = dat.sign.pv[samp.names]
+    dat.sign.fdr = dat.sign.fdr[samp.names]
+    #print(groups)
     
     #get the heatmap column annotation
-    samp.anno = as.data.frame(samp.info[,groups])
-    rownames(samp.anno) = samp.info[,samples]
-    colnames(samp.anno)[1] = groups
+    samp.anno = as.data.frame(groups)
+    rownames(samp.anno) = samp.names
+    colnames(samp.anno)[1] = "Sample.Class"
     
     #create lists of pheatmaps for significant p-values and adjusted p-values respectively
     pv_hm_list = list()
@@ -81,11 +72,18 @@ pheatmap_plots <-
         print("There are 0 entries with significant P-values in the differential expression data frame")
       }
       
-      #if there are any noentries with significant adjusted p-values, but there are with significant p-values, then save in the g.l list the row-scaled regular and non-scaled correlograms
+      #if there are no entries with significant adjusted p-values, but there are with significant p-values, then save in the g.l list the row-scaled regular and non-scaled correlograms
       if (length(pv_hm_list) != 0) {
         gl.pv = list()
         gl.pv$regular = pv_hm_list$row$regular
         gl.pv$gene.correlogram = pv_hm_list$none$correlogram
+        gl.pv$samp.correlogram = pv_hm_list$none$correlogram.sample
+        grid.newpage()
+        print(gl.pv$regular )
+        grid.newpage()
+        print(gl.pv$gene.correlogram)
+        grid.newpage()
+        print(gl.pv$samp.correlogram)
         g.l[["pval"]] = gl.pv
       }
       
@@ -95,11 +93,16 @@ pheatmap_plots <-
       gl.fdr = list()
       gl.fdr$regular = fdr_hm_list$row$regular
       gl.fdr$gene.correlogram = fdr_hm_list$none$correlogram
+      gl.fdr$samp.correlogram = fdr_hm_list$none$correlogram.sample
+      grid.newpage()
+      print(gl.fdr$regular )
+      grid.newpage()
+      print(gl.fdr$gene.correlogram)
+      grid.newpage()
+      print(gl.fdr$samp.correlogram)
       g.l[["fdr"]] = gl.fdr
     }
     
     return(g.l)
     
   }
-
-

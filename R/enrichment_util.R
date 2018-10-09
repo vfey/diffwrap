@@ -1,5 +1,5 @@
 runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="", use.background.from.diffr.output=TRUE, 
-                                  enrichment.methods=c("clusterProfiler", "DAVID"), organism.db.for.clusterProfiler=org.Hs.eg.db,
+                                  enrichment.methods=c("clusterProfiler", "DAVID", "gProfileR"), organism.db.for.clusterProfiler=org.Hs.eg.db,
                                   p.thr=0.05, fdr.thr=0.05, logfc.thr=1, out.dir=NULL, david.email.address="", david.url="", max.gene.set.size=1000,
                                   do.similarity.filtering=FALSE)
 {
@@ -8,6 +8,7 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="", use.ba
   enrichment_out.l$clusterProfiler_ORA <- list()
   enrichment_out.l$clusterProfiler_GSEA <- list()
   enrichment_out.l$DAVID <- list()
+  enrichment_out.l$gProfileR <- list()
   
   contrast.names = names(diffr_wrapper.output$contrasts)
   cat("Performing enrichment analyses for ", length(contrast.names), " comparisons: \n")
@@ -28,7 +29,7 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="", use.ba
   }
   
   #for (contrast in contrast.names) {
-  contrast=contrast.names[2]
+  contrast=contrast.names[1]
     cat("***", contrast, "*** \n")
     
     de_table = diffr_wrapper.output$contrasts[[contrast]]
@@ -56,13 +57,13 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="", use.ba
        #For GSEA,an ordered gene list must be prepared:
        
        #### feature 1: numeric vector 
-       geneList = filtered_de_table[[fc.col]]
+       geneList <- filtered_de_table[[fc.col]]
        ## feature 2: named vector
-       names(geneList) = as.character(rownames(filtered_de_table))
+       names(geneList) <- as.character(rownames(filtered_de_table))
        ## feature 3: decreasing order
-       geneList = sort(geneList, decreasing = TRUE)
+       geneList <- sort(geneList, decreasing = TRUE)
        
-       enrichment_out.l$clusterProfiler_GSEA[[contrast]] = run_clusterProfiler_GO(input_genes = geneList, 
+       enrichment_out.l$clusterProfiler_GSEA[[contrast]] <- run_clusterProfiler_GO(input_genes = geneList, 
                                                                                   background_genes = background.genes, 
                                                                                   file_name = NULL, 
                                                                                   ordered_query = TRUE, 
@@ -81,7 +82,7 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="", use.ba
         cat("   Performing DAVID... \n")
         if(david.email.address != "") {
           
-          enrichment_out.l$DAVID[[contrast]] = doDavidEnrichmentAnalysis(background.ensembl.ids = background.genes,
+          enrichment_out.l$DAVID[[contrast]] <- doDavidEnrichmentAnalysis(background.ensembl.ids = background.genes,
                                    foreground.ensembl.ids = input.genes, email.address=david.email.address,
                                    url.address = "https://david.ncifcrf.gov/webservice/services/DAVIDWebService.DAVIDWebServiceHttpSoap12Endpoint/",
                                    time.out.value = 60000, annotation.category = "GOTERM_BP_FAT", pval.thr = p.thr, max.gene.set.size = max.gene.set.size, save.result.table = TRUE, out.dir=out.dir,analysis.name,
@@ -92,7 +93,9 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="", use.ba
           
         }
       }
-      
+      if(method == "gProfileR") {
+        enrichment_out.l$gProfileR[[contrast]] <- run_gprofiler(input.genes, background.genes, data_sources = "BP", file_name = paste(out.dir,"GOBP_enrichment", sep="/"))
+      }
     }
     
   #}

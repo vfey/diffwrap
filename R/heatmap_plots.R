@@ -11,8 +11,9 @@
 #
 # Details: calls function diffr_pheatmap 
 #
+
 pheatmap_plots <-
-  function(d3, id, sym.col="gene_symbol", samp.info = samp.info, samples, groups, main=NULL, p.thr=0.05, fdr.thr=0.05, logfc.thr=1)
+  function(d3, id, sym.col="gene_symbol", samp.info = samp.info, samples, groups, sample.plot.names,main=NULL, p.thr=0.05, fdr.thr=0.05, logfc.thr=1)
   {
     #print(samples)
     #print(groups)
@@ -41,13 +42,18 @@ pheatmap_plots <-
     
     dat.sign.pv = dat.sign.pv[samp.names]
     dat.sign.fdr = dat.sign.fdr[samp.names]
-    #print(groups)
     
     #get the heatmap column annotation
     samp.anno = as.data.frame(groups)
     rownames(samp.anno) = samp.names
     colnames(samp.anno)[1] = "Sample.Class"
     
+    #if pretty names for the plots are available change the names to the pretty names
+    if (!is.null(sample.plot.names)) {
+      colnames(dat.sign.pv) = sample.plot.names
+      colnames(dat.sign.fdr) = sample.plot.names
+      rownames(samp.anno) = sample.plot.names
+    }
     #create lists of pheatmaps for significant p-values and adjusted p-values respectively
     pv_hm_list = list()
     fdr_hm_list = list()

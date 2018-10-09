@@ -1,6 +1,7 @@
 runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="", use.background.from.diffr.output=TRUE, 
                                   enrichment.methods=c("clusterProfiler", "DAVID"), organism.db.for.clusterProfiler=org.Hs.eg.db,
-                                  p.thr=0.05, fdr.thr=0.05, logfc.thr=1, out.dir=NULL, david.email.address="", david.url="", max.gene.set.size=1000)
+                                  p.thr=0.05, fdr.thr=0.05, logfc.thr=1, out.dir=NULL, david.email.address="", david.url="", max.gene.set.size=1000,
+                                  do.similarity.filtering=FALSE)
 {
   
   enrichment_out.l <- list()
@@ -50,7 +51,7 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="", use.ba
                                                                                  max_set_size = max.gene.set.size,
                                                                                  min_overlap = 2,
                                                                                  pAdjustMethod = "BH",
-                                                                                 similarity_filtering = "none")
+                                                                                 similarity_filtering = do.similarity.filtering)
 
        #For GSEA,an ordered gene list must be prepared:
        
@@ -73,7 +74,7 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="", use.ba
                                                                                   max_set_size = 1000, 
                                                                                   min_overlap = 2, 
                                                                                   pAdjustMethod = "BH", 
-                                                                                  similarity_filtering = "none")
+                                                                                  similarity_filtering = do.similarity.filtering)
       } 
     
       if(method == "DAVID") {

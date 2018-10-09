@@ -359,13 +359,13 @@ diffExpr <-
 			cont <- grep("^groups.+", colnames(fit3$coefficients), value=TRUE)
 			cat("  ", cont, "\n")
 			out.l <- diff_expr_extract_contrasts(cont, fit.l$fit, fit3, normcnt, out.l, do.voom=TRUE, out.dir, analysis.name, biomart, biom.data.set, biom.mart,
-					host, biom.filter, biom.attributes, sym.col, rm.dups, p.thr, fdr.thr, logfc.thr, numlab, point.lab, font.size, plots, lists, samp.info = samp.info, samples = samples, groups = groups)
+					host, biom.filter, biom.attributes, sym.col, rm.dups, p.thr, fdr.thr, logfc.thr, numlab, point.lab, font.size, plots, lists, samp.info = samp.info, samples = samples, groups = groups, sample.plot.names = sample.plot.names)
 		}
 	  
 		if (!is.null(contrasts)) {
 			cat("  ...for all (remaining) comparisons (voom)...\n")
 			out.l <- diff_expr_extract_contrasts(contrasts, fit.l$fit, fit.l$fit2, normcnt, out.l, do.voom=TRUE, out.dir, analysis.name, biomart, biom.data.set, biom.mart,
-					host, biom.filter, biom.attributes, sym.col, rm.dups, p.thr, fdr.thr, logfc.thr, numlab, point.lab, font.size, plots, lists, samp.info = samp.info, samples = samples, groups = groups)
+					host, biom.filter, biom.attributes, sym.col, rm.dups, p.thr, fdr.thr, logfc.thr, numlab, point.lab, font.size, plots, lists, samp.info = samp.info, samples = samples, groups = groups, sample.plot.names = sample.plot.names)
 		}
 	} else {
 		if (!is.null(pairs)) {
@@ -373,13 +373,13 @@ diffExpr <-
 			cont <- grep("^groups.+", colnames(fit$coefficients), value=TRUE)
 			cat("  ", cont, "\n")
 			out.l <- diff_expr_extract_contrasts(cont, fit.l$fit, NULL, normcnt, out.l, do.voom=FALSE, out.dir, analysis.name, biomart, biom.data.set, biom.mart,
-					host, biom.filter, biom.attributes, sym.col, rm.dups, p.thr, fdr.thr, logfc.thr, numlab, point.lab, font.size, plots, lists, samp.info = samp.info, samples = samples, groups = groups)
+					host, biom.filter, biom.attributes, sym.col, rm.dups, p.thr, fdr.thr, logfc.thr, numlab, point.lab, font.size, plots, lists, samp.info = samp.info, samples = samples, groups = groups, sample.plot.names = sample.plot.names)
 		}
 	  
 		if (!is.null(contrasts)) {
 			cat("  ...for all (remaining) comparisons (GLM)...\n")
 			out.l <- diff_expr_extract_contrasts(contrasts, fit.l$fit, NULL, normcnt, out.l, do.voom=FALSE, out.dir, analysis.name, biomart, biom.data.set, biom.mart,
-					host, biom.filter, biom.attributes, sym.col, rm.dups, p.thr, fdr.thr, logfc.thr, numlab, point.lab, font.size, plots, lists, samp.info = samp.info, samples = samples, groups = groups)
+					host, biom.filter, biom.attributes, sym.col, rm.dups, p.thr, fdr.thr, logfc.thr, numlab, point.lab, font.size, plots, lists, samp.info = samp.info, samples = samples, groups = groups, sample.plot.names = sample.plot.names)
 		}
 	}
 	on.exit()

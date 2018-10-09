@@ -24,7 +24,7 @@ doDavidEnrichmentAnalysis = function(background.ensembl.ids,
   FG <- addList(david, foreground.ensembl.ids, idType="ENSEMBL_GENE_ID", listName="isClass", listType="Gene")
   BG <- addList(david, background.ensembl.ids, idType="ENSEMBL_GENE_ID", listName="all", listType="Background")
   
-  print(getSpecieNames(david))
+  cat("The species is ", getSpecieNames(david), "\n" )
   
   cat("Proportion ", FG$inDavid, " of the foreground genes in DAVID \n")
   cat("Proportion ", BG$inDavid, " of the background genes in DAVID \n")

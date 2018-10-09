@@ -28,7 +28,7 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="", use.ba
   }
   
   #for (contrast in contrast.names) {
-  contrast=contrast.names[1]
+  contrast=contrast.names[2]
     cat("***", contrast, "*** \n")
     
     de_table = diffr_wrapper.output$contrasts[[contrast]]

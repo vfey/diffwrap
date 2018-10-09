@@ -69,18 +69,25 @@ run_clusterProfiler_GO <- function(input_genes,
                                           pAdjustMethod = "BH",
                                           seed = T)
 
-    GSE.results.df <- data.frame(GSE.results)
-    GSE.results.df$Count <- sapply(GSE.results.df$core_enrichment, function(x) length(unlist(strsplit(x, split = "/"))))
-    # Filter by minimun overlap and extract only interesting columns
-    GSE.results.df <- GSE.results.df[GSE.results.df$Count >= min_overlap, c(1:3,5:7,11:12)] 
-    colnames(GSE.results.df) <- c("Term ID", "Term description", "Gene Set Size", "Normalized Enrichment Score", "P-Value", 
+    if(dim(GSE.results)[1] >= 1) {
+    
+      GSE.results.df <- data.frame(GSE.results)
+      GSE.results.df$Count <- sapply(GSE.results.df$core_enrichment, function(x) length(unlist(strsplit(x, split = "/"))))
+      # Filter by minimun overlap and extract only interesting columns
+      GSE.results.df <- GSE.results.df[GSE.results.df$Count >= min_overlap, c(1:3,5:7,11:12)] 
+      colnames(GSE.results.df) <- c("Term ID", "Term description", "Gene Set Size", "Normalized Enrichment Score", "P-Value", 
                                   "Adjusted P-Value", "DEGs Contributing to Enrichment", "No of DEGs Contributing to Enrichment")
     
-    # Write to Excel file  
-    WriteXLS(GSE.results.df, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = T)
+      # Write to Excel file  
+      WriteXLS(GSE.results.df, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = T)
     
-    return(GSE.results.df)
+      return(GSE.results.df)
+      
+    } else {
+      return("No enrichments found")
+      
     }
+  }
   
   if (!ordered_query) {
     
@@ -96,22 +103,27 @@ run_clusterProfiler_GO <- function(input_genes,
                                             minGSSize = min_set_size,
                                             maxGSSize = max_set_size,
                                             readable = TRUE)
-  
+    if(dim(ORA.results)[1] >= 1) {
+    
       if (similarity_filtering) {
         print("Simplifying results...")
         ORA.results <- clusterProfiler::simplify(ORA.results)
       }
 
-    ORA.results.df <- data.frame(ORA.results)
-    # Filter by minimun overlap and extract only interesting columns
-    ORA.results.df <- ORA.results.df[ORA.results.df$Count >= min_overlap, c(1:6,8:9)]
-    colnames(ORA.results.df) <- c("Term ID", "Term description", "Gene Ratio", "Background Ratio", "P-Value", 
+      ORA.results.df <- data.frame(ORA.results)
+      # Filter by minimun overlap and extract only interesting columns
+      ORA.results.df <- ORA.results.df[ORA.results.df$Count >= min_overlap, c(1:6,8:9)]
+      colnames(ORA.results.df) <- c("Term ID", "Term description", "Gene Ratio", "Background Ratio", "P-Value", 
                                   "Adjusted P-Value", "DEGs Annotated to Term", "No of DEGs Annotated to Term")
       
       
-    # Write to Excel file  
-    WriteXLS(ORA.results.df, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = T)
-    return(ORA.results.df)
+      # Write to Excel file  
+      WriteXLS(ORA.results.df, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = T)
+      return(ORA.results.df)
+      }
+      else {
+        return("No enrichments found")
+      }
   }
 }
 

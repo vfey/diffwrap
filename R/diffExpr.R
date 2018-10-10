@@ -67,6 +67,10 @@
 #' @import scatterplot3d
 #' @import dendextend
 #' @importFrom genefilter rowVars
+#' @import clusterProfileR
+#' @import RDAVIDWebService
+#' @import gProfileR
+#' @import WriteXLS
 NULL
 #'
 #' Main wrapper for executing the entire pipeline from reading in expression data such as count

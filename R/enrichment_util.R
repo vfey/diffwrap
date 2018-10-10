@@ -21,10 +21,9 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="", use.ba
   
   background.genes = ""
   if(use.background.from.diffr.output) {
-    # background.genes <- rownames(diffr_wrapper.output$d2$counts) ## THIS should be used after filtering is corrected. Until that, two extra elements need to be skipped:
+    # background.genes <- rownames(dat) ## THIS should be used after filtering is corrected. Until that, two extra elements need to be skipped:
     background.genes <- 
-      rownames(diffr_wrapper.output$d2$counts)[rownames(diffr_wrapper.output$d2$counts) != "N_multimapping" |
-                                                 rownames(diffr_wrapper.output$d2$counts) != "N_noFeature"]
+      rownames(dat)[rownames(dat) != "N_multimapping" | rownames(dat) != "N_noFeature"]
     cat("The genes of full expression table (", length(background.genes), ") is used as the background... \n") 
   }
   

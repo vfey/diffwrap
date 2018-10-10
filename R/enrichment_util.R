@@ -19,7 +19,7 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="", use.ba
   fdr.col <- names(dat)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(dat)))]
   fc.col <- names(dat)[grep("^logfc$|fold$", tolower(names(dat)))]
   
-  background_genes = ""
+  background.genes = ""
   if(use.background.from.diffr.output) {
     # background.genes <- rownames(diffr_wrapper.output$d2$counts) ## THIS should be used after filtering is corrected. Until that, two extra elements need to be skipped:
     background.genes <- 

@@ -22,12 +22,20 @@ doDavidEnrichmentAnalysis = function(background.ensembl.ids,
   
   #Setting up gene lists /ensembl_ids):
   FG <- addList(david, foreground.ensembl.ids, idType="ENSEMBL_GENE_ID", listName="isClass", listType="Gene")
-  BG <- addList(david, background.ensembl.ids, idType="ENSEMBL_GENE_ID", listName="all", listType="Background")
+  cat("   Proportion ", FG$inDavid, " of the given foreground genes in DAVID \n")
   
-  cat("The species is ", getSpecieNames(david), "\n" )
+  if (background.ensembl.ids != ""){
+    BG <- addList(david, background.ensembl.ids, idType="ENSEMBL_GENE_ID", listName="all", listType="Background")
+    cat("Proportion ", BG$inDavid, " of the given background genes in DAVID \n")
+  }
+  else {
+    cat("   Using DAVID default background (the complete genome) \n")
+  }
   
-  cat("Proportion ", FG$inDavid, " of the foreground genes in DAVID \n")
-  cat("Proportion ", BG$inDavid, " of the background genes in DAVID \n")
+  cat("   The species is ", getSpecieNames(david), "\n" )
+  
+  
+  
   
   setAnnotationCategories(david, annotation.category)
   FuncAnnotChart <- getFunctionalAnnotationChart(david, threshold=pval.thr, count=3L) #PValue < 0.05, at least 3 genes

@@ -1,8 +1,17 @@
 runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="", use.background.from.diffr.output=TRUE, 
-                                  enrichment.methods=c("clusterProfiler", "DAVID", "gProfileR"), organism.db.for.clusterProfiler=org.Hs.eg.db,
+                                  enrichment.methods=c("clusterProfilerGO", "DAVID", "gProfileR"),
                                   p.thr=0.05, fdr.thr=0.05, logfc.thr=1, out.dir=NULL, david.email.address="", david.url="", max.gene.set.size=1000,
                                   do.similarity.filtering=FALSE)
 {
+  
+  species="human" ## TODO: HOW to obtain this...
+  
+  ## TODO: invent a smarter way to do this...
+  enrich.resource.terms = data.frame("Organism" = c("human", "mouse"), 
+                                     "clusterProfilerGO" = c("org.Hs.eg.db", "org.Mm.eg,db"),
+                                     "clusterProfilerKEGG" = c("hsa","mmu"),
+                                     "gProfileR" = c("hsapiens", "mmusculus"))
+  rownames(enrich.resource.terms) = c("human", "mouse")
   
   enrichment_out.l <- list()
   enrichment_out.l$clusterProfiler_ORA <- list()
@@ -38,14 +47,16 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="", use.ba
     
     for (method in enrichment.methods) { 
    
-     if(method == "clusterProfiler"){
+     if(method == "clusterProfilerGO"){
+       
+       org.db = as.character(enrich.resource.terms[species, method])
        enrichment_out.l$clusterProfiler_ORA[[contrast]] = run_clusterProfiler_GO(input_genes = input.genes,
                                                                                  background_genes = background.genes,
                                                                                  file_name = NULL,
                                                                                  ordered_query = FALSE,
                                                                                  id_type = "ENSEMBL",
                                                                                  ontology = "BP",
-                                                                                 OrgDb = organism.db.for.clusterProfiler,
+                                                                                 OrgDb = org.db,
                                                                                  pvalueCutoff = p.thr,
                                                                                  min_set_size = 10,
                                                                                  max_set_size = max.gene.set.size,
@@ -68,7 +79,7 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="", use.ba
                                                                                   ordered_query = TRUE, 
                                                                                   id_type = "ENSEMBL", 
                                                                                   ontology = "BP", 
-                                                                                  OrgDb = organism.db.for.clusterProfiler, 
+                                                                                  OrgDb = org.db, 
                                                                                   pvalueCutoff = p.thr, 
                                                                                   min_set_size = 10, 
                                                                                   max_set_size = 1000, 

@@ -21,14 +21,14 @@ doDavidEnrichmentAnalysis = function(background.ensembl.ids,
   
   #Setting up gene lists /ensembl_ids):
   FG <- addList(david, foreground.ensembl.ids, idType="ENSEMBL_GENE_ID", listName="isClass", listType="Gene")
-  cat("   Proportion ", FG$inDavid, " of the given foreground genes in DAVID \n")
+  cat("      Proportion ", FG$inDavid, " of the given foreground genes in DAVID \n")
   
   if (length(background.ensembl.ids) == 1 && background.ensembl.ids == ""){
-    cat("   Using DAVID default background (the complete genome) \n")
+    cat("      Using DAVID default background (the complete genome) \n")
   }
   else {
     BG <- addList(david, background.ensembl.ids, idType="ENSEMBL_GENE_ID", listName="all", listType="Background")
-    cat("   Proportion ", BG$inDavid, " of the given background genes in DAVID \n")
+    cat("      Proportion ", BG$inDavid, " of the given background genes in DAVID \n")
   }
   
   cat("   The species is ", getSpecieNames(david), "\n" )
@@ -68,12 +68,12 @@ doDavidEnrichmentAnalysis = function(background.ensembl.ids,
   
     if(save.result.table){
       filename=paste0(contrast.name,".DAVID.", annotation.category,".enrichment_table.xls" )
-      cat("Saving DAVID result table into ", file.path(out.dir, paste0(analysis.name, ".", filename)), "...\n")
+      cat("      Saving DAVID result table into ", file.path(out.dir, paste0(analysis.name, ".", filename)), "...\n")
       write.table(result.table,
                 file = file.path(out.dir, paste0(analysis.name, ".", filename)), row.names = FALSE,
                 col.names = TRUE)
     }
-      return(result.table) # or would the result.table be better?
+      return(result.table)
   } 
   else {
     cat("      No significant enrichments found with DAVID...\n")

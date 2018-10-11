@@ -1,10 +1,8 @@
-runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="", use.background.from.diffr.output=TRUE, 
+runEnrichmentAnalyses <- function(diffr_wrapper.output, species="human", analysis.name="", use.background.from.diffr.output=TRUE, 
                                   enrichment.methods=c("clusterProfilerGO", "DAVID", "gProfileR"),
                                   p.thr=0.05, fdr.thr=0.05, logfc.thr=1, out.dir=NULL, david.email.address="", david.url="", max.gene.set.size=1000,
                                   do.similarity.filtering=FALSE)
 {
-  
-  species="human" ## TODO: HOW to obtain this...
   
   ## TODO: invent a smarter way to do this...
   enrich.resource.terms = data.frame("Organism" = c("human", "mouse"), 
@@ -104,7 +102,8 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="", use.ba
         }
       }
       if(method == "gProfileR") {
-        enrichment_out.l$gProfileR[[contrast]] <- run_gprofiler(input.genes, background.genes, data_sources = "BP", file_name = paste(out.dir,"GOBP_enrichment", sep="/"))
+        org = as.character(enrich.resource.terms[species, method])
+        enrichment_out.l$gProfileR[[contrast]] <- run_gprofiler(input.genes, background.genes, data_sources = "BP", organism = org, file_name = paste(out.dir,"GOBP_enrichment", sep="/"))
       }
     }
     

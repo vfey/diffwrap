@@ -52,9 +52,11 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, species="human", analysi
      if(method == "clusterProfilerGO"){
        cat("   Performing GO BP enrichment with clusterProfiler... \n")
        org.db = as.character(enrich.resource.terms[species, method])
+       fname.no.suffix = file.path(out.dir, paste(analysis.name, contrast, method, "ORA", sep = "_"))
+       print(fname.no.suffix)
        enrichment_out.l$clusterProfiler_ORA[[contrast]] = run_clusterProfiler_GO(input_genes = input.genes,
                                                                                  background_genes = background.genes,
-                                                                                 file_name = NULL,
+                                                                                 file_name = fname.no.suffix,
                                                                                  ordered_query = FALSE,
                                                                                  id_type = "ENSEMBL",
                                                                                  ontology = "BP",
@@ -75,18 +77,19 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, species="human", analysi
        ## feature 3: decreasing order
        geneList <- sort(geneList, decreasing = TRUE)
        
-       enrichment_out.l$clusterProfiler_GSEA[[contrast]] <- run_clusterProfiler_GO(input_genes = geneList, 
-                                                                                  background_genes = background.genes, 
-                                                                                  file_name = NULL, 
-                                                                                  ordered_query = TRUE, 
-                                                                                  id_type = "ENSEMBL", 
-                                                                                  ontology = "BP", 
-                                                                                  OrgDb = org.db, 
-                                                                                  pvalueCutoff = p.thr, 
-                                                                                  min_set_size = 10, 
-                                                                                  max_set_size = 1000, 
-                                                                                  min_overlap = 2, 
-                                                                                  pAdjustMethod = "BH", 
+       fname.no.suffix = file.path(out.dir, paste(analysis.name, contrast, method, "GSEA", sep = "_"))
+       enrichment_out.l$clusterProfiler_GSEA[[contrast]] <- run_clusterProfiler_GO(input_genes = geneList,
+                                                                                  background_genes = background.genes,
+                                                                                  file_name = NULL,
+                                                                                  ordered_query = TRUE,
+                                                                                  id_type = "ENSEMBL",
+                                                                                  ontology = "BP",
+                                                                                  OrgDb = org.db,
+                                                                                  pvalueCutoff = p.thr,
+                                                                                  min_set_size = 10,
+                                                                                  max_set_size = 1000,
+                                                                                  min_overlap = 2,
+                                                                                  pAdjustMethod = "BH",
                                                                                   similarity_filtering = do.similarity.filtering)
       } 
     
@@ -102,14 +105,19 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, species="human", analysi
         
         }
         else{
-          cat("      No e-mail address. No connection into DAVID....")
+          cat("      No e-mail address. No connection into DAVID...\n")
           enrichment_out.l$DAVID[[contrast]]="No e-mail address. DAVID could not be performed."
         }
       }
       if(method == "gProfileR") {
         cat("   Performing GO BP enrichment with gProfileR... \n")
         org = as.character(enrich.resource.terms[species, method])
-        enrichment_out.l$gProfileR[[contrast]] <- run_gprofiler(input.genes, background.genes, data_sources = "BP", organism = org, file_name = paste(out.dir,"GOBP_enrichment", sep="/"))
+        fname.no.suffix = file.path(out.dir, paste(analysis.name, contrast, method, sep = "_"))
+        enrichment_out.l$gProfileR[[contrast]] <- run_gprofiler(input.genes, background.genes, 
+                                                                file_name = fname.no.suffix, 
+                                                                data_sources = "BP", 
+                                                                organism = org) 
+                                                        
       }
     }
     

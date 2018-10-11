@@ -53,18 +53,14 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, species="human", analysi
        cat("   Performing GO BP enrichment with clusterProfiler... \n")
        org.db = as.character(enrich.resource.terms[species, method])
        fname.no.suffix = file.path(out.dir, paste(analysis.name, contrast, method, "ORA", sep = "_"))
-       print(fname.no.suffix)
        enrichment_out.l$clusterProfiler_ORA[[contrast]] = run_clusterProfiler_GO(input_genes = input.genes,
                                                                                  background_genes = background.genes,
                                                                                  file_name = fname.no.suffix,
                                                                                  ordered_query = FALSE,
-                                                                                 id_type = "ENSEMBL",
                                                                                  ontology = "BP",
                                                                                  OrgDb = org.db,
                                                                                  pvalueCutoff = p.thr,
-                                                                                 min_set_size = 10,
                                                                                  max_set_size = max.gene.set.size,
-                                                                                 min_overlap = 2,
                                                                                  pAdjustMethod = "BH",
                                                                                  similarity_filtering = do.similarity.filtering)
 
@@ -80,15 +76,12 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, species="human", analysi
        fname.no.suffix = file.path(out.dir, paste(analysis.name, contrast, method, "GSEA", sep = "_"))
        enrichment_out.l$clusterProfiler_GSEA[[contrast]] <- run_clusterProfiler_GO(input_genes = geneList,
                                                                                   background_genes = background.genes,
-                                                                                  file_name = NULL,
+                                                                                  file_name = fname.no.suffix,
                                                                                   ordered_query = TRUE,
-                                                                                  id_type = "ENSEMBL",
                                                                                   ontology = "BP",
                                                                                   OrgDb = org.db,
                                                                                   pvalueCutoff = p.thr,
-                                                                                  min_set_size = 10,
-                                                                                  max_set_size = 1000,
-                                                                                  min_overlap = 2,
+                                                                                  max_set_size = max.gene.set.size,
                                                                                   pAdjustMethod = "BH",
                                                                                   similarity_filtering = do.similarity.filtering)
       } 

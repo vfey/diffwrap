@@ -24,12 +24,12 @@ doDavidEnrichmentAnalysis = function(background.ensembl.ids,
   FG <- addList(david, foreground.ensembl.ids, idType="ENSEMBL_GENE_ID", listName="isClass", listType="Gene")
   cat("   Proportion ", FG$inDavid, " of the given foreground genes in DAVID \n")
   
-  if (background.ensembl.ids != ""){
-    BG <- addList(david, background.ensembl.ids, idType="ENSEMBL_GENE_ID", listName="all", listType="Background")
-    cat("Proportion ", BG$inDavid, " of the given background genes in DAVID \n")
+  if (length(background.ensembl.ids) == 1 && background.ensembl.ids == ""){
+    cat("   Using DAVID default background (the complete genome) \n")
   }
   else {
-    cat("   Using DAVID default background (the complete genome) \n")
+    BG <- addList(david, background.ensembl.ids, idType="ENSEMBL_GENE_ID", listName="all", listType="Background")
+    cat("   Proportion ", BG$inDavid, " of the given background genes in DAVID \n")
   }
   
   cat("   The species is ", getSpecieNames(david), "\n" )

@@ -1,3 +1,7 @@
+# Wrapper function for performing various enrichment analyses
+# 
+# Author: Meeri Pekkarinen
+###############################################################################
 runEnrichmentAnalyses <- function(diffr_wrapper.output, species="human", analysis.name="", use.background.from.diffr.output=TRUE, 
                                   enrichment.methods=c("clusterProfilerGO", "DAVID", "gProfileR"),
                                   p.thr=0.05, fdr.thr=0.05, logfc.thr=1, out.dir=NULL, david.email.address="", david.url="", max.gene.set.size=1000,
@@ -34,8 +38,8 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, species="human", analysi
     cat("The genes of full expression table (", length(background.genes), ") is used as the background... \n") 
   }
   
-  #for (contrast in contrast.names) {
-  contrast=contrast.names[1]
+  for (contrast in contrast.names) {
+
     cat("***", contrast, "*** \n")
     
     de_table = diffr_wrapper.output$contrasts[[contrast]]
@@ -46,7 +50,7 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, species="human", analysi
     for (method in enrichment.methods) { 
    
      if(method == "clusterProfilerGO"){
-       
+       cat("   Performing GO BP enrichment with clusterProfiler... \n")
        org.db = as.character(enrich.resource.terms[species, method])
        enrichment_out.l$clusterProfiler_ORA[[contrast]] = run_clusterProfiler_GO(input_genes = input.genes,
                                                                                  background_genes = background.genes,
@@ -98,16 +102,18 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, species="human", analysi
         
         }
         else{
-          
+          cat("      No e-mail address. No connection into DAVID....")
+          enrichment_out.l$DAVID[[contrast]]="No e-mail address. DAVID could not be performed."
         }
       }
       if(method == "gProfileR") {
+        cat("   Performing GO BP enrichment with gProfileR... \n")
         org = as.character(enrich.resource.terms[species, method])
         enrichment_out.l$gProfileR[[contrast]] <- run_gprofiler(input.genes, background.genes, data_sources = "BP", organism = org, file_name = paste(out.dir,"GOBP_enrichment", sep="/"))
       }
     }
     
-  #}
+  }
   return(enrichment_out.l)
 }
   

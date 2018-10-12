@@ -78,7 +78,8 @@ run_clusterProfiler_GO <- function(input_genes,
       colnames(GSE.results.df) <- c("Term ID", "Term description", "Gene Set Size", "Normalized Enrichment Score", "P-Value", 
                                   "Adjusted P-Value", "DEGs Contributing to Enrichment", "No of DEGs Contributing to Enrichment")
     
-      # Write to Excel file  
+      # Write to Excel file
+      cat("         Saving result into ", paste0(file_name, ".xlsx"), "...\n")
       WriteXLS(GSE.results.df, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = T)
     
       return(GSE.results.df)
@@ -118,6 +119,7 @@ run_clusterProfiler_GO <- function(input_genes,
       
       
       # Write to Excel file  
+      cat("         Saving result into ", paste0(file_name, ".xlsx"), "...\n")
       WriteXLS(ORA.results.df, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = T)
       return(ORA.results.df)
       }

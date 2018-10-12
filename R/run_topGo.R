@@ -21,7 +21,7 @@
 
 #           column: p.adj.weight01 - represents the adjusted p-value for the weight01 algorithm    
 #           requires packages: topGO, readxl, org.Hs.eg.db
-run.topG0 <- function(background, foreground, ontologies = c("BP"), organism, ID_type = "ENSEMBL", pAdjustMethod = "BH") {
+run.topGO <- function(background, foreground, ontologies = c("BP"), organism, ID_type = "ENSEMBL", pAdjustMethod = "BH") {
   
   # genes.full = data.frame(readxl::read_excel(background, skip = 1))
   # gene.full.names = genes.full$Ensembl.ID

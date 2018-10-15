@@ -3,24 +3,32 @@
 # Author: Meeri Pekkarinen
 ###############################################################################
 runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="", 
-                                  use.background.from.diffr.output=TRUE, out.dir=NULL,
+                                  use.background.from.diffr.output=TRUE, 
+                                  out.dir=NULL,
                                   species="human",
                                   p.thr=0.05, fdr.thr=0.05, logfc.thr=1, 
-                                  enrichment.methods = c("clusterProfilerGO", "DAVID", "gProfileR", "topGO"), 
-                                  clusterProfilerGO.params = list(do.similarity.filtering=F,
+                                  enrichment.methods = c("clusterProfilerGO", "clusterProfilerKEGG","DAVID", "gProfileR", "topGO"), 
+                                  clusterProfilerGO.params = list(analysis.approach="ORA",
+                                                                  do.similarity.filtering=F,
                                                                   min.gene.set.size=10,
-                                                                  max.gene.set.size = 1000, 
+                                                                  max.gene.set.size=1000, 
                                                                   ontology="BP", 
                                                                   min.overlap=2,
-                                                                  p.adjust.method="BH",
-                                                                  analysis.approach="ORA"),
-                                  clusterProfilerKEGG.params = list(),
+                                                                  p.adjust.method="BH"
+                                                                  ),
+                                  clusterProfilerKEGG.params = list(analysis.approach="ORA",
+                                                                    min.gene.set.size=10,
+                                                                    max.gene.set.size=1000, 
+                                                                    ontology="BP", 
+                                                                    min.overlap=2,
+                                                                    p.adjust.method="BH"
+                                                                    ),
                                   david.params = list(email.address="", 
                                                       url="",
                                                       time.out.value = 60000,
                                                       annotation.category = "GOTERM_BP_FAT",
                                                       max.gene.set.size = 1000),
-                                  gProfiler.params = list(data.sources="BP", show.only.significant = TRUE),
+                                  gProfiler.params = list(data.sources="GO:BP", show.only.significant = TRUE),
                                   topGO.params = list(),
                                   ontologies.used = c("BP")) 
 {
@@ -34,8 +42,8 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
   rownames(enrich.resource.terms) = c("human", "mouse")
   
   enrichment_out.l <- list()
-  enrichment_out.l$clusterProfiler_ORA <- list()
-  enrichment_out.l$clusterProfiler_GSEA <- list()
+  enrichment_out.l$clusterProfiler_GO <- list()
+  enrichment_out.l$clusterProfiler_KEGG <- list()
   enrichment_out.l$DAVID <- list()
   enrichment_out.l$gProfileR <- list()
   enrichment_out.l$topGO <- list()
@@ -48,6 +56,8 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
   pv.col <- names(dat)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(dat)))]
   fdr.col <- names(dat)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(dat)))]
   fc.col <- names(dat)[grep("^logfc$|fold$", tolower(names(dat)))]
+  entrez.col <- names(dat)[grep("entrez", tolower(names(dat)))]
+  
   
   background.genes = ""
   if(use.background.from.diffr.output) {
@@ -77,23 +87,20 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
     for (method in enrichment.methods) { 
    
      if(method == "clusterProfilerGO"){
+       
        cat("   Performing GO BP enrichment with clusterProfiler... \n")
        org.db = as.character(enrich.resource.terms[species, method])
-       
-
-       # print(clusterProfilerGO.params$ontology)
-       # print(typeof(clusterProfilerGO.params$ontology))
-       # print(clusterProfilerGO.params$p.adjust.method)
-       # print(typeof(clusterProfilerGO.params$p.adjust.method))
-       
+      
        if(clusterProfilerGO.params$analysis.approach == "ORA"){
+         
          ordered.query=FALSE
          genes = input.genes
          fname.no.suffix = file.path(out.dir, paste(analysis.name, contrast, method, "ORA", sep = "_"))
+         
        }
        else {
          
-         ordered.query =TRUE
+         ordered.query = TRUE
          
          #For GSEA,an ordered gene list must be prepared:
          #### feature 1: numeric vector
@@ -105,7 +112,7 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
          genes = geneList
          fname.no.suffix = file.path(out.dir, paste(analysis.name, contrast, method, "GSEA", sep = "_"))
        }
-       enrichment_out.l$clusterProfiler_ORA[[contrast]] = run_clusterProfiler_GO(input_genes = genes,
+       enrichment_out.l$clusterProfiler_GO[[contrast]] = run_clusterProfiler_GO(input_genes = genes,
                                                                                  background_genes = background.genes,
                                                                                  file_name = fname.no.suffix,
                                                                                  ordered_query = ordered.query, 
@@ -119,8 +126,44 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
                                                                                  similarity_filtering = clusterProfilerGO.params$do.similarity.filtering)
 
       
-      } 
-    
+     } 
+      
+      if(method == "clusterProfilerKEGG") {
+        cat("   Performing KEGG enrichment with clusterProfiler... \n")
+        org = as.character(enrich.resource.terms[species, method])
+      
+        if(length(entrez.col) == 0){
+          cat("      No entrez IDs found  from the data. skipping KEGG-enrichment...\n")
+          break 
+        }
+        
+        if(length(background.genes)  > 1){
+           background.gene.entrez=de_table[[entrez.col]][!is.na(de_table[[entrez.col]])]
+           cat("      ",length(background.gene.entrez), "/", length(background.genes), " of the all DE genes having corresponding entrez id used as background...\n")
+           
+        }
+        else{
+          cat("      Using default background in KEGG-enrichment...\n")
+          background.gene.entrez = ""
+        }
+        
+        input.gene.entrez=filtered_de_table[[entrez.col]][!is.na(filtered_de_table[[entrez.col]])]
+        cat("      ",length(input.gene.entrez), "/", length(input.genes), " of the input genes having corresponding entrez id used for the analysis...\n")
+        
+        
+        enrichment_out.l$clusterProfiler_KEGG[[contrast]] = run_clusterProfiler_KEGG(input_genes=as.character(input.gene.entrez),
+                                              background_genes = as.character(background.gene.entrez),
+                                              file_name = NULL,
+                                              ordered_query = FALSE,
+                                              organism = org,
+                                              pvalueCutoff = fdr.thr,
+                                              min_set_size = clusterProfilerKEGG.params$min.gene.set.size,
+                                              max_set_size = clusterProfilerKEGG.params$max.gene.set.size,
+                                              min_overlap = clusterProfilerKEGG.params$min.overlap,
+                                              pAdjustMethod = clusterProfilerKEGG.params$p.adjust.method)
+         
+      }
+      
       if(method == "DAVID") {
         cat("   Performing DAVID... \n")
         if(david.params$email.address != "") {

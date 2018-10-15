@@ -29,6 +29,9 @@ run.topGO <- function(background, foreground, ontologies = c("BP"), organism, ID
   # genes.of.interest = data.frame(readxl::read_excel(foreground, skip = 1))
   # gene.of.interest.names = genes.of.interest$Ensembl.ID
   # 
+  print(paste0("pAdjustMethod: ", pAdjustMethod))
+  print(paste0("ID_type: ",ID_type))
+  
   gene.full.names = background
   gene.of.interest.names = foreground
   gene.list <- factor(as.integer(gene.full.names %in% gene.of.interest.names))

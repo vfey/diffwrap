@@ -67,7 +67,17 @@ run_gprofiler <- function(input_genes,
                           min_overlap = 2,
                           correction_method = "fdr",
                           hier_filtering = "none") {
-
+    print(paste0("ordered_query :",ordered_query))
+    print(paste0("show_only_significant: ",show_only_significant))
+    print(paste0("exclude_iea: ",exclude_iea))
+    print(paste0("max_p_value: ",max_p_value))
+    print(paste0("sort_by_structure: ",sort_by_structure))
+    print(paste0("min_set_size: ", min_set_size))
+    print(paste0("max_set_size: ", max_set_size))
+    print(paste0("min_overlap: ", min_overlap))
+    print(paste0("correction_method: ", correction_method))
+    print(paste0("hier_filtering: ", hier_filtering))
+          
     results <- gprofiler(query = as.character(input_genes),
                      organism = organism,
                      sort_by_structure = sort_by_structure,

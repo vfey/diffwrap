@@ -122,7 +122,7 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
         fname.no.suffix = file.path(out.dir, paste(analysis.name, contrast, method, sep = "_"))
         enrichment_out.l$gProfileR[[contrast]] <- run_gprofiler(input.genes, background.genes, 
                                                                 file_name = fname.no.suffix, 
-                                                                data_sources = "BP", 
+                                                                data_sources = "GO:BP", 
                                                                 organism = org) 
                                                         
       }

@@ -29,8 +29,8 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
                                                       annotation.category = "GOTERM_BP_FAT",
                                                       max.gene.set.size = 1000),
                                   gProfiler.params = list(data.sources="GO:BP", show.only.significant = TRUE),
-                                  topGO.params = list(),
-                                  ontologies.used = c("BP")) 
+                                  topGO.params = list(ontologies.used = c("BP"), org = "org.Hs.eg.db")
+                                  ) 
 {
   
   ## TODO: invent a smarter way to do this...
@@ -189,8 +189,8 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
       if(method == "gProfileR") {
         cat("   Performing GO BP enrichment with gProfileR... \n")
         org = as.character(enrich.resource.terms[species, method])
-        print(org)
-        print(gProfiler.params$data.sources)
+        print(paste0("Organism: ",org))
+        print(paste0("Data sources: ",gProfiler.params$data.sources))
         fname.no.suffix = file.path(out.dir, paste(analysis.name, contrast, method, sep = "_"))
         enrichment_out.l$gProfileR[[contrast]] <- run_gprofiler(input.genes, background.genes, 
                                                                 file_name = fname.no.suffix,
@@ -203,9 +203,11 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
       
       if (method == "topGO") {
         cat("Performing topGO.... \n")
-   
+        print(paste0("Ontologies used: ",topGO.params$ontologies.used))
+        print(paste0("Organism: ",topGO.params$org))
+        
         org.db = as.character(enrich.resource.terms[species, method])
-        enrichment_out.l$topGO[[contrast]] <- run.topGO(background=background.genes, foreground = input.genes,ontologies = ontologies.used, organism = org.db)
+        enrichment_out.l$topGO[[contrast]] <- run.topGO(background=background.genes, foreground = input.genes,ontologies =  topGO.params$ontologies.used, organism = topGO.params$org)
       }
     }
 

@@ -3,25 +3,47 @@
 # Author: Meeri Pekkarinen
 ###############################################################################
 runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="", 
-                                  use.background.from.diffr.output=TRUE, out.dir=NULL,
+                                  use.background.from.diffr.output=TRUE, 
+                                  out.dir=NULL,
                                   species="human",
                                   p.thr=0.05, fdr.thr=0.05, logfc.thr=1, 
-                                  enrichment.methods = c("clusterProfilerGO", "DAVID", "gProfileR", "topGO"), 
-                                  david.email.address="", david.url="", max.gene.set.size = 1000, #params for David
-                                  organism.db = "org.Hs.eg.db", do.similarity.filtering=FALSE, # params for clusterProfiler, organism.db used in topGO too
-                                  ontologies.used = c("BP")) #params for topGO
+                                  enrichment.methods = c("clusterProfilerGO", "clusterProfilerKEGG","DAVID", "gProfileR", "topGO"), 
+                                  clusterProfilerGO.params = list(analysis.approach="ORA",
+                                                                  do.similarity.filtering=F,
+                                                                  min.gene.set.size=10,
+                                                                  max.gene.set.size=1000, 
+                                                                  ontology="BP", 
+                                                                  min.overlap=2,
+                                                                  p.adjust.method="BH"
+                                                                  ),
+                                  clusterProfilerKEGG.params = list(analysis.approach="ORA",
+                                                                    min.gene.set.size=10,
+                                                                    max.gene.set.size=1000, 
+                                                                    ontology="BP", 
+                                                                    min.overlap=2,
+                                                                    p.adjust.method="BH"
+                                                                    ),
+                                  david.params = list(email.address="", 
+                                                      url="",
+                                                      time.out.value = 60000,
+                                                      annotation.category = "GOTERM_BP_FAT",
+                                                      max.gene.set.size = 1000),
+                                  gProfiler.params = list(data.sources="GO:BP", show.only.significant = TRUE),
+                                  topGO.params = list(),
+                                  ontologies.used = c("BP")) 
 {
   
   ## TODO: invent a smarter way to do this...
   enrich.resource.terms = data.frame("Organism" = c("human", "mouse"), 
                                      "clusterProfilerGO" = c("org.Hs.eg.db", "org.Mm.eg,db"),
                                      "clusterProfilerKEGG" = c("hsa","mmu"),
-                                     "gProfileR" = c("hsapiens", "mmusculus"))
+                                     "gProfileR" = c("hsapiens", "mmusculus"),
+                                     "topGO" = c("org.Hs.eg.db", "org.Mm.eg,db"))
   rownames(enrich.resource.terms) = c("human", "mouse")
   
   enrichment_out.l <- list()
-  enrichment_out.l$clusterProfiler_ORA <- list()
-  enrichment_out.l$clusterProfiler_GSEA <- list()
+  enrichment_out.l$clusterProfiler_GO <- list()
+  enrichment_out.l$clusterProfiler_KEGG <- list()
   enrichment_out.l$DAVID <- list()
   enrichment_out.l$gProfileR <- list()
   enrichment_out.l$topGO <- list()
@@ -30,10 +52,12 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
   cat("Performing enrichment analyses for ", length(contrast.names), " comparisons: \n")
   cat("  ", contrast.names, " \n")
   
-  dat <- diffr_wrapper.output$contrasts[[1]] #extracting appropriate colnames by examining the first contrast
+  dat <- diffr_wrapper.output$contrasts[[1]] ## extracting appropriate colnames using the first contrast
   pv.col <- names(dat)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(dat)))]
   fdr.col <- names(dat)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(dat)))]
   fc.col <- names(dat)[grep("^logfc$|fold$", tolower(names(dat)))]
+  entrez.col <- names(dat)[grep("entrez", tolower(names(dat)))]
+  
   
   background.genes = ""
   if(use.background.from.diffr.output) {
@@ -48,11 +72,13 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
     cat("***", contrast, "*** \n")
     de_table = diffr_wrapper.output$contrasts[[contrast]]
     
-    filtered_de_table = de_table[de_table[[fdr.col]] < fdr.thr & de_table[[fc.col]] >= logfc.thr,]
+    cat("   Filtering the DE genes (fdr < ", fdr.thr, "and abs. logFC >=", logfc.thr, ")...\n")
+    filtered_de_table = de_table[de_table[[fdr.col]] < fdr.thr & abs(de_table[[fc.col]]) >= logfc.thr,]
     
     #if there are no entries with significant fdr, then filter by p.value
     if (!(nrow(filtered_de_table) > 0)) {
-      filtered_de_table = de_table[de_table[[pv.col]] < p.thr ,]
+      cat("      No entries with significant fdr. P-values used instead...\n")
+      filtered_de_table = de_table[de_table[[pv.col]] < p.thr & abs(de_table[[fc.col]]) >= logfc.thr,]
     }
     
     input.genes = rownames(filtered_de_table)
@@ -61,52 +87,96 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
     for (method in enrichment.methods) { 
    
      if(method == "clusterProfilerGO"){
+       
        cat("   Performing GO BP enrichment with clusterProfiler... \n")
        org.db = as.character(enrich.resource.terms[species, method])
-       fname.no.suffix = file.path(out.dir, paste(analysis.name, contrast, method, "ORA", sep = "_"))
-
-       enrichment_out.l$clusterProfiler_ORA[[contrast]] = run_clusterProfiler_GO(input_genes = input.genes,
+      
+       if(clusterProfilerGO.params$analysis.approach == "ORA"){
+         
+         ordered.query=FALSE
+         genes = input.genes
+         fname.no.suffix = file.path(out.dir, paste(analysis.name, contrast, method, "ORA", sep = "_"))
+         
+       }
+       else {
+         
+         ordered.query = TRUE
+         
+         #For GSEA,an ordered gene list must be prepared:
+         #### feature 1: numeric vector
+         geneList <- filtered_de_table[[fc.col]]
+         ## feature 2: named vector
+         names(geneList) <- as.character(rownames(filtered_de_table))
+         ## feature 3: decreasing order
+         geneList <- sort(geneList, decreasing = TRUE)
+         genes = geneList
+         fname.no.suffix = file.path(out.dir, paste(analysis.name, contrast, method, "GSEA", sep = "_"))
+       }
+       enrichment_out.l$clusterProfiler_GO[[contrast]] = run_clusterProfiler_GO(input_genes = genes,
                                                                                  background_genes = background.genes,
                                                                                  file_name = fname.no.suffix,
-                                                                                 ordered_query = FALSE,
-                                                                                 ontology = ontologies.used,
+                                                                                 ordered_query = ordered.query, 
                                                                                  OrgDb = org.db,
-                                                                                 pvalueCutoff = p.thr,
-                                                                                 max_set_size = max.gene.set.size,
-                                                                                 pAdjustMethod = "BH",
-                                                                                 similarity_filtering = do.similarity.filtering)
+                                                                                 pvalueCutoff = fdr.thr,
+                                                                                 ontology = clusterProfilerGO.params$ontology,
+                                                                                 min_set_size = clusterProfilerGO.params$min.gene.set.size,
+                                                                                 max_set_size = clusterProfilerGO.params$max.gene.set.size,
+                                                                                 min_overlap = clusterProfilerGO.params$min.overlap,
+                                                                                 pAdjustMethod = clusterProfilerGO.params$p.adjust.method,
+                                                                                 similarity_filtering = clusterProfilerGO.params$do.similarity.filtering)
 
-       #For GSEA,an ordered gene list must be prepared:
-
-       #### feature 1: numeric vector
-       geneList <- filtered_de_table[[fc.col]]
-       ## feature 2: named vector
-       names(geneList) <- as.character(rownames(filtered_de_table))
-       ## feature 3: decreasing order
-       geneList <- sort(geneList, decreasing = TRUE)
-
-       
-       fname.no.suffix = file.path(out.dir, paste(analysis.name, contrast, method, "GSEA", sep = "_"))
-       enrichment_out.l$clusterProfiler_GSEA[[contrast]] <- run_clusterProfiler_GO(input_genes = geneList,
-                                                                                  background_genes = background.genes,
-                                                                                  file_name = fname.no.suffix,
-                                                                                  ordered_query = TRUE,
-                                                                                  ontology = ontologies.used,
-                                                                                  OrgDb = org.db,
-                                                                                  pvalueCutoff = p.thr,
-                                                                                  max_set_size = max.gene.set.size,
-                                                                                  pAdjustMethod = "BH",
-                                                                                  similarity_filtering = do.similarity.filtering)
-      } 
-    
+      
+     } 
+      
+      if(method == "clusterProfilerKEGG") {
+        cat("   Performing KEGG enrichment with clusterProfiler... \n")
+        org = as.character(enrich.resource.terms[species, method])
+      
+        if(length(entrez.col) == 0){
+          cat("      No entrez IDs found  from the data. skipping KEGG-enrichment...\n")
+          break 
+        }
+        
+        if(length(background.genes)  > 1){
+           background.gene.entrez=de_table[[entrez.col]][!is.na(de_table[[entrez.col]])]
+           cat("      ",length(background.gene.entrez), "/", length(background.genes), " of the all DE genes having corresponding entrez id used as background...\n")
+           
+        }
+        else{
+          cat("      Using default background in KEGG-enrichment...\n")
+          background.gene.entrez = ""
+        }
+        
+        input.gene.entrez=filtered_de_table[[entrez.col]][!is.na(filtered_de_table[[entrez.col]])]
+        cat("      ",length(input.gene.entrez), "/", length(input.genes), " of the input genes having corresponding entrez id used for the analysis...\n")
+        
+        
+        enrichment_out.l$clusterProfiler_KEGG[[contrast]] = run_clusterProfiler_KEGG(input_genes=as.character(input.gene.entrez),
+                                              background_genes = as.character(background.gene.entrez),
+                                              file_name = NULL,
+                                              ordered_query = FALSE,
+                                              organism = org,
+                                              pvalueCutoff = fdr.thr,
+                                              min_set_size = clusterProfilerKEGG.params$min.gene.set.size,
+                                              max_set_size = clusterProfilerKEGG.params$max.gene.set.size,
+                                              min_overlap = clusterProfilerKEGG.params$min.overlap,
+                                              pAdjustMethod = clusterProfilerKEGG.params$p.adjust.method)
+         
+      }
+      
       if(method == "DAVID") {
         cat("   Performing DAVID... \n")
-        if(david.email.address != "") {
+        if(david.params$email.address != "") {
           
           enrichment_out.l$DAVID[[contrast]] <- doDavidEnrichmentAnalysis(background.ensembl.ids = background.genes,
-                                   foreground.ensembl.ids = input.genes, email.address=david.email.address,
-                                   url.address = "https://david.ncifcrf.gov/webservice/services/DAVIDWebService.DAVIDWebServiceHttpSoap12Endpoint/",
-                                   time.out.value = 60000, annotation.category = "GOTERM_BP_FAT", pval.thr = p.thr, max.gene.set.size = max.gene.set.size, save.result.table = TRUE, out.dir=out.dir,analysis.name,
+                                   foreground.ensembl.ids = input.genes, 
+                                   email.address = david.params$email.address,
+                                   url.address = david.params$url,
+                                   time.out.value = david.params$time.out.value, 
+                                   annotation.category = david.params$annotation.category, 
+                                   pval.thr = p.thr, 
+                                   max.gene.set.size = david.params$max.gene.set.size, 
+                                   save.result.table = TRUE, out.dir=out.dir,analysis.name,
                                    contrast.name=contrast)
         
         }
@@ -119,17 +189,23 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
       if(method == "gProfileR") {
         cat("   Performing GO BP enrichment with gProfileR... \n")
         org = as.character(enrich.resource.terms[species, method])
+        print(org)
+        print(gProfiler.params$data.sources)
         fname.no.suffix = file.path(out.dir, paste(analysis.name, contrast, method, sep = "_"))
         enrichment_out.l$gProfileR[[contrast]] <- run_gprofiler(input.genes, background.genes, 
-                                                                file_name = fname.no.suffix, 
-                                                                data_sources = "GO:BP", 
-                                                                organism = org) 
+                                                                file_name = fname.no.suffix,
+                                                                organism = org,
+                                                                data_sources = gProfiler.params$data.sources,
+                                                                show_only_significant = gProfiler.params$show.only.significant
+                                                                ) 
                                                         
       }
       
       if (method == "topGO") {
+        cat("Performing topGO.... \n")
    
-        enrichment_out.l$topGO[[contrast]] <- run.topG0(background.genes, input.genes,ontologies = ontologies.used, organism = organism.db)
+        org.db = as.character(enrich.resource.terms[species, method])
+        enrichment_out.l$topGO[[contrast]] <- run.topGO(background=background.genes, foreground = input.genes,ontologies = ontologies.used, organism = org.db)
       }
     }
 

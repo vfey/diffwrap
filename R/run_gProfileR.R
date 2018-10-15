@@ -56,11 +56,11 @@ run_gprofiler <- function(input_genes,
                           background_genes = "",
                           file_name = NULL,
                           ordered_query = FALSE,
-                          show_only_significant = T,
+                          show_only_significant = F,
                           data_sources = NULL,
                           organism = "hsapiens",
                           exclude_iea = FALSE,
-                          max_p_value = 0.05,
+                          max_p_value = 0.5,
                           sort_by_structure = FALSE,
                           min_set_size = 10,
                           max_set_size = 1000,
@@ -68,7 +68,7 @@ run_gprofiler <- function(input_genes,
                           correction_method = "fdr",
                           hier_filtering = "none") {
 
-    results <- gprofiler(query = input_genes,
+    results <- gprofiler(query = as.character(input_genes),
                      organism = organism,
                      sort_by_structure = sort_by_structure,
                      ordered_query = ordered_query,
@@ -83,7 +83,15 @@ run_gprofiler <- function(input_genes,
                      custom_bg = background_genes,
                      src_filter = data_sources)
 
-    results <- results[,c(9,10,12,4:6,3,14)] # Extract only interesting columns
+    cols.res = colnames(results)
+    cols.interest = c("term.id", "domain","term.name","term.size","query.size","overlap.size","p.value","intersection") 
+    ids.list = list()
+    for(col.intr in cols.interest) {
+      ids.list[[col.intr]] = grep(col.intr, col.res)
+    }
+    ids.interest = as.vector(unlist(ids.list))
+    
+    results <- results[,ids.interest] # Extract only interesting columns
     colnames(results) <- c("Term ID", "Term Domain", "Term Description", "Term Size", "Query Size",
                        "No of DEGs annotated to Term", "Adjusted P-Value", "DEGs Annotated to Term")
     

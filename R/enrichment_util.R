@@ -12,14 +12,15 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
                                                                   max.gene.set.size = 1000, 
                                                                   ontology="BP", 
                                                                   min.overlap=2,
-                                                                  p.adjust.method="BH"),
+                                                                  p.adjust.method="BH",
+                                                                  analysis.approach="ORA"),
                                   clusterProfilerKEGG.params = list(),
                                   david.params = list(email.address="", 
                                                       url="",
                                                       time.out.value = 60000,
                                                       annotation.category = "GOTERM_BP_FAT",
                                                       max.gene.set.size = 1000),
-                                  gProfiler.params = list(),
+                                  gProfiler.params = list(data.sources="BP", show.only.significant = TRUE),
                                   topGO.params = list(),
                                   ontologies.used = c("BP")) 
 {
@@ -78,19 +79,38 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
      if(method == "clusterProfilerGO"){
        cat("   Performing GO BP enrichment with clusterProfiler... \n")
        org.db = as.character(enrich.resource.terms[species, method])
-       fname.no.suffix = file.path(out.dir, paste(analysis.name, contrast, method, "ORA", sep = "_"))
+       
 
        # print(clusterProfilerGO.params$ontology)
        # print(typeof(clusterProfilerGO.params$ontology))
        # print(clusterProfilerGO.params$p.adjust.method)
        # print(typeof(clusterProfilerGO.params$p.adjust.method))
        
-       enrichment_out.l$clusterProfiler_ORA[[contrast]] = run_clusterProfiler_GO(input_genes = input.genes,
+       if(clusterProfilerGO.params$analysis.approach == "ORA"){
+         ordered.query=FALSE
+         genes = input.genes
+         fname.no.suffix = file.path(out.dir, paste(analysis.name, contrast, method, "ORA", sep = "_"))
+       }
+       else {
+         
+         ordered.query =TRUE
+         
+         #For GSEA,an ordered gene list must be prepared:
+         #### feature 1: numeric vector
+         geneList <- filtered_de_table[[fc.col]]
+         ## feature 2: named vector
+         names(geneList) <- as.character(rownames(filtered_de_table))
+         ## feature 3: decreasing order
+         geneList <- sort(geneList, decreasing = TRUE)
+         genes = geneList
+         fname.no.suffix = file.path(out.dir, paste(analysis.name, contrast, method, "GSEA", sep = "_"))
+       }
+       enrichment_out.l$clusterProfiler_ORA[[contrast]] = run_clusterProfiler_GO(input_genes = genes,
                                                                                  background_genes = background.genes,
                                                                                  file_name = fname.no.suffix,
-                                                                                 ordered_query = FALSE, #to run function in ORA-mode
+                                                                                 ordered_query = ordered.query, 
                                                                                  OrgDb = org.db,
-                                                                                 pvalueCutoff = p.thr,
+                                                                                 pvalueCutoff = fdr.thr,
                                                                                  ontology = clusterProfilerGO.params$ontology,
                                                                                  min_set_size = clusterProfilerGO.params$min.gene.set.size,
                                                                                  max_set_size = clusterProfilerGO.params$max.gene.set.size,
@@ -98,29 +118,7 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
                                                                                  pAdjustMethod = clusterProfilerGO.params$p.adjust.method,
                                                                                  similarity_filtering = clusterProfilerGO.params$do.similarity.filtering)
 
-       #For GSEA,an ordered gene list must be prepared:
-
-       #### feature 1: numeric vector
-       geneList <- filtered_de_table[[fc.col]]
-       ## feature 2: named vector
-       names(geneList) <- as.character(rownames(filtered_de_table))
-       ## feature 3: decreasing order
-       geneList <- sort(geneList, decreasing = TRUE)
-
-
-       fname.no.suffix = file.path(out.dir, paste(analysis.name, contrast, method, "GSEA", sep = "_"))
-       enrichment_out.l$clusterProfiler_GSEA[[contrast]] <- run_clusterProfiler_GO(input_genes = geneList,
-                                                                                  background_genes = background.genes,
-                                                                                  file_name = fname.no.suffix,
-                                                                                  ordered_query = TRUE, #to run function in GSEA-mode
-                                                                                  OrgDb = org.db,
-                                                                                  pvalueCutoff = p.thr,
-                                                                                  ontology = clusterProfilerGO.params$ontology,
-                                                                                  min_set_size = clusterProfilerGO.params$min.gene.set.size,
-                                                                                  max_set_size = clusterProfilerGO.params$max.gene.set.size,
-                                                                                  min_overlap = clusterProfilerGO.params$min.overlap,
-                                                                                  pAdjustMethod = clusterProfilerGO.params$p.adjust.method,
-                                                                                  similarity_filtering = clusterProfilerGO.params$do.similarity.filtering)
+      
       } 
     
       if(method == "DAVID") {
@@ -148,11 +146,15 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
       if(method == "gProfileR") {
         cat("   Performing GO BP enrichment with gProfileR... \n")
         org = as.character(enrich.resource.terms[species, method])
+        print(org)
+        print(gProfiler.params$data.sources)
         fname.no.suffix = file.path(out.dir, paste(analysis.name, contrast, method, sep = "_"))
         enrichment_out.l$gProfileR[[contrast]] <- run_gprofiler(input.genes, background.genes, 
-                                                                file_name = fname.no.suffix, 
-                                                                data_sources = "BP", 
-                                                                organism = org) 
+                                                                file_name = fname.no.suffix,
+                                                                organism = org,
+                                                                data_sources = gProfiler.params$data.sources,
+                                                                show_only_significant = gProfiler.params$show.only.significant
+                                                                ) 
                                                         
       }
       

@@ -64,7 +64,7 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
     # background.genes <- rownames(dat) ## THIS should be used after filtering is corrected. Until that, two extra elements need to be skipped:
     background.genes <- 
       rownames(dat)[rownames(dat) != "N_multimapping" | rownames(dat) != "N_noFeature"]
-    cat("The genes of full expression table (", length(background.genes), ") is used as the background... \n") 
+    cat("The genes of full expression table (", length(background.genes), ") is used as the background (expect in GSEA-analyses, where no background is used)... \n") 
   }
  
   for (contrast in contrast.names) {
@@ -82,7 +82,7 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
     }
     
     input.genes = rownames(filtered_de_table)
-    cat("  ", length(input.genes), " genes used as input \n")
+    cat("  ", length(input.genes), " genes used as input (expect in GSEA-analyses, where all measured genes is used) \n")
     
     for (method in enrichment.methods) { 
    
@@ -102,11 +102,11 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
          
          ordered.query = TRUE
          
-         #For GSEA,an ordered gene list must be prepared:
+         #For GSEA,an ordered gene list of ALL genes must be prepared:
          #### feature 1: numeric vector
-         geneList <- filtered_de_table[[fc.col]]
+         geneList <- de_table[[fc.col]]
          ## feature 2: named vector
-         names(geneList) <- as.character(rownames(filtered_de_table))
+         names(geneList) <- as.character(rownames(de_table))
          ## feature 3: decreasing order
          geneList <- sort(geneList, decreasing = TRUE)
          genes = geneList

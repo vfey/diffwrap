@@ -257,6 +257,7 @@ diffExpr <-
 			}
 			names(sample.plot.names) <- colnames(d)
 		}
+	 
 		diff_expr_mds_plot(d, groups=groups, n=n, sample.plot.names=sample.plot.names, analysis.name=analysis.name, do.pdf=TRUE, out.dir=out.dir)
 	}
 

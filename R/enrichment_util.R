@@ -91,9 +91,16 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
    
      if(method == "clusterProfilerGO"){
        
+       ## Initial preparations: setting result directory and replacing missing parameters
        method.dir = dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
+       default.params = list(analysis.approach="ORA", do.similarity.filtering=F, min.gene.set.size=10, 
+                             max.gene.set.size=1000, ontology="BP", min.overlap=2, p.adjust.method="BH")
+       missing.params = default.params[names(default.params)[!(names(default.params) %in% names(clusterProfilerGO.params))]]
+       clusterProfilerGO.params = c(clusterProfilerGO.params, missing.params)
        
        cat("   Performing GO BP enrichment with clusterProfiler... \n")
+       cat("   ")
+       print(unlist(clusterProfilerGO.params))
        org.db = as.character(enrich.resource.terms[species, method])
       
        if(clusterProfilerGO.params$analysis.approach == "ORA"){
@@ -135,9 +142,18 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
       
       if(method == "clusterProfilerKEGG") {
       
+        ## Initial preparations: setting result directory and replacing missing parameters
         method.dir = dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
+        default.params = list(analysis.approach="ORA", min.gene.set.size=10, max.gene.set.size=1000, 
+                              ontology="BP", min.overlap=2, p.adjust.method="BH")
+        missing.params = default.params[names(default.params)[!(names(default.params) %in% names(clusterProfilerKEGG.params))]]
+        clusterProfilerKEGG.params = c(clusterProfilerKEGG.params, missing.params)
+        
+    
         
         cat("   Performing KEGG enrichment with clusterProfiler... \n")
+        cat("   ")
+        print(unlist(clusterProfilerKEGG.params))
         org = as.character(enrich.resource.terms[species, method])
       
         if(length(entrez.col) == 0){
@@ -201,6 +217,10 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
       if(method == "DAVID") {
         
         method.dir = dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
+        default.params = list(email.address="", url="",time.out.value = 60000, 
+                              annotation.category = "GOTERM_BP_FAT", max.gene.set.size = 1000)
+        missing.params = default.params[names(default.params)[!(names(default.params) %in% names(david.params))]]
+        david.params = c(david.params, missing.params)
         
         cat("   Performing DAVID... \n")
         if(david.params$email.address != "") {

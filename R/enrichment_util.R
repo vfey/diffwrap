@@ -48,6 +48,9 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
   enrichment_out.l$gProfileR <- list()
   enrichment_out.l$topGO <- list()
   
+  #Creating subfolders
+  lapply(enrichment.methods, function(x) dir.create(file.path(out.dir, method), showWarnings = F))
+  
   contrast.names = names(diffr_wrapper.output$contrasts)
   cat("Performing enrichment analyses for ", length(contrast.names), " comparisons: \n")
   cat("  ", contrast.names, " \n")
@@ -88,6 +91,8 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
    
      if(method == "clusterProfilerGO"){
        
+       method.dir = dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
+       
        cat("   Performing GO BP enrichment with clusterProfiler... \n")
        org.db = as.character(enrich.resource.terms[species, method])
       
@@ -95,7 +100,7 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
          
          ordered.query=FALSE
          genes = input.genes
-         fname.no.suffix = file.path(out.dir, paste(analysis.name, contrast, method, "ORA", sep = "_"))
+         fname.no.suffix = file.path(method.dir, paste(analysis.name, contrast, method, "ORA", sep = "_"))
          
        }
        else {
@@ -110,7 +115,7 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
          ## feature 3: decreasing order
          geneList <- sort(geneList, decreasing = TRUE)
          genes = geneList
-         fname.no.suffix = file.path(out.dir, paste(analysis.name, contrast, method, "GSEA", sep = "_"))
+         fname.no.suffix = file.path(method.dir, paste(analysis.name, contrast, method, "GSEA", sep = "_"))
        }
        enrichment_out.l$clusterProfiler_GO[[contrast]] = run_clusterProfiler_GO(input_genes = genes,
                                                                                  background_genes = background.genes,
@@ -129,6 +134,9 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
      } 
       
       if(method == "clusterProfilerKEGG") {
+      
+        method.dir = dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
+        
         cat("   Performing KEGG enrichment with clusterProfiler... \n")
         org = as.character(enrich.resource.terms[species, method])
       
@@ -156,7 +164,7 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
           
           ordered.query=FALSE
           genes = as.character(input.gene.entrez)
-          fname.no.suffix = file.path(out.dir, paste(analysis.name, contrast, method, "ORA", sep = "_"))
+          fname.no.suffix = file.path(method.dir, paste(analysis.name, contrast, method, "ORA", sep = "_"))
           
         }
         else {
@@ -174,7 +182,7 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
           geneList <- sort(geneList, decreasing = TRUE)
          
           genes = geneList
-          fname.no.suffix = file.path(out.dir, paste(analysis.name, contrast, method, "GSEA", sep = "_"))
+          fname.no.suffix = file.path(method.dir, paste(analysis.name, contrast, method, "GSEA", sep = "_"))
         }
         
         enrichment_out.l$clusterProfiler_KEGG[[contrast]] = run_clusterProfiler_KEGG(input_genes=genes,
@@ -191,6 +199,9 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
       }
       
       if(method == "DAVID") {
+        
+        method.dir = dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
+        
         cat("   Performing DAVID... \n")
         if(david.params$email.address != "") {
           
@@ -202,7 +213,7 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
                                    annotation.category = david.params$annotation.category, 
                                    pval.thr = p.thr, 
                                    max.gene.set.size = david.params$max.gene.set.size, 
-                                   save.result.table = TRUE, out.dir=out.dir,analysis.name,
+                                   save.result.table = TRUE, out.dir=method.dir,analysis.name,
                                    contrast.name=contrast)
         
         }
@@ -213,11 +224,14 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
       }
 
       if(method == "gProfileR") {
+        
+        method.dir = dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
+        
         cat("   Performing GO BP enrichment with gProfileR... \n")
         org = as.character(enrich.resource.terms[species, method])
         print(paste0("Organism: ",org))
         print(paste0("Data sources: ",gProfiler.params$data.sources))
-        fname.no.suffix = file.path(out.dir, paste(analysis.name, contrast, method, sep = "_"))
+        fname.no.suffix = file.path(method.dir, paste(analysis.name, contrast, method, sep = "_"))
         enrichment_out.l$gProfileR[[contrast]] <- run_gprofiler(input.genes, background.genes, 
                                                                 file_name = fname.no.suffix,
                                                                 organism = org,
@@ -228,6 +242,9 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
       }
       
       if (method == "topGO") {
+        
+        method.dir = dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
+        
         cat("Performing topGO.... \n")
         print(paste0("Ontologies used: ",topGO.params$ontologies.used))
         print(paste0("Organism: ",topGO.params$org))

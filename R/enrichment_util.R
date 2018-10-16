@@ -207,7 +207,7 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
         print(paste0("Organism: ",topGO.params$org))
         
         org.db = as.character(enrich.resource.terms[species, method])
-        enrichment_out.l$topGO[[contrast]] <- run.topGO(background=background.genes, foreground = input.genes,ontologies =  topGO.params$ontologies.used, organism = topGO.params$org)
+        enrichment_out.l$topGO[[contrast]] <- run.topGO(background=background.genes, foreground = input.genes,ontologies =  topGO.params$ontologies.used, organism = org.db)
       }
     }
 

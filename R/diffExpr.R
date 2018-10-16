@@ -75,7 +75,7 @@ NULL
 #'    Most sub-functions are exported and can be called by the user, as well, if desired.
 #'    These functions may be applicable to different kinds of data/input, rely, however,
 #'    on the conventions set for this package.
-#' @param expr.file \code{character}. Vector of input file paths
+#' @param expr.file \code{character} or \code{list}. String or vector or list of input file paths
 #' @param samp.info \code{data.frame}. samp.info object containing information of the project's sample sheet
 #' @param control \code{character}. Name of the control group
 #' @param design \code{matrix}. design matrix
@@ -89,6 +89,15 @@ NULL
 #' @param bayes.trend \code{logical}. Should an intensity-trend be allowed for the prior variance? Passed to 'limma::eBayes'.
 #' @param bayes.robust \code{logical}. Should the estimation of df.prior and var.prior be robustified against outlier sample variances? Passed to 'limma::eBayes'.
 #' @param sym.col \code{character}. Name of the column in the query result with gene symbols
+#' @param ellipse \code{logical}. Should an ellipse be plottrd around samples belonging to the same sample group?
+#' @param ellipse.mapping.groups \code{character} The name of the column in 'samp.info' with group names for ellipse drawing. If \code{NULL} (default)
+#'     will use the \code{groups} column. If 'samp.info' is not supplied vector of groups.
+#' @param label.samples \code{logical}. Should points in appropriate QC plots be labelled. So far, applies only to PCA ggplot.
+#' @param geom.point.size \code{numeric}. Size of points in appropriate QC plots. So far, applies only to PCA ggplot.
+#' @param label.font.size \code{numeric}. Font size used for point labels in appropriate QC plots. So far, applies only to PCA ggplot.
+#' @param plot.ellipse.legend \code{logical}. Should a legend be addded for ellipses in PCA plots? NA, the default, includes
+#'     if any aesthetics are mapped. FALSE never includes, and TRUE always includes. It can also be a named logical vector to finely select
+#'     the aesthetics to display.
 #'
 #' @details For experiemtal desgins involving comparisons within as well as between subjects inter-subject needs to be computed.
 #'     In this case, the column specified in the 'pairs' argument must assign the subjects to the treatment/tissue/etc groups.
@@ -105,13 +114,15 @@ NULL
 #'
 #' @export
 diffExpr <-
-		function(expr.file="mature_miRNA_expression.xls", samp.info, control, design=NULL, samples=NULL, sample.plot.names=NULL, groups=NULL, pairs=NULL, block=FALSE, contrasts=NULL, out.dir=NULL,
-				analysis.name=NULL, biomart=FALSE, biom.data.set="hsapiens_gene_ensembl", biom.mart=c("ensembl", "snp", "funcgen", "vega", "pride", "plants"),
-				host="www.ensembl.org", biom.filter="ensembl_gene_id", biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"), sym.col="hgnc_symbol",
-				rm.dups=FALSE, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE, min.samp=NULL, strict = TRUE, disp=c("gene", "trend", "common"), do.voom=FALSE,
-				voom.fun=voom, norm.method=c("tmm", "quantile"), bayes.trend=FALSE, bayes.robust=FALSE, n=500, gene.selection="common", ellipse=TRUE,
-				circle=TRUE, varname.size=0, var.axes=FALSE, samp.lab=TRUE, PC=c(1,2,3), type=c("both", "uncorrected", "pseudo-corrected"), font.size=5,
-				plots=TRUE, lists=TRUE)
+		function(expr.file="mature_miRNA_expression.xls", samp.info, control, design=NULL, samples=NULL, sample.plot.names=NULL, groups=NULL, pairs=NULL,
+				block=FALSE, contrasts=NULL, out.dir=NULL, project.dir=".", analysis.name=NULL, biomart=FALSE, biom.data.set="hsapiens_gene_ensembl",
+				biom.mart=c("ensembl", "snp", "funcgen", "vega", "pride", "plants"), host="www.ensembl.org", biom.filter="ensembl_gene_id",
+				biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"), sym.col="hgnc_symbol", rm.dups=FALSE, p.thr=0.05, fdr.thr=0.05, logfc.thr=1,
+				numlab=15, point.lab=TRUE, min.samp=NULL, strict = TRUE, disp=c("gene", "trend", "common"), do.voom=FALSE, voom.fun=voom,
+				norm.method=c("tmm", "quantile"), bayes.trend=FALSE, bayes.robust=FALSE, n=500, gene.selection="common", ellipse=TRUE,
+				ellipse.mapping.groups=NULL, label.samples=TRUE, geom.point.size=2, label.font.size = 5, plot.ellipse.legend=NA, circle=TRUE, varname.size=0,
+				var.axes=FALSE, PC=c(1,2,3), type=c("both", "uncorrected", "pseudo-corrected"), font.size=5, plots=TRUE, lists=TRUE,
+				dry.run=FALSE)
 {
 	## initial checks
 	if (missing(expr.file) || !is.character(unlist(expr.file))) {
@@ -130,6 +141,9 @@ diffExpr <-
 		if (length(groups) == 1) {
 			stop("Need more than 1 groups!")
 		}
+		if (!is.null(ellipse.mapping.groups) && length(ellipse.mapping.groups)!=length(groups)) {
+			stop("Ellipse mapping groups factor needs to be of same length as groups factor")
+		} 
 	} else {
 		if (is.null(samples) || length(samples) > 1) {
 			stop("Need name of colum containing sample names!")
@@ -141,7 +155,38 @@ diffExpr <-
 			stop("'samp.info' needs to be a data.frame object containing at least two columns: 'SampleNames' and 'Groups' (the actual names can be provided\nby the 'samples' and 'groups' arguments, repsectively.)")
 		}
 	}
-
+	
+	# setting standard ouput folder
+	if (is.null(out.dir)) {
+		cat("No output folder set. Using default\n")
+		out.dir <- file.path(normalizePath(project.dir), "differential_expression")
+	}
+	# checking for content in existing output folder
+	if (file.exists(out.dir)) {
+		if (length(dir(out.dir))) {
+			cat("  Output directory exists and is not empty! Found:\n")
+			found <- dir(out.dir, include.dirs = TRUE)
+			print(found)
+			out.dir <- paste(out.dir, "new",
+					gsub("-", "", unlist(strsplit(as.character(Sys.time()), " "))[1]),
+					gsub(":", "", unlist(strsplit(as.character(Sys.time()), " "))[2]),
+					sep = "_")
+			cat("  Creating new output folder", sQuote(out.dir), "...")
+		} else {
+			cat("  Output folder exists and is empty.\n")
+		}
+	}
+	# creating output folder if not existing
+	if (!file.exists(out.dir)) {
+		cat("  Output directory does not exist. Creating...\n")
+		if (!dry.run) {
+			dir.create(out.dir)
+		} else {
+			cat(" ~~DRY RUN~~\n")
+		}
+	}
+	cat("  Saving output to", out.dir, "\n")
+	
 	if (block) {
 		do.voom <- TRUE
 		cat("*** Using 'blocked' design (i.e., samples are measured _in blocks_). Enforcing 'voom'! ***\n")
@@ -159,10 +204,11 @@ diffExpr <-
 	## standardize samp.info
 	### needs to be a data.frame with (at least) two columns: 'SampleNames' and 'Groups'
 	### if a data.frame is provided by the 'samp.info' argument the columns are renamed to meet that convention
-	#### save Groups name first
+	#### save Groups name and ellipse mapping groups name first
+	ellipse.grp.nam <- ellipse.mapping.groups
 	grp.nam <- groups
 	#### reformat samp.info data frame
-	samp.info <- diff_expr_get_samp_info(samp.info, samples, groups)
+	samp.info <- diff_expr_get_samp_info(samp.info, samples, groups, ellipse.mapping.groups)
 
 	## make control group first levels to ensure it becomes the '(Intercept)'
 	cat("  Setting control group...\n")
@@ -170,6 +216,10 @@ diffExpr <-
 		control <- paste0("group_", control)
 	}
 	groups <- relevel(samp.info$Groups, ref=control)
+	
+	#### extract vector of ellipse group names from samp.info 
+	ellipse.mapping.groups <- samp.info$Ellipse
+	
 
 	if (is.null(analysis.name)) {
 		analysis.name <- paste0(paste(levels(groups)[1:2], collapse="_"), "_")
@@ -205,7 +255,9 @@ diffExpr <-
 				cat("  NOTE: Sanity check for pretty names failed. Falling back to column names...\n")
 				sample.plot.names <- as.character(spn$SampleNames)
 			}
+			names(sample.plot.names) <- colnames(d)
 		}
+	 
 		diff_expr_mds_plot(d, groups=groups, n=n, sample.plot.names=sample.plot.names, analysis.name=analysis.name, do.pdf=TRUE, out.dir=out.dir)
 	}
 
@@ -277,8 +329,12 @@ diffExpr <-
 			} else {
 				type.plot <- "uncorrected, normalised DGEList"
 			}
-			out.l <- diff_expr_QC_plots(counts=normcnt, samp.info=samp.info, control=control, out.l=out.l, grp.nam=grp.nam, PC=PC, ellipse=ellipse, circle=circle, varname.size=varname.size,
-					var.axes=var.axes, samp.lab=samp.lab, pairs=pairs, pairs.name=pairs_col, gene.selection=gene.selection, n=n, type=type.plot, analysis.name=analysis.name, out.dir=out.dir)
+			out.l <- diff_expr_QC_plots(counts=normcnt, samp.info=samp.info, control=control, out.l=out.l, grp.nam=grp.nam, PC=PC,
+					sample.plot.names=sample.plot.names,
+					ellipse=ellipse, ellipse.mapping.groups=ellipse.mapping.groups, ellipse.grp.nam=ellipse.grp.nam, label.samples=label.samples,
+					geom.point.size=geom.point.size, label.font.size = label.font.size, plot.ellipse.legend=plot.ellipse.legend, circle=circle,
+					varname.size=varname.size, var.axes=var.axes, pairs=pairs, pairs.name=pairs_col, gene.selection=gene.selection, n=n,
+					type=type.plot, analysis.name=analysis.name, out.dir=out.dir)
 		}
 
 		if (!block && !is.null(pairs) && (type %in% c("both", "pseudo-corrected"))) {
@@ -288,8 +344,12 @@ diffExpr <-
 			cat("   Calculating pseudo-counts...\n")
 			pseudo.counts <- diff_expr_pseudo_counts(design=design, d=d, pairs=pairs, disp=disp, do.cpm=TRUE)
 			cat("   done\n")
-			out.l <- diff_expr_QC_plots(counts=pseudo.counts, samp.info=samp.info, control=control, out.l=out.l, grp.nam=grp.nam, PC=PC, ellipse=ellipse, circle=circle, varname.size=varname.size,
-					var.axes=var.axes, samp.lab=samp.lab, pairs=pairs, pairs.name=pairs_col, gene.selection=gene.selection, n=n, type="pseudo-corrected, normalised DGEList", analysis.name=analysis.name, out.dir=out.dir)
+			out.l <- diff_expr_QC_plots(counts=pseudo.counts, samp.info=samp.info, control=control, out.l=out.l, grp.nam=grp.nam, PC=PC,
+					sample.plot.names=sample.plot.names, ellipse=ellipse, ellipse.mapping.groups=ellipse.mapping.groups,
+					ellipse.grp.nam=ellipse.grp.nam, label.samples=label.samples, geom.point.size=geom.point.size,
+					label.font.size = label.font.size, plot.ellipse.legend=plot.ellipse.legend, circle=circle, varname.size=varname.size,
+					var.axes=var.axes, pairs=pairs, pairs.name=pairs_col, gene.selection=gene.selection, n=n,
+					type="pseudo-corrected, normalised DGEList", analysis.name=analysis.name, out.dir=out.dir)
 		}
 	}
 
@@ -300,12 +360,13 @@ diffExpr <-
 			cont <- grep("^groups.+", colnames(fit3$coefficients), value=TRUE)
 			cat("  ", cont, "\n")
 			out.l <- diff_expr_extract_contrasts(cont, fit.l$fit, fit3, normcnt, out.l, do.voom=TRUE, out.dir, analysis.name, biomart, biom.data.set, biom.mart,
-					host, biom.filter, biom.attributes, sym.col, rm.dups, p.thr, fdr.thr, logfc.thr, numlab, point.lab, font.size, plots, lists)
+					host, biom.filter, biom.attributes, sym.col, rm.dups, p.thr, fdr.thr, logfc.thr, numlab, point.lab, font.size, plots, lists, samp.info = samp.info, samples = samples, groups = groups, sample.plot.names = sample.plot.names)
 		}
+	  
 		if (!is.null(contrasts)) {
 			cat("  ...for all (remaining) comparisons (voom)...\n")
 			out.l <- diff_expr_extract_contrasts(contrasts, fit.l$fit, fit.l$fit2, normcnt, out.l, do.voom=TRUE, out.dir, analysis.name, biomart, biom.data.set, biom.mart,
-					host, biom.filter, biom.attributes, sym.col, rm.dups, p.thr, fdr.thr, logfc.thr, numlab, point.lab, font.size, plots, lists)
+					host, biom.filter, biom.attributes, sym.col, rm.dups, p.thr, fdr.thr, logfc.thr, numlab, point.lab, font.size, plots, lists, samp.info = samp.info, samples = samples, groups = groups, sample.plot.names = sample.plot.names)
 		}
 	} else {
 		if (!is.null(pairs)) {
@@ -313,920 +374,15 @@ diffExpr <-
 			cont <- grep("^groups.+", colnames(fit$coefficients), value=TRUE)
 			cat("  ", cont, "\n")
 			out.l <- diff_expr_extract_contrasts(cont, fit.l$fit, NULL, normcnt, out.l, do.voom=FALSE, out.dir, analysis.name, biomart, biom.data.set, biom.mart,
-					host, biom.filter, biom.attributes, sym.col, rm.dups, p.thr, fdr.thr, logfc.thr, numlab, point.lab, font.size, plots, lists)
+					host, biom.filter, biom.attributes, sym.col, rm.dups, p.thr, fdr.thr, logfc.thr, numlab, point.lab, font.size, plots, lists, samp.info = samp.info, samples = samples, groups = groups, sample.plot.names = sample.plot.names)
 		}
+	  
 		if (!is.null(contrasts)) {
 			cat("  ...for all (remaining) comparisons (GLM)...\n")
 			out.l <- diff_expr_extract_contrasts(contrasts, fit.l$fit, NULL, normcnt, out.l, do.voom=FALSE, out.dir, analysis.name, biomart, biom.data.set, biom.mart,
-					host, biom.filter, biom.attributes, sym.col, rm.dups, p.thr, fdr.thr, logfc.thr, numlab, point.lab, font.size, plots, lists)
+					host, biom.filter, biom.attributes, sym.col, rm.dups, p.thr, fdr.thr, logfc.thr, numlab, point.lab, font.size, plots, lists, samp.info = samp.info, samples = samples, groups = groups, sample.plot.names = sample.plot.names)
 		}
 	}
 	on.exit()
 	return(out.l)
 }
-
-#' Function to standardize `samp.info` sample information data frame
-#' @export
-diff_expr_get_samp_info <-
-		function(samp.info, samples, groups)
-{
-	if (!is.null(samp.info)) {
-		cat("Using user-provided sample information...\n")
-		cat("  Renaming sample name column...\n")
-		names(samp.info)[names(samp.info) == samples] <- "SampleNames"
-		cat("  Renaming groups column...\n")
-		names(samp.info)[names(samp.info) == groups] <- "Groups"
-		cat("  Factorizing columns... \n")
-		samp.info$SampleNames <- edgeR::dropEmptyLevels(as.factor(samp.info$SampleNames))
-		samp.info$Groups <- edgeR::dropEmptyLevels(as.factor(samp.info$Groups))
-	} else {
-		samp.info <- data.frame(SampleNames=samples, Groups=groups)
-	}
-	if (is.numeric(samp.info$Groups)) {
-		samp.info$Groups <- paste0("group_", samp.info$Groups)
-	}
-	cat("  Reordering by sample names...\n")
-	samp.info <- samp.info[order(samp.info$SampleNames), ]
-	return(samp.info)
-}
-
-#' Function to read counts as produced by htseq-count
-#' @export
-diff_expr_read_counts <-
-		function(expr.file, samp.info)
-{
-	if (length(unlist(expr.file)) > 1) {
-		## check sample names
-		cat("Checking expression file names...\n")
-		if (is.null(names(expr.file))) {
-			names(expr.file) <- sub("\\.[a-z]{1,5}$", "", basename(expr.file))
-		}
-		expr.file <- expr.file[order(names(expr.file))]
-		if (any(names(expr.file) %in% samp.info$SampleNames)) {
-			snam <- which(names(expr.file) %in% samp.info$SampleNames)
-			if (!identical(names(expr.file)[snam], as.character(samp.info$SampleNames))) {
-				stop("Input vector of count file names must be identical to all or a subset of sample names provided in 'samp.info', i.e., it must be the same names in the same order!")
-			} else {
-				if (nrow(samp.info) < length(expr.file)) {
-					cat("  Importing subset of samples...\n")
-				}
-				expr.file <- expr.file[as.character(samp.info$SampleNames)]
-			}
-		} else {
-			stop("Sample names not found in input files")
-		}
-		# import individual count files
-		cat("Reading count files for samples:\n")
-		print(samp.info$SampleNames)
-		counts <- readDGE(expr.file)$counts
-	} else {
-		# reading output from CAP-miRSEQ summary script
-		cat("Reading output from CAP-miRSEQ summary script...\n")
-		counts <- read.table(expr.file, sep="\t", header=T, stringsAsFactor=F)
-		# assign unique mature_precursor id to each row
-		row.names(counts) <- expression.raw$Mature.miRNA
-		# extract samples used in this comparison
-		samples <- make.names(samp.info$SampleNames)
-		counts <- counts[, samples]
-	}
-	# in case of untypical gene identifiers change those
-	## for "gene:" in front of the Ensembl Gene ID
-	rownames(counts) <- sub("^gene:", "", rownames(counts))
-	return(counts)
-}
-
-#' Function to filter counts
-#' @export
-diff_expr_filter_counts <-
-		function(counts, samp.info, strict=TRUE, min.samp=NULL)
-{
-	#### Important: CPMs must be calculated with all counts including the non-aligned ones so as not to distort the results
-	#### because: CPM <- apply(countmatrix, 2, function(x) (x/sum(x))*1000000) # uses sum of ALL counts in that sample
-	noint_names <- grep("no_feature|ambiguous|too_low_aQual|not_aligned|alignment_not_unique", rownames(counts), value=TRUE)
-	noint <- rownames(counts) %in% noint_names
-	## In edgeR, it is recommended to remove features without at least 1 read per million in n of the
-	## samples, where n is the size of the smallest group of replicates (determined from the 'groups' vector)
-	### can be overridden by 'min.samp'
-	### if we want to be really strict we only keep a miRNA if there are > 5 reads per million in at least half of the samples
-	cpms <- cpm(counts)
-	if (strict) {
-		cat("  Using 'strict' filtering...\n")
-		keep <- rowSums(cpms > 5) >= ceiling(ncol(counts)/2) & !noint
-	} else {
-		if(is.null(min.samp)) {
-			min.samp <- min(table(samp.info$Groups))
-		}
-		keep <- rowSums(cpms > 1) >= min.samp & !noint
-	}
-	cat("  Removing", length(which(!keep)), "and keeping", length(which(keep)), "rows...\n")
-	counts <- counts[keep, ]
-	## Visualize and inspect the count table
-	colnames(counts) <- basename(colnames(counts))
-	return(counts)
-}
-
-#' Function to create design matrix
-#' @export
-diff_expr_make_design <-
-		function(samp.info, groups, pairs=NULL, block=FALSE)
-{
-	if (block || is.null(pairs)) {
-		cat("Creating simple design matrix...\n")
-		design <- model.matrix(~0+groups)
-		colnames(design) <- gsub("groups", "", colnames(design))
-	} else if (!is.null(pairs)) {
-		cat("Creating design matrix for paired samples. Using column", sQuote(pairs), "as 'pairs' variable...\n")
-		pairs <- samp.info[[pairs]]
-		if (!is.numeric(pairs)) {
-			pairs <- dropEmptyLevels(as.factor(samp.info[[pairs]]))
-			cat(" ", levels(pairs), "\n")
-			design <- model.matrix(~pairs+groups)
-		} else {
-			design <- model.matrix(~groups+pairs)
-		}
-	}
-	return(design)
-}
-
-#' Function to make contrast matrix
-#' @export
-diff_expr_make_contrasts <-
-		function(design, pairs=NULL, block=FALSE, contrasts=NULL)
-{
-	if (is.null(contrasts)) {
-		cat("Comparing all groups vs. all...\n")
-		if (block || is.null(pairs)) {
-			cat("  Using all levels...\n")
-			n <- colnames(design)
-		} else if (!is.null(pairs)) {
-			cat("  Extracting 'groups' levels...\n")
-			n <- grep("^groups.+", colnames(design), value=TRUE)
-		}
-		if (length(n)==1L || length(grep("__", n))) {
-			cat("  ! Skipping contrast matrix creation !\n")
-			return(NULL)
-		}
-		contrasts <- unlist(lapply(n[1:(length(n)-1)], function(x) {
-							contr <- paste(n[n!=x], x, sep="-")
-							cyc <- which(n==x)
-							contr[cyc:length(contr)]
-						}))
-		cat("  ", contrasts, "\n")
-	} else {
-		cat("  Comparing selected groups", contrasts, "\n")
-	}
-	cat("  Creating contrast matrix...\n")
-	contrasts <- suppressWarnings(makeContrasts(contrasts=contrasts, levels=design))
-	return(contrasts)
-}
-
-#' Function to compute linear model fit and optionally apply 'voom' beforehand
-#' @export
-diff_expr_fit <-
-		function(counts, d, design, do.voom=TRUE, voom.fun=voom, norm.method=c("quantile", "tmm"), bayes.trend=FALSE, bayes.robust=FALSE, pairs=NULL,
-				pairs_col=NULL, block=FALSE, contrasts=NULL, disp="tagwise.dispersion")
-{
-	if (do.voom) {
-		if (norm.method=="tmm") {
-			cts <- d
-			norm.method="none"
-		} else {
-			cts <- counts
-		}
-		v <- voom.fun(cts, design=design, plot=FALSE, normalize.method=norm.method)
-
-		# For paired samples or block designs:
-		if (block && !is.null(pairs)) {
-			if (!is.factor(pairs)) {
-				stop("For block designs 'pairs' needs to be a factor.")
-			}
-			cat("  Samples are paired. Using column", sQuote(pairs_col), "as block variable...\n")
-			cat("    ", levels(pairs), "\n")
-			cat("  Calculating consensus correlation...\n")
-			corfit <- duplicateCorrelation(v$E , design, block=pairs)
-			cat("  Fitting linear model using consensus correlation...\n")
-			fit <- lmFit(v, design, block=pairs, correlation=corfit$consensus)
-		} else {
-			cat("  Fitting linear model...\n")
-			fit <- lmFit(v, design)
-		}
-		if (!is.null(contrasts)) {
-			if (length(grep("^Intercept$", rownames(contrasts)))) {
-				rownames(contrasts)[grep("^Intercept$", rownames(contrasts))] <- "(Intercept)"
-			}
-			cat("  Fitting contrasts...\n")
-			fit2 <- contrasts.fit(fit, contrasts)
-			cat("  eBayes fit...\n")
-			fit2 <- eBayes(fit2, trend = bayes.trend, robust = bayes.robust)
-		} else {
-			cat("  eBayes fit...\n")
-			fit2 <- eBayes(fit, trend = bayes.trend, robust = bayes.robust)
-		}
-		return(list(v=v, fit=fit, fit2=fit2))
-	} else {
-		## Estimate dispersion values, relative to the design matrix, using the Cox-Reid (CR)-adjusted likelihood
-		cat("  Estimating dispersion values...\n")
-		d2 <- estimateGLMTrendedDisp(d, design)
-		d2 <- estimateGLMTagwiseDisp(d2, design)
-		# Given the design matrix and dispersion estimates, fit a GLM to each feature
-		cat("  Fitting linear model...\n")
-		fit <- glmFit(d2, design, dispersion=d2[[disp]])
-		return(list(d=d, d2=d2, fit=fit))
-	}
-}
-
-#' Function to extract contrasts and generate top tables and plots
-#' @export
-diff_expr_extract_contrasts <-
-		function(contrasts=NULL, fit, fit2=NULL, normcnt, out.l, do.voom=TRUE, out.dir=NULL,
-				analysis.name=NULL, biomart=FALSE, biom.data.set="hsapiens_gene_ensembl", biom.mart=c("ensembl", "snp", "funcgen", "vega", "pride", "plants"),
-				host="www.ensembl.org", biom.filter="ensembl_gene_id", biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"), sym.col="hgnc_symbol",
-				rm.dups=FALSE, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE, font.size=5, plots=TRUE, lists=TRUE)
-{
-	if (!length(grep("contrasts", names(out.l)))) {
-		out.l$contrasts <- list()
-	}
-	if (is.null(contrasts)) {
-		cat("  Extracting 'groups' levels from design...\n")
-		cn <- grep("^groups.+", colnames(fit$design), value=TRUE)
-	} else if (is.matrix(contrasts) && !is.null(colnames(contrasts))) {
-		# if do.voom=TRUE contrasts have been calculated already in the fit function and only need to be extracted
-		# in the case of paired samples, contrasts are inherent to the design and only need to be extracted
-		# otherwise, we need to feed the contrast matrix to glmLRT to instruct it to calculate the desired contrasts
-		# see the different behaviour of glmLRT below for do.voom=FALSE
-		cn <- colnames(contrasts)
-	} else {
-		# contrasts is a character vector
-		# this will only be called for the non-contrasted columns of the design matrix for paired samples
-		# which means contrasts are inherent to the design and only need to be extracted
-		cn <- contrasts
-	}
-	out.l$MAplots <- list()
-	out.l$volcanoPlots <- list()
-	for (contr in cn) {
-		cat("Calculating differential expression for", contr, "\n")
-		if (do.voom) {
-			cat("Generating output table of differentially expressed features...\n")
-			tt <- topTable(fit2, coef=contr, number=nrow(fit2), sort.by="P")
-		} else {
-			# Perform a likelihood ratio test, specifying the contrast of interest.
-			# Needs to be done per-contrast as otherwise it will perform the LR test of all contrasts together while we want this done individually.
-			cat("Performing likelihood ratio test on this contrast...\n")
-			if (is.matrix(contrasts)) {
-				# calculating the contrast
-				de <- glmLRT(fit, contrast = contrasts[, contr])
-			} else {
-				# only extracting the contrast (for paired samples)
-				de <- glmLRT(fit, coef=contr)
-			}
-			# Use the topTags function to present a tabular summary of the differential expression statistics (note that topTags
-			# operates on the output of exactTest or glmLRT, but only the latter is shown here)
-			cat("Generating tablular summary of differential expression statistics ('top table')\n")
-			tt <- topTags(de, n = nrow(de))
-#			} else {
-#				stop("Need contrast matrix as input.")
-#			}
-		}
-		if (is.null(contrasts)) {
-			fitcnt <- fit$coefficients[, contr]
-			addinfo <- cbind(normcnt, fitcnt)
-			if (do.voom) {
-				names(addinfo)[names(addinfo) %in% "fitcnt"] <- "Fitted Coefficients (log2)"
-			} else {
-				names(addinfo)[names(addinfo) %in% "fitcnt"] <- "Fitted Coefficients (ln)"
-			}
-		} else if (is.matrix(contrasts)) {
-			fitcnt <- fit$coefficients[, rownames(contrasts)[contrasts[, contr]!=0]]
-			addinfo <- cbind(normcnt, fitcnt)
-		} else {
-			addinfo <- normcnt
-		}
-		d3 <- merge(addinfo, tt, by="row.names", sort=FALSE)
-		cat("Renaming ID column...\n")
-		names(d3)[1] <- "ID"
-		if (biomart) {
-			d3 <- diff_expr_biomart(d3, biom.data.set, biom.mart, host, biom.filter, biom.attributes, sym.col, rm.dups)
-			id.col <- names(d3)[names(d3) %in% biom.filter]
-		} else {
-			syms <- convertId2(as.character(d3$ID))
-			syms <- data.frame(ID=names(syms), gene_symbol=as.character(syms), stringsAsFactors=FALSE)
-			d3 <- merge(syms, d3, by="ID", all.y=TRUE, all.x=FALSE, sort=TRUE)
-			if (any(d3$gene_symbol=="") || any(is.na(d3$gene_symbol))) {
-				cat("  Replacing", length(which(d3$gene_symbol=="" | is.na(d3$gene_symbol))), "missing Gene Symbols by Ensembl IDs...\n")
-				d3$gene_symbol[d3$gene_symbol=="" | is.na(d3$gene_symbol)] <- as.character(d3$ID[d3$gene_symbol=="" | is.na(d3$gene_symbol)])
-			}
-			id.col <- "ID"
-		}
-		cat("Setting unique row names...\n")
-		rownames(d3) <- make.unique(as.character(d3[[id.col]]))
-		out.l$contrasts[[contr]] <- d3
-		if (lists) {
-			DE.out <- paste(analysis.name, contr, "differential_expression.tsv", sep="_")
-			cat("Saving list to", DE.out, "...\n")
-			write.table(d3, file.path(out.dir, DE.out), sep="\t", quote=FALSE, row.names=FALSE)
-		}
-
-		# Create a graphical summary, such as an M (log-fold change) versus A (log-average expression) plot, here showing the
-		# genes selected as differentially expressed (with a 5% false discovery rate)
-		if (plots) {
-			cat("Plotting...\n")
-			pdf(file.path(out.dir, paste(analysis.name, contr, "_plots.pdf", sep="_")), width=11, height=8.5)
-			par(mar = c(6,6,5,3))
-			cat(" MA-plot...\n")
-			out.l$MAplots[[contr]] <- diff_expr_ma_plot(d3, contr, id.col, sym.col, p.thr, fdr.thr, logfc.thr, numlab, out.dir, analysis.name, point.lab, biom.attributes, font.size, lists)
-
-			## Volcano plot
-			cat(" Volcano plot...\n")
-			out.l$volcanoPlots[[contr]] <- diff_expr_volcano_plot(d3, id.col, sym.col="gene_symbol", p.thr=p.thr, fdr.thr=fdr.thr, logfc.thr=logfc.thr, numlab=numlab, point.lab=point.lab)
-
-#png(paste(out.dir,"/",analysis.name,".Pvalue_distribution.png",sep=""),width=1280,height=960,res=150)
-			## Histogram of P-value distribution
-			cat(" Dendrogram plot...\n")
-			diff_expr_pval_hist_plot(d3)
-			dev.off()
-
-			cat("done\n")
-		}
-	}
-	return(out.l)
-}
-
-#' Function to calculate pseudo counts representing batch-corrected normalised but untransformed values
-#' @export
-diff_expr_pseudo_counts <-
-		function(design, d, pairs, disp="tagwise.dispersion", do.cpm=TRUE)
-{
-	cat("    Estimating dispersion...")
-	disp.mat <- estimateDisp(d, design)
-	cat("done\n    Fitting generalised linear model...")
-	fit0 <- glmFit(d, design, dispersion=disp.mat[[disp]])
-	old.fitted <- fit0$fitted.values
-	batch.coefs <- grep(pairs, colnames(design))
-	new.coefs <- fit0$unshrunk.coefficients
-	cat("done\n    Set coefficients for blocking variable to 0...")
-	new.coefs[, batch.coefs] <- 0
-	cat("done\n    Refit coefficients...")
-	new.fitted <- exp(new.coefs %*% t(design) + as.vector(fit0$offset))
-	cat("done\n    Getting pseudo-counts...")
-	pseudo.counts <- q2qnbinom(d$counts, old.fitted, new.fitted, dispersion=disp.mat[[disp]])
-	cat("done\n")
-	if (do.cpm) {
-		cat("    Getting CPMs...")
-		pseudo.counts <- cpm(pseudo.counts, log=TRUE, prior.count=3)
-		cat("done\n")
-	}
-	return(pseudo.counts)
-}
-
-#' Function to retrieve additional information from biomart
-#' @export
-diff_expr_biomart <-
-		function(d3, biom.data.set="hsapiens_gene_ensembl", biom.mart=c("ensembl", "snp", "funcgen", "vega", "pride", "plants"),
-				host="www.ensembl.org", biom.filter="ensembl_gene_id", biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"),
-				sym.col="hgnc_symbol", rm.dups=FALSE)
-{
-	gene.lab <- convert.bm(d3, "ID", biom.data.set, biom.mart, host, biom.filter, biom.attributes, sym.col, rm.dups)
-	names(gene.lab)[names(gene.lab)==sym.col] <- "gene_symbol"
-	cat("  Extended annotation:\n")
-	biom.attributes[biom.attributes==sym.col] <- "gene_symbol"
-	if (length(d3$ID)>8) {
-		print(gene.lab[1:8, biom.attributes])
-		cat("_truncated_ (", length(d3$ID), "features)\n")
-	} else {
-		print(gene.lab[, biom.attributes])
-	}
-	return(gene.lab)
-}
-
-#' Function to do PCA using `stats::prcomp`
-#' @export
-diff_expr_PCA <-
-		function(counts, n=500, scale.=FALSE)
-{
-	select <- 1:nrow(counts)
-	if (!is.null(n)) {
-		cat("    Getting row-wise variances...")
-		Pvars <- genefilter::rowVars(counts)
-		cat("done\n    Selecting", n, "rows with highest variances...")
-		select <- order(Pvars, decreasing = TRUE)[seq_len(min(n, length(Pvars)))]
-		cat("done\n")
-	}
-	cat("    Calculating principal components...")
-	PCA <- prcomp(t(counts[select, ]), scale.=scale.)
-	cat("done\n")
-	return(PCA)
-}
-
-#' Function to generate a MDS plot usig `ggplot2`
-#' @export
-diff_expr_ggplot_mds <-
-		function(counts, samp.name, groups, grp.nam=NULL, pairs=NULL, pairs.name=NULL, gene.selection="common", dim.plot=c(1,2), main=NULL)
-{
-	cat("    Preparing data...")
-	mds <- plotMDS(counts, gene.selection=gene.selection, dim.plot=dim.plot, plot=FALSE)
-	dat <- data.frame(SampleName=samp.name, Groups=groups, x=mds$x, y=mds$y)
-	cat("done\n    Plotting...")
-	g <- ggplot(dat, aes(x, y, colour=Groups))
-	if (!is.null(pairs)) {
-		dat <- data.frame(SampleName=samp.name, Groups=groups, Block=pairs, x=mds$x, y=mds$y)
-		if (is.factor(dat$Block) && length(levels(dat$Block)) <= 6) {
-			cat("\n     Block design using a discrete variable. Shaping points by blocking variable...\n")
-			g <- ggplot(dat, aes(x, y, colour=Groups, shape=Block))
-			if (!is.null(pairs.name)) {
-				g <- g + scale_shape_discrete(name=pairs.name)
-			}
-		} else if (is.numeric(dat$Block)) {
-			cat("\n     Block design using a continuous variable. Sizing points by blocking variable...\n")
-			g <- ggplot(dat, aes(x, y, colour=Groups, size=Block))
-			if (!is.null(pairs.name)) {
-				g <- g + scale_size_continuous(name=pairs.name)
-			}
-		}
-	}
-	g <- g + geom_point()
-	g <- g + geom_text_repel(
-			data = dat,
-			aes(label = SampleName),
-			size = 5,
-			box.padding = unit(0.35, "lines"),
-			point.padding = unit(0.3, "lines"),
-			show.legend = FALSE)
-	if (!is.null(grp.nam)) {
-		g <- g + scale_color_discrete(name=grp.nam)
-	}
-	g <- g + ggtitle(paste0("Multi-dimensional scaling (", main, ")"))
-	print(g)
-	cat("    done\n")
-	return(g)
-}
-
-## PCA plots
-#' Function to generate a PCA biplot using `medseqr::ggbiplot`
-#' @export
-diff_expr_PCA_ggbiplot <-
-		function(PCA, groups, grp.nam=NULL, ellipse=TRUE, circle=TRUE, varname.size=0, var.axes=FALSE, main=NULL, fix.aspect=FALSE, tweak=FALSE, ...)
-{
-	main <- paste("Biplot for PCA (", main, ")")
-	cat("    Plotting...")
-	g <- medseqr::ggbiplot.n(PCA, var.scale = 1, obs.scale = 1, groups = groups, grp.nam=grp.nam, ellipse = ellipse, circle = circle, varname.size = varname.size, var.axes = var.axes, main=main, fix.aspect=fix.aspect, tweak=tweak, ...)
-	print(g)
-	cat("done\n")
-	return(g)
-}
-
-#' Function to generate an ordinary two-dimensional PCA plot using `ggplot2`
-#' @export
-diff_expr_PCA_ggplot <-
-		function(PCA, samp.name=NULL, groups, grp.nam=NULL, PC=c(1,2), main=NULL, ellipse = TRUE, ellipse.mapping.groups = NULL, label.samples = TRUE,
-				geom.point.size = 2, label.font.size = 5, plot.ellipse.legend=NA)
-{
-	
-	cat("    Preparing data...")
-	if (is.null(samp.name)) {
-		samp.n <- rownames(PCA$x)
-	} else if (is.na(samp.name)) {
-		samp.n <- ""
-	} else {
-		stop("samp.name can only be 'NULL' to use the row names of the principal components matrix or 'NA' to be empty.")
-	}
-	
-	percentVar <- round(100*PCA$sdev^2/sum(PCA$sdev^2), 1)
-	dataGG <- data.frame(PCx=PCA$x[, PC[1]], PCy=PCA$x[, PC[2]], Condition=groups, Sample=samp.n)
-	
-	#Additional grouping for ellipses if provided
-	if (ellipse && !is.null(ellipse.mapping.groups)) {
-		dataGG$Ellipse <- ellipse.mapping.groups
-	} else {
-		dataGG$Ellipse <- groups
-	}
-	if (is.null(grp.nam)) {
-		grp.nam <- "Group"
-	}
-	cat("done\n    Plotting...\n")
-	g <- ggplot(data=dataGG, aes(PCx, PCy, color=Condition))
-	g <- g + geom_point(size = geom.point.size)
-	g <- g + ggtitle(paste0("PCA (", main, ")"))
-	g <- g + labs(x=paste0("PC", PC[1], ": ", round(percentVar[PC[1]], 4), "% variance explained"),
-			y=paste0("PC", PC[2], ": ", round(percentVar[PC[2]], 4), "% variance explained"))
-	g <- g + scale_colour_brewer(name=grp.nam, type="qual", palette=3, direction=1) # allows a maximum of 12 colours
-	g <- g + theme_bw(base_size = 10) # if more than 10 groups yellow will be used which is not easily readable on white bg, so change bg to grey
-	if (length(levels(dataGG$Condition))+length(levels(dataGG$Ellipse)) > 10) {
-		g <- g + theme(panel.background = element_rect(fill = "#f4f4f4"))
-	}
-	
-	g <- g + theme(panel.border = element_blank(),
-			axis.line = element_line(color='black'),
-			panel.grid.major = element_line(size = 0.2),
-			panel.grid.minor = element_line(size = 0.2))
-	
-	if ( ellipse ) {
-		cat("     Adding ellipse...\n")
-		if (identical(dataGG$Condition, dataGG$Ellipse)) {
-			g = g + stat_ellipse(type="t", show.legend=plot.ellipse.legend) #assumes a multivariate t-distribution
-		} else {
-			g = g + stat_ellipse(mapping = aes(PCx, PCy, linetype=Ellipse), type = "t", inherit.aes = F, show.legend=plot.ellipse.legend)
-		}
-	}
-	
-	if (label.samples){
-		if (is.null(samp.name)) {
-			g <- g + geom_text_repel(aes(label=Sample),
-					data=dataGG,
-					size = label.font.size,
-					box.padding = unit(0.35, "lines"),
-					point.padding = unit(0.3, "lines"),
-					show.legend = F)
-		}
-	}
-	print(g)
-	cat("done\n")
-	return(g)
-}
-
-#' Function to generate a 3D scatterplot
-#' @export
-diff_expr_3d_scatterplot <-
-		function(PCA, samp.name=NULL, groups, grp.nam=NULL, PC=c(1,2,3), main=NULL)
-{
-	cat("    Preparing data...")
-	if (is.null(samp.name)) {
-		samp.name <- rownames(PCA$x)
-	} else if (is.na(samp.name)) {
-		samp.name <- ""
-	} else {
-		stop("samp.name can only be 'NULL' to use the row names of the principal components matrix or 'NA' to be empty.")
-	}
-
-	percentVar <- round(100*PCA$sdev^2/sum(PCA$sdev^2), 1)
-	dat <- data.frame(PCx=PCA$x[, PC[1]], PCy=PCA$x[, PC[2]], PCz=PCA$x[, PC[3]], Condition=groups)
-	cond <- levels(dat$Condition)
-	col_seq <- rev(rep(c(seq.int(from=2, to=12, by=2), seq.int(from=1, to=11, by=2)), ceiling(length(cond)/12))[1:length(cond)])
-	cols <- brewer.pal(n=12, name="Paired")[col_seq]
-	plcol <- rep(cols[1], nrow(dat))
-	names(plcol) <- dat$Condition
-	if (is.null(grp.nam)) {
-		grp.nam <- "Condition"
-	}
-	for (i in 2:length(cond)) {
-		plcol[dat$Condition == cond[i]] <- cols[i]
-	}
-	cat("done\n    Plotting...\n     scatterplot...\n")
-	s3d <- scatterplot3d(dat[,1:3],        # x y and z axis
-			color=plcol, pch=19,        # circle color indicates no. of cylinders
-			type="h", lty.hplot=2,       # lines to the horizontal plane
-			scale.y=.75,                 # scale y axis (reduce by 25%)
-			main=paste0("3-D Scatterplot for PCA (", main, ")"))
-	cat("     point labels...\n")
-	s3d.coords <- s3d$xyz.convert(dat[,1:3])
-	text(s3d.coords$x, s3d.coords$y,     # x and y coordinates
-			labels=samp.name,       # text to plot
-			pos=4, cex=.5)                  # shrink text 50% and place to right of points)
-# add the legend
-	cat("     legend...\n")
-	legend("topleft", inset=.05,      # location and inset
-			bty="n", cex=.5,              # suppress legend box, shrink text 50%
-			title=grp.nam,
-			legend=unique(names(plcol)), fill=unique(plcol))
-	cat("    done\n")
-}
-
-#' Function to generate dendrogram plots based on hierarchical clustering
-#' @export
-diff_expr_dendro_plot <-
-		function(counts, groups, grp.nam=NULL, main=NULL)
-{
-	cat("    Hierarchical clustering...")
-	hc <- hclust(dist(t(counts)))
-	plot(hc, main=paste("Hierarchical Clustering (", main, ")"))
-	cat("done\n    Generating coloured dendrogram...")
-	dend <- as.dendrogram(hc)
-	labels_colors(dend) <- as.numeric(groups)[hc$order]
-	par(mar=c(8,6,6,4))
-	plot(dend, main=paste0("Hierarchical Clustering (", main, ")\n[coloured by ", grp.nam, "]"))
-	cat("done\n")
-}
-
-#' Main wrapper function for QC plots
-#' @export
-diff_expr_QC_plots <-
-		function(counts, samp.info, control, out.l, grp.nam=NULL, PC=c(1,2,3), ellipse=TRUE, circle=TRUE, varname.size=0, var.axes=FALSE, samp.lab=TRUE, pairs=NULL,
-				pairs.name=NULL, gene.selection="common", n=500, type=NULL, analysis.name=NULL, out.dir=NULL)
-{
-	cat("  Doing PCA...\n")
-	PCA <- diff_expr_PCA(counts=counts, n=n)
-	cat("  done\n")
-	groups <- relevel(samp.info$Groups, ref=control)
-	samp.name <- samp.info$SampleNames
-	samp.name_pca <- NA
-	if (samp.lab) {
-		samp.name_pca <- NULL
-	}
-	main <- paste(type, analysis.name, sep="_")
-	main <- gsub("\\.{1,}", "_", make.names(main))
-	out.l$QCplots <- list()
-	cat("  Plotting...\n")
-	pdf_file <- file.path(out.dir, paste0(Sys.Date(), "_", main, "_QC_plots.pdf"))
-	cat("   Saving plot to", pdf_file, "...\n")
-	pdf(pdf_file, width=11, height=11)
-	main <- paste(type, analysis.name)
-	cat("   MDS ggplot...\n")
-	out.l$QCplots[["MDS"]] <- diff_expr_ggplot_mds(counts=counts, samp.name=samp.name, groups=groups, grp.nam=grp.nam, pairs=pairs, pairs.name=pairs.name, gene.selection=gene.selection, dim.plot=PC[1:2], main=main)
-	cat("   done.\n   PCA ggbiplot...\n")
-	out.l$QCplots[["PCAbiplot"]] <- diff_expr_PCA_ggbiplot(PCA=PCA, groups=groups, grp.nam=grp.nam, ellipse=ellipse, circle=circle, varname.size=varname.size, var.axes=var.axes, main=main)
-	cat("   done.\n   PCA ggplot...\n")
-	out.l$QCplots[["PCAlabelledPlot"]] <- diff_expr_PCA_ggplot(PCA=PCA, samp.name=samp.name_pca, groups=groups, grp.nam=grp.nam, PC=c(1,2), main=main)
-	cat("   done.\n   PCA 3d scatterplot...\n")
-	diff_expr_3d_scatterplot(PCA=PCA, samp.name=samp.name_pca, groups=groups, grp.nam=grp.nam, PC=PC[1:3], main=main)
-	cat("   done.\n   PCA cluster dendrogram...\n")
-	diff_expr_dendro_plot(counts=counts, groups=groups, grp.nam=grp.nam, main=main)
-	cat("   done.\n")
-	dev.off()
-	cat("  Plotting finished.\n")
-	return(out.l)
-}
-
-#' Function to generate a MDS plot using `limma::plotMDS`
-#' @export
-diff_expr_mds_plot <-
-		function(d, groups, n=500, sample.plot.names=NULL, analysis.name=NULL, do.pdf=FALSE, out.dir=NULL)
-{
-	if (!is.null(sample.plot.names)) {
-		cat("  *** Using custom sample labels: ***\n  ", head(sample.plot.names), "\n")
-	}
-	if (do.pdf) {
-		pdf(file.path(out.dir, paste0(analysis.name, "_MDS_plot.pdf")), width=11, height=11)
-	}
-	par(mar = c(6,6,5,3))
-	plotMDS(d, top=n, labels=sample.plot.names, main=paste0("MDS plot for '", analysis.name, "' normalised DGEList"), col = rainbow(length(levels(groups)))[factor(groups)])
-	legend("bottomright", legend=levels(groups), pch=15, col=rainbow(length(levels(groups))))
-	if (do.pdf) {
-		dev.off()
-	}
-}
-
-#' Function to generate a M-A plot using `ggplot2`
-#' @export
-diff_expr_ma_plot <-
-		function(dat, contr, id=NULL, sym.col="gene_symbol", p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, out.dir=NULL, analysis.name=NULL, point.lab=TRUE, biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"),
-				font.size=5, lists=TRUE)
-{
-	if (is.null(id) && !sym.col %in% names(dat)) {
-		stop("Need one of 'id' or 'sym.col'.")
-	}
-	if (sym.col %in% names(dat)) {
-		dat$label_id <- dat[[sym.col]]
-	} else if (id %in% names(dat)) {
-		dat$label_id <- dat[[id]]
-	} else {
-		stop("No ID columns found.")
-	}
-	rn <- rownames(dat)
-	pv.col <- names(dat)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(dat)))]
-	fdr.col <- names(dat)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(dat)))]
-	numlab <- ceiling(1.25*numlab)
-	A <- grep("^logCPM$|^AveExpr$", names(dat), value=TRUE)
-	degFDR <- rn[dat[[fdr.col]] < fdr.thr & abs(dat$logFC) >= logfc.thr]
-	degPval <- rn[dat[[pv.col]] < p.thr & abs(dat$logFC) >= logfc.thr]
-	dat$`P-Value` <- dat[[pv.col]]
-	dat$`adj. P-Value` <- dat[[fdr.col]]
-	dat$`log2 Fold-Change` <- abs(dat$logFC)
-	dat$`Average Expression` <- dat[[A]]
-	# list to collect ggplot2 objects for output
-	g.l <- list()
-	cat("  M-A plot...\n")
-	## BiomaRt
-#				marts <- listMarts(host=host)[["biomart"]]
-#				marts1 <- unlist(lapply(strsplit(tolower(marts), "_"), function(x) x[length(x)]))
-#				biom <- match.arg(biom.mart)
-#				biom <- marts[grep(biom, marts1)]
-#				cat("Using BioMart:", biom, "\n")
-#				mart <- useDataset(dataset=biom.data.set, useMart(biomart=biom, host=host))
-#				cat("   Getting more information:", biom.attributes[biom.attributes!=biom.filter], "...\n")
-	if (length(degFDR)>0) {
-		cat(" FDR filtered values...\n")
-#					biom.ids <- getBM(attributes=biom.attributes, filters=biom.filter, values=degFDR, mart=mart)
-
-#					gene.lab <- tt$table[rn %in% degFDR, ]
-#					gene.lab <- merge(biom.ids, gene.lab, by.x=biom.filter, by.y="row.names", all.x=FALSE)
-
-		## ggplot2 M-A plot
-		g <- ggplot(data=dat, aes(x=`Average Expression`, y=logFC))
-		g <- g + geom_point(aes(size=`log2 Fold-Change`, color=`adj. P-Value`, alpha=`log2 Fold-Change`))
-		g <- g + scale_colour_gradient2(low="#00106B", high="#A4B1FF", mid="#F3F5FF", midpoint=0.2)
-		if (point.lab) {
-			gene.lab <- dat[rn %in% degFDR, ]
-			cat("    ", nrow(gene.lab), "point(s) labelled...\n")
-			if (nrow(gene.lab)>numlab) {
-				cat("     Restricting to", numlab, "...\n")
-				ix <- sort(gene.lab$`adj. P-Value`, index=T)$ix
-				gene.lab <- gene.lab[ix[1:numlab], ][order(ix[1:numlab]), ]
-			}
-			cat("   Highlighted features:\n")
-			if (length(degFDR)>8) {
-				print(gene.lab[1:8, 1:2])
-				cat("_truncated_ (", length(degFDR), "features)\n")
-			} else {
-				print(gene.lab[1:8, 1:2])
-			}
-			g <- g + ggtitle(paste0("M-A plot for ", contr, " (highl.: FDR < ", fdr.thr, "; FC >= ", 2^logfc.thr, "-fold)"))
-			g <- g + geom_text_repel(data = gene.lab, aes(label = label_id), size = font.size, box.padding = unit(0.35, "lines"), point.padding = unit(0.3, "lines"), show.legend = F)
-			if (lists) {
-				write.table(gene.lab, file.path(out.dir, paste(analysis.name, contr, "labelledPointsSmearPlot.tsv", sep="_")), sep="\t", quote=FALSE, row.names=FALSE)
-			}
-		} else {
-			g <- g + ggtitle(paste("M-A plot for", contr))
-		}
-		print(g)
-		g.l[["FDR"]] <- g
-	}
-	if (length(degPval)>0) {
-		cat("    for P-value filtered values...\n")
-#					biom.ids <- getBM(attributes=biom.attributes, filters=biom.filter, values=degPval, mart=mart)
-
-#					gene.lab <- tt$table[rn %in% degPval, ]
-#					gene.lab <- merge(biom.ids, gene.lab, by.x=biom.filter, by.y="row.names", all.x=FALSE)
-
-		## ggplot implemetation of MA plot
-		g <- ggplot(data=dat, aes(x=`Average Expression`, y=logFC))
-		g <- g + geom_point(aes(size=`log2 Fold-Change`, color=`P-Value`, alpha=`log2 Fold-Change`))
-		g <- g + scale_colour_gradient2(low="#00106B", high="#A4B1FF", mid="#F3F5FF", midpoint=0.2)
-		if (point.lab) {
-			gene.lab <- dat[rn %in% degPval, ]
-			cat("    ", nrow(gene.lab), "point(s) labelled...\n")
-			if (nrow(gene.lab)>numlab) {
-				cat("     Restricting to", numlab, "...\n")
-				ix <- sort(gene.lab$`P-Value`, index=T)$ix
-				gene.lab <- gene.lab[ix[1:numlab], ][order(ix[1:numlab]), ]
-			}
-			cat("   Highlighted features:\n")
-			if (length(degPval)>8) {
-				print(gene.lab[1:8, 1:2])
-				cat(paste0("   _truncated_ (", length(degPval), " features)\n"))
-			} else {
-				print(gene.lab[1:8, 1:2])
-			}
-			g <- g + ggtitle(paste0("M-A plot for ", contr, " (highl.: P-value < ", p.thr, "; FC >= ", 2^logfc.thr, "-fold)"))
-			g <- g + geom_text_repel(data = gene.lab, aes(label = label_id), size = font.size, box.padding = unit(0.35, "lines"), point.padding = unit(0.3, "lines"), show.legend = F)
-			if (lists) {
-				write.table(gene.lab, file.path(out.dir, paste(analysis.name, contr, "labelledPointsSmearPlot.tsv", sep="_")), sep="\t", quote=FALSE, row.names=FALSE)
-			}
-		} else {
-			g <- g + ggtitle(paste("M-A plot for", contr))
-		}
-		print(g)
-		g.l[["Pval"]] <- g
-	}
-	return(g.l)
-}
-
-
-##' Helper function that returns volcano plot.
-#' @export
-prepare_volcano_of_given_property = function(data.df, property.to.plot = c("fdr", "p"), property.column,
-                                             property.thr, logfc.thr, main,
-                                             numlab, point.lab, sym.col){
-
-  data.df[[property.to.plot]] <- data.df[[property.column]]
-
-  # Formatted names to use in plot texts:
-  property.formatted.name = toupper(property.to.plot)
-  name.of.legend = paste0(property.formatted.name, "-values")
-  legend.treshold.tag = paste0("signif. (", property.formatted.name, "<", property.thr, " & ", "logFC>", logfc.thr, ")")
-  subtitle.name = paste("(",")", sep=name.of.legend )
-  x.axis.name = "Logarithmic fold change"
-  y.axis.name = paste0("-log10(", property.formatted.name, ")")
-  line.label.tag = "p" #except if we have FDR-values:
-  if(property.to.plot == "fdr" ){
-    line.label.tag = "q"
-  }
-  line_label_text = paste(line.label.tag, property.thr, sep = "=")
-
-  # Constructing new bivalue column for coloring the points and displaying legend
-  data.df[[name.of.legend]] <- "not signif."
-  data.df[[name.of.legend]][data.df[[property.to.plot]] < property.thr & abs(data.df$logFC) > logfc.thr] <- legend.treshold.tag
-
-  # Adding another bivalue column for magnitude of foldchange
-  #data.df$FC <- paste0("less than ", 2^logfc.thr, "-fold")
-  #data.df$FC[(data.df$logFC < -1*logfc.thr | data.df$logFC > logfc.thr)] <- paste0("more than ", 2^logfc.thr, "-fold")
-
-  # Filtering data.df to label points
-  filtdat <- data.df[ data.df[[property.to.plot]] < property.thr & abs(data.df$logFC) > logfc.thr, ]
-  cat("    ", nrow(filtdat), "point(s) labelled...\n")
-  if (nrow(filtdat) > numlab) {
-    cat("     Restricting to", numlab, "...\n")
-    ix <- sort(filtdat[,property.to.plot], index=T)$ix
-    filtdat <- filtdat[ix[1:numlab], ][order(ix[1:numlab]), ]
-  }
-
-  # Constructing the plot
-  volcano.plot <- ggplot(data.df, aes(x = data.df$logFC, y = -log10(data.df[,property.to.plot]),
-                                      color = data.df[[name.of.legend]]))
-
-  volcano.plot <- volcano.plot + geom_point(alpha=0.4, size=1.75)
-  volcano.plot <- volcano.plot + theme_bw(base_size = 10)
-
-  volcano.plot <- volcano.plot + theme(panel.border = element_blank(),
-                                       axis.line = element_line(color='black'),
-                                       panel.grid.major = element_line(size = 0.2),
-                                       panel.grid.minor = element_line(size = 0.2))
-
-  volcano.plot <- volcano.plot + xlab(x.axis.name) + ylab(y.axis.name)
-  volcano.plot <- volcano.plot + labs(color = name.of.legend)
-
-  #volcano.plot <- volcano.plot + scale_color_manual(values=c("#0066FF", "#CC0000"))
-  volcano.plot <- volcano.plot + scale_x_continuous(breaks = scales::pretty_breaks(n=6)) + scale_y_continuous(breaks = scales::pretty_breaks(n=8))
-
-  volcano.plot <- volcano.plot + geom_hline(aes(yintercept=-log10(property.thr)), colour="red", linetype="dashed")
-  volcano.plot <- volcano.plot + geom_vline(aes(xintercept=logfc.thr), colour="red", linetype="dashed")
-  volcano.plot <- volcano.plot + geom_vline(aes(xintercept=-logfc.thr), colour="red", linetype="dashed")
-
-  volcano.plot <- volcano.plot + ggtitle(main, subtitle = subtitle.name) +
-    theme(plot.title = element_text(hjust = 0.5)) +
-    theme(plot.subtitle = element_text(hjust = 0.5)) #hjust 0.5 for centering
-
-  volcano.plot <- volcano.plot + geom_text(data=data.df, aes(x=floor(min(data.df$logFC)), y=-log10(property.thr)), label = line_label_text, nudge_x=0.5, nudge_y=max(-log10(data.df[,property.to.plot]))/60, size=3.5, color="red")
-  volcano.plot <- volcano.plot + geom_text(x=0, y=-0.7, label="two-fold FC", size=3, color="red") #currently not displayed?
-
-  if (point.lab && nrow(filtdat)>0) {
-
-    volcano.plot <- volcano.plot + geom_text_repel(
-      data = filtdat,
-      aes(x= filtdat$logFC, y = -log10(filtdat[[property.to.plot]]), label = filtdat[[sym.col]]),
-      size = 3,
-      colour = "gray30",
-      box.padding = unit(0.35, "lines"),
-      point.padding = unit(0.3, "lines"),
-      show.legend = F
-    )
-
-  }
-
-  return(volcano.plot)
-}
-
-#' Function to generate a Volcano plot using `ggplot2`
-#' @description `diff_expr_volcano_plot` generates two Volcano plots highlighing genes that are differentially expressed beyond custom thresholds for siginificance (set by parameters `p.thr` and fdr.thr`) and differential expression level (set by parameter `logfc.thr`).
-#' @param d3 \code{data.frame}. Data frame containing all necessary columns to generate a Volcano plot with gene labels (at least p-values, FDR values, log-ratios and gene symbols or other IDs)
-#' @param id \code{character}. Name of the gene ID column. Can be the same as `sym.col` but usually refers to an additional column with, e.g., Ensembl Gene IDs.
-#' @param sym.col \code{character}. Name of column with gene symbols, e.g., HGNC Symbols.
-#' @param main \code{character}. Main plot title. (Will be complemented with additional information, e.g., 'FDR' when labelling according to and FDR threshold.)
-#' @param p.thr \code{numeric}. Plotted values with a P-Value below this threshold will be labelled in the P-Value plot.
-#' @param fdr.thr \code{numeric}. Plotted values with a FDR below this threshold will be labelled in the FDR plot.
-#' @param logfc.thr \code{numeric}. Plotted (`abs`olute) values above this threshold will have bigger dots.
-#' @param numlab \code{numeric}. Maximum number of labels per plot. Supersedes numbers calculated based on `p.thr` and `fdr.thr`.
-#' @param point.lab \code{logical}. Should points be labelled, at all?
-#' @export
-diff_expr_volcano_plot <-
-  function(d3, id, sym.col="gene_symbol", main=NULL, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE)
-  {
-    pv.col <- names(d3)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
-    fdr.col <- names(d3)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
-
-    if (point.lab) {
-      cont.dat <- d3[, c(id, sym.col, "logFC", pv.col, fdr.col)]
-      if (any(cont.dat$gene_symbol=="") || any(is.na(cont.dat$gene_symbol))) {
-        repl <- which(cont.dat$gene_symbol==""|is.na(cont.dat$gene_symbol))
-        cont.dat[repl, sym.col] <- cont.dat[repl, as.character(id)]
-      }
-    } else {
-      cont.dat <- d3[, c(id, "logFC", pv.col, fdr.col)]
-    }
-
-
-    g.l <- list()
-    g.l[["FDR"]] = prepare_volcano_of_given_property(data.df = cont.dat,
-                                                     property.to.plot = 'fdr',
-                                                     property.column = fdr.col,
-                                                     property.thr = fdr.thr,
-                                                     logfc.thr = logfc.thr,
-                                                     main = main,
-                                                     numlab = numlab,
-                                                     point.lab = TRUE,
-                                                     sym.col = sym.col)
-
-    g.l[["Pval"]] = prepare_volcano_of_given_property(data.df = cont.dat,
-                                                      property.to.plot = 'p',
-                                                      property.column = pv.col,
-                                                      property.thr = p.thr,
-                                                      logfc.thr = logfc.thr,
-                                                      main = main,
-                                                      numlab = numlab,
-                                                      point.lab = TRUE,
-                                                      sym.col = sym.col)
-
-
-
-    return(g.l)
-
-  }
-
-#' Function to generate a histogram of the P-Value distribution
-#' @export
-diff_expr_pval_hist_plot <-
-		function(d3)
-{
-	cat("  Histogram of P-value distribution...\n")
-	pv.col <- names(d3)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
-	hist(d3[[pv.col]],breaks=20, xlab="P Value", ylab="Frequency", main="P-value distribution")
-}
-

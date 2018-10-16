@@ -18,10 +18,12 @@ diffExpr(expr.file = "mature_miRNA_expression.xls", samp.info, control,
   min.samp = NULL, strict = TRUE, disp = c("gene", "trend",
   "common"), do.voom = FALSE, voom.fun = voom, norm.method = c("tmm",
   "quantile"), bayes.trend = FALSE, bayes.robust = FALSE, n = 500,
-  gene.selection = "common", ellipse = TRUE, circle = TRUE,
-  varname.size = 0, var.axes = FALSE, samp.lab = TRUE, PC = c(1, 2,
-  3), type = c("both", "uncorrected", "pseudo-corrected"),
-  font.size = 5, plots = TRUE, lists = TRUE)
+  gene.selection = "common", ellipse = TRUE,
+  ellipse.mapping.groups = NULL, label.samples = TRUE,
+  geom.point.size = 2, label.font.size = 5, plot.ellipse.legend = NA,
+  circle = TRUE, varname.size = 0, var.axes = FALSE,
+  samp.lab = TRUE, PC = c(1, 2, 3), type = c("both", "uncorrected",
+  "pseudo-corrected"), font.size = 5, plots = TRUE, lists = TRUE)
 }
 \arguments{
 \item{expr.file}{\code{character}. Vector of input file paths}
@@ -49,6 +51,20 @@ vector of groups.}
 \item{bayes.trend}{\code{logical}. Should an intensity-trend be allowed for the prior variance? Passed to 'limma::eBayes'.}
 
 \item{bayes.robust}{\code{logical}. Should the estimation of df.prior and var.prior be robustified against outlier sample variances? Passed to 'limma::eBayes'.}
+
+\item{ellipse}{\code{logical}. Should an ellipse be plottrd around samples belonging to the same sample group?}
+
+\item{ellipse.mapping.groups}{\code{character} vector of group names for ellipse drawing.}
+
+\item{label.samples}{\code{logical}. Should points in appropriate QC plots be labelled. So far, applies only to PCA ggplot.}
+
+\item{geom.point.size}{\code{numeric}. Size of points in appropriate QC plots. So far, applies only to PCA ggplot.}
+
+\item{label.font.size}{\code{numeric}. Font size used for point labels in appropriate QC plots. So far, applies only to PCA ggplot.}
+
+\item{plot.ellipse.legend}{\code{logical}. Should a legend be addded for ellipses in PCA plots? NA, the default, includes
+if any aesthetics are mapped. FALSE never includes, and TRUE always includes. It can also be a named logical vector to finely select
+the aesthetics to display.}
 }
 \value{
 A list of all relevant objects generated in the course of the workflow:

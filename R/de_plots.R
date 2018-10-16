@@ -1,0 +1,276 @@
+# All plots for differential expression analysis results
+# 
+# Author: vidal
+###############################################################################
+
+
+#' Function to generate a M-A plot using `ggplot2`
+#' @export
+diff_expr_ma_plot <-
+		function(dat, contr, id=NULL, sym.col="gene_symbol", p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, out.dir=".", analysis.name=NULL, point.lab=TRUE, biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"),
+				font.size=5, lists=TRUE)
+{
+	if (is.null(id) && !sym.col %in% names(dat)) {
+		stop("Need one of 'id' or 'sym.col'.")
+	}
+	if (sym.col %in% names(dat)) {
+		dat$label_id <- dat[[sym.col]]
+	} else if (id %in% names(dat)) {
+		dat$label_id <- dat[[id]]
+	} else {
+		stop("No ID columns found.")
+	}
+	rn <- rownames(dat)
+	pv.col <- names(dat)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(dat)))]
+	fdr.col <- names(dat)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(dat)))]
+	numlab <- ceiling(1.25*numlab)
+	A <- grep("^logCPM$|^AveExpr$", names(dat), value=TRUE)
+	degFDR <- rn[dat[[fdr.col]] < fdr.thr & abs(dat$logFC) >= logfc.thr]
+	degPval <- rn[dat[[pv.col]] < p.thr & abs(dat$logFC) >= logfc.thr]
+	dat$`P-Value` <- dat[[pv.col]]
+	dat$`adj. P-Value` <- dat[[fdr.col]]
+	dat$`log2 Fold-Change` <- abs(dat$logFC)
+	dat$`Average Expression` <- dat[[A]]
+	# list to collect ggplot2 objects for output
+	g.l <- list()
+	cat("  M-A plot...\n")
+	## BiomaRt
+#				marts <- listMarts(host=host)[["biomart"]]
+#				marts1 <- unlist(lapply(strsplit(tolower(marts), "_"), function(x) x[length(x)]))
+#				biom <- match.arg(biom.mart)
+#				biom <- marts[grep(biom, marts1)]
+#				cat("Using BioMart:", biom, "\n")
+#				mart <- useDataset(dataset=biom.data.set, useMart(biomart=biom, host=host))
+#				cat("   Getting more information:", biom.attributes[biom.attributes!=biom.filter], "...\n")
+	if (length(degFDR)>0) {
+		cat(" FDR filtered values...\n")
+#					biom.ids <- getBM(attributes=biom.attributes, filters=biom.filter, values=degFDR, mart=mart)
+		
+#					gene.lab <- tt$table[rn %in% degFDR, ]
+#					gene.lab <- merge(biom.ids, gene.lab, by.x=biom.filter, by.y="row.names", all.x=FALSE)
+		
+		## ggplot2 M-A plot
+		g <- ggplot(data=dat, aes(x=`Average Expression`, y=logFC))
+		g <- g + geom_point(aes(size=`log2 Fold-Change`, color=`adj. P-Value`, alpha=`log2 Fold-Change`))
+		g <- g + scale_colour_gradient2(low="#00106B", high="#A4B1FF", mid="#F3F5FF", midpoint=0.2)
+		if (point.lab) {
+			gene.lab <- dat[rn %in% degFDR, ]
+			cat("    ", nrow(gene.lab), "point(s) labelled...\n")
+			if (nrow(gene.lab)>numlab) {
+				cat("     Restricting to", numlab, "...\n")
+				ix <- sort(gene.lab$`adj. P-Value`, index=T)$ix
+				gene.lab <- gene.lab[ix[1:numlab], ][order(ix[1:numlab]), ]
+			}
+			cat("   Highlighted features:\n")
+			if (length(degFDR)>8) {
+				print(gene.lab[1:8, 1:2])
+				cat("_truncated_ (", length(degFDR), "features)\n")
+			} else {
+				print(gene.lab[1:8, 1:2])
+			}
+			g <- g + ggtitle(paste0("M-A plot for ", contr, " (highl.: FDR < ", fdr.thr, "; FC >= ", 2^logfc.thr, "-fold)"))
+			g <- g + geom_text_repel(data = gene.lab, aes(label = label_id), size = font.size, box.padding = unit(0.35, "lines"), point.padding = unit(0.3, "lines"), show.legend = F)
+			if (lists) {
+				write.table(gene.lab, file.path(out.dir, paste(analysis.name, contr, "labelledPointsSmearPlot.tsv", sep="_")), sep="\t", quote=FALSE, row.names=FALSE)
+			}
+		} else {
+			g <- g + ggtitle(paste("M-A plot for", contr))
+		}
+		print(g)
+		g.l[["FDR"]] <- g
+	}
+	if (length(degPval)>0) {
+		cat("    for P-value filtered values...\n")
+#					biom.ids <- getBM(attributes=biom.attributes, filters=biom.filter, values=degPval, mart=mart)
+		
+#					gene.lab <- tt$table[rn %in% degPval, ]
+#					gene.lab <- merge(biom.ids, gene.lab, by.x=biom.filter, by.y="row.names", all.x=FALSE)
+		
+		## ggplot implemetation of MA plot
+		g <- ggplot(data=dat, aes(x=`Average Expression`, y=logFC))
+		g <- g + geom_point(aes(size=`log2 Fold-Change`, color=`P-Value`, alpha=`log2 Fold-Change`))
+		g <- g + scale_colour_gradient2(low="#00106B", high="#A4B1FF", mid="#F3F5FF", midpoint=0.2)
+		if (point.lab) {
+			gene.lab <- dat[rn %in% degPval, ]
+			cat("    ", nrow(gene.lab), "point(s) labelled...\n")
+			if (nrow(gene.lab)>numlab) {
+				cat("     Restricting to", numlab, "...\n")
+				ix <- sort(gene.lab$`P-Value`, index=T)$ix
+				gene.lab <- gene.lab[ix[1:numlab], ][order(ix[1:numlab]), ]
+			}
+			cat("   Highlighted features:\n")
+			if (length(degPval)>8) {
+				print(gene.lab[1:8, 1:2])
+				cat(paste0("   _truncated_ (", length(degPval), " features)\n"))
+			} else {
+				print(gene.lab[1:8, 1:2])
+			}
+			g <- g + ggtitle(paste0("M-A plot for ", contr, " (highl.: P-value < ", p.thr, "; FC >= ", 2^logfc.thr, "-fold)"))
+			g <- g + geom_text_repel(data = gene.lab, aes(label = label_id), size = font.size, box.padding = unit(0.35, "lines"), point.padding = unit(0.3, "lines"), show.legend = F)
+			if (lists) {
+				write.table(gene.lab, file.path(out.dir, paste(analysis.name, contr, "labelledPointsSmearPlot.tsv", sep="_")), sep="\t", quote=FALSE, row.names=FALSE)
+			}
+		} else {
+			g <- g + ggtitle(paste("M-A plot for", contr))
+		}
+		print(g)
+		g.l[["Pval"]] <- g
+	}
+	return(g.l)
+}
+
+
+##' Helper function that returns volcano plot.
+#' @export
+prepare_volcano_of_given_property = function(data.df, property.to.plot = c("fdr", "p"), property.column,
+		property.thr, logfc.thr, main,
+		numlab, point.lab, sym.col){
+	
+	data.df[[property.to.plot]] <- data.df[[property.column]]
+	
+	# Formatted names to use in plot texts:
+	property.formatted.name = toupper(property.to.plot)
+	name.of.legend = paste0(property.formatted.name, "-values")
+	legend.treshold.tag = paste0("signif. (", property.formatted.name, "<", property.thr, " & ", "logFC>", logfc.thr, ")")
+	subtitle.name = paste("(",")", sep=name.of.legend )
+	x.axis.name = "Logarithmic fold change"
+	y.axis.name = paste0("-log10(", property.formatted.name, ")")
+	line.label.tag = "p" #except if we have FDR-values:
+	if(property.to.plot == "fdr" ){
+		line.label.tag = "q"
+	}
+	line_label_text = paste(line.label.tag, property.thr, sep = "=")
+	
+	# Constructing new bivalue column for coloring the points and displaying legend
+	data.df[[name.of.legend]] <- "not signif."
+	data.df[[name.of.legend]][data.df[[property.to.plot]] < property.thr & abs(data.df$logFC) > logfc.thr] <- legend.treshold.tag
+	
+	# Adding another bivalue column for magnitude of foldchange
+	#data.df$FC <- paste0("less than ", 2^logfc.thr, "-fold")
+	#data.df$FC[(data.df$logFC < -1*logfc.thr | data.df$logFC > logfc.thr)] <- paste0("more than ", 2^logfc.thr, "-fold")
+	
+	# Filtering data.df to label points
+	filtdat <- data.df[ data.df[[property.to.plot]] < property.thr & abs(data.df$logFC) > logfc.thr, ]
+	cat("    ", nrow(filtdat), "point(s) labelled...\n")
+	if (nrow(filtdat) > numlab) {
+		cat("     Restricting to", numlab, "...\n")
+		ix <- sort(filtdat[,property.to.plot], index=T)$ix
+		filtdat <- filtdat[ix[1:numlab], ][order(ix[1:numlab]), ]
+	}
+	
+	# Constructing the plot
+	volcano.plot <- ggplot(data.df, aes(x = data.df$logFC, y = -log10(data.df[,property.to.plot]),
+					color = data.df[[name.of.legend]]))
+	
+	volcano.plot <- volcano.plot + geom_point(alpha=0.4, size=1.75)
+	volcano.plot <- volcano.plot + theme_bw(base_size = 10)
+	
+	volcano.plot <- volcano.plot + theme(panel.border = element_blank(),
+			axis.line = element_line(color='black'),
+			panel.grid.major = element_line(size = 0.2),
+			panel.grid.minor = element_line(size = 0.2))
+	
+	volcano.plot <- volcano.plot + xlab(x.axis.name) + ylab(y.axis.name)
+	volcano.plot <- volcano.plot + labs(color = name.of.legend)
+	
+	#volcano.plot <- volcano.plot + scale_color_manual(values=c("#0066FF", "#CC0000"))
+	volcano.plot <- volcano.plot + scale_x_continuous(breaks = scales::pretty_breaks(n=6)) + scale_y_continuous(breaks = scales::pretty_breaks(n=8))
+	
+	volcano.plot <- volcano.plot + geom_hline(aes(yintercept=-log10(property.thr)), colour="red", linetype="dashed")
+	volcano.plot <- volcano.plot + geom_vline(aes(xintercept=logfc.thr), colour="red", linetype="dashed")
+	volcano.plot <- volcano.plot + geom_vline(aes(xintercept=-logfc.thr), colour="red", linetype="dashed")
+	
+	volcano.plot <- volcano.plot + ggtitle(main, subtitle = subtitle.name) +
+			theme(plot.title = element_text(hjust = 0.5)) +
+			theme(plot.subtitle = element_text(hjust = 0.5)) #hjust 0.5 for centering
+	
+	volcano.plot <- volcano.plot + geom_text(data=data.df, aes(x=floor(min(data.df$logFC)), y=-log10(property.thr)), label = line_label_text, nudge_x=0.5, nudge_y=max(-log10(data.df[,property.to.plot]))/60, size=3.5, color="red")
+	volcano.plot <- volcano.plot + geom_text(x=0, y=-0.7, label="two-fold FC", size=3, color="red") #currently not displayed?
+	
+	if (point.lab && nrow(filtdat)>0) {
+		
+		volcano.plot <- volcano.plot + geom_text_repel(
+				data = filtdat,
+				aes(x= filtdat$logFC, y = -log10(filtdat[[property.to.plot]]), label = filtdat[[sym.col]]),
+				size = 3,
+				colour = "gray30",
+				box.padding = unit(0.35, "lines"),
+				point.padding = unit(0.3, "lines"),
+				show.legend = F
+		)
+		
+	}
+	
+	return(volcano.plot)
+}
+
+#' Function to generate a Volcano plot using `ggplot2`
+#' @description `diff_expr_volcano_plot` generates two Volcano plots highlighing genes that are differentially expressed beyond custom thresholds for siginificance (set by parameters `p.thr` and fdr.thr`) and differential expression level (set by parameter `logfc.thr`).
+#' @param d3 \code{data.frame}. Data frame containing all necessary columns to generate a Volcano plot with gene labels (at least p-values, FDR values, log-ratios and gene symbols or other IDs)
+#' @param id \code{character}. Name of the gene ID column. Can be the same as `sym.col` but usually refers to an additional column with, e.g., Ensembl Gene IDs.
+#' @param sym.col \code{character}. Name of column with gene symbols, e.g., HGNC Symbols.
+#' @param main \code{character}. Main plot title. (Will be complemented with additional information, e.g., 'FDR' when labelling according to and FDR threshold.)
+#' @param p.thr \code{numeric}. Plotted values with a P-Value below this threshold will be labelled in the P-Value plot.
+#' @param fdr.thr \code{numeric}. Plotted values with a FDR below this threshold will be labelled in the FDR plot.
+#' @param logfc.thr \code{numeric}. Plotted (`abs`olute) values above this threshold will have bigger dots.
+#' @param numlab \code{numeric}. Maximum number of labels per plot. Supersedes numbers calculated based on `p.thr` and `fdr.thr`.
+#' @param point.lab \code{logical}. Should points be labelled, at all?
+#' @export
+diff_expr_volcano_plot <-
+		function(d3, id, sym.col="gene_symbol", main=NULL, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE)
+{
+	pv.col <- names(d3)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
+	fdr.col <- names(d3)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
+	
+	if (point.lab) {
+		cont.dat <- d3[, c(id, sym.col, "logFC", pv.col, fdr.col)]
+		if (any(cont.dat$gene_symbol=="") || any(is.na(cont.dat$gene_symbol))) {
+			repl <- which(cont.dat$gene_symbol==""|is.na(cont.dat$gene_symbol))
+			cont.dat[repl, sym.col] <- cont.dat[repl, as.character(id)]
+		}
+	} else {
+		cont.dat <- d3[, c(id, "logFC", pv.col, fdr.col)]
+	}
+	
+	
+	g.l <- list()
+	g.l[["FDR"]] = prepare_volcano_of_given_property(data.df = cont.dat,
+			property.to.plot = 'fdr',
+			property.column = fdr.col,
+			property.thr = fdr.thr,
+			logfc.thr = logfc.thr,
+			main = main,
+			numlab = numlab,
+			point.lab = TRUE,
+			sym.col = sym.col)
+	
+	g.l[["Pval"]] = prepare_volcano_of_given_property(data.df = cont.dat,
+			property.to.plot = 'p',
+			property.column = pv.col,
+			property.thr = p.thr,
+			logfc.thr = logfc.thr,
+			main = main,
+			numlab = numlab,
+			point.lab = TRUE,
+			sym.col = sym.col)
+	
+	#Printing the plots so they can be stored into pdf-file when this function is called
+	print(g.l[["Pval"]])
+	print(g.l[["FDR"]])
+	
+	
+	return(g.l)
+	
+}
+
+#' Function to generate a histogram of the P-Value distribution
+#' @export
+diff_expr_pval_hist_plot <-
+		function(d3)
+{
+	cat("  Histogram of P-value distribution...\n")
+	pv.col <- names(d3)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
+	hist(d3[[pv.col]],breaks=20, xlab="P Value", ylab="Frequency", main="P-value distribution")
+}
+
+

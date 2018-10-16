@@ -161,7 +161,11 @@ diff_expr_extract_contrasts <-
 			
 			## Volcano plot
 			cat(" Volcano plot...\n")
-			out.l$volcanoPlots[[contr]] <- diff_expr_volcano_plot(d3, id.col, sym.col="gene_symbol", p.thr=p.thr, fdr.thr=fdr.thr, logfc.thr=logfc.thr, numlab=numlab, point.lab=point.lab)
+			#The following three lines would probably be wise to do using regular expression
+			volcano.name = gsub(".", " ", contr, fixed=TRUE)
+			volcano.name = gsub("_", " ", volcano.name, fixed=TRUE)
+			volcano.name = gsub("-", " vs. ", volcano.name, fixed=TRUE)
+			out.l$volcanoPlots[[contr]] <- diff_expr_volcano_plot(d3, id.col, sym.col="gene_symbol", main=volcano.name, p.thr=p.thr, fdr.thr=fdr.thr, logfc.thr=logfc.thr, numlab=numlab, point.lab=point.lab)
 			
 #png(paste(out.dir,"/",analysis.name,".Pvalue_distribution.png",sep=""),width=1280,height=960,res=150)
 			## Histogram of P-value distribution

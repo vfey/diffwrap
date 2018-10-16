@@ -137,24 +137,50 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
           break 
         }
         
-        if(length(background.genes)  > 1){
-           background.gene.entrez=de_table[[entrez.col]][!is.na(de_table[[entrez.col]])]
-           cat("      ",length(background.gene.entrez), "/", length(background.genes), " of the all DE genes having corresponding entrez id used as background...\n")
-           
+        
+        background.gene.entrez = ""
+        if(clusterProfilerKEGG.params$analysis.approach == "ORA"){
+          
+          if(length(background.genes)  > 1){
+            background.gene.entrez=de_table[[entrez.col]][!is.na(de_table[[entrez.col]])]
+            cat("      ",length(background.gene.entrez), "/", length(background.genes), " of the all measured genes having corresponding entrez id used as background...\n")
+            
+          }
+          else{
+            cat("      Using default background in KEGG-enrichment...\n")
+          }
+          
+          input.gene.entrez=as.character(filtered_de_table[[entrez.col]][!is.na(filtered_de_table[[entrez.col]])])
+          cat("      ",length(input.gene.entrez), "/", length(input.genes), " of the input genes having corresponding entrez id used for the analysis...\n")
+          
+          
+          ordered.query=FALSE
+          genes = as.character(input.gene.entrez)
+          fname.no.suffix = file.path(out.dir, paste(analysis.name, contrast, method, "ORA", sep = "_"))
+          
         }
-        else{
-          cat("      Using default background in KEGG-enrichment...\n")
-          background.gene.entrez = ""
+        else {
+          
+          ordered.query = TRUE
+          
+          #For GSEA,an ordered gene list of ALL genes must be prepared:
+          #### feature 1: numeric vector
+          geneList <- de_table[[fc.col]][!is.na(de_table[[entrez.col]])]
+          
+          ## feature 2: named vector
+          names(geneList) <- as.character(de_table[[entrez.col]][!is.na(de_table[[entrez.col]])])
+        
+          ## feature 3: decreasing order
+          geneList <- sort(geneList, decreasing = TRUE)
+         
+          genes = geneList
+          fname.no.suffix = file.path(out.dir, paste(analysis.name, contrast, method, "GSEA", sep = "_"))
         }
         
-        input.gene.entrez=filtered_de_table[[entrez.col]][!is.na(filtered_de_table[[entrez.col]])]
-        cat("      ",length(input.gene.entrez), "/", length(input.genes), " of the input genes having corresponding entrez id used for the analysis...\n")
-        
-        
-        enrichment_out.l$clusterProfiler_KEGG[[contrast]] = run_clusterProfiler_KEGG(input_genes=as.character(input.gene.entrez),
-                                              background_genes = as.character(background.gene.entrez),
+        enrichment_out.l$clusterProfiler_KEGG[[contrast]] = run_clusterProfiler_KEGG(input_genes=genes,
+                                              background_genes = background.gene.entrez,
                                               file_name = NULL,
-                                              ordered_query = FALSE,
+                                              ordered_query = ordered.query,
                                               organism = org,
                                               pvalueCutoff = fdr.thr,
                                               min_set_size = clusterProfilerKEGG.params$min.gene.set.size,

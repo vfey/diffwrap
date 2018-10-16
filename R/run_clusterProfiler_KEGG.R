@@ -8,7 +8,7 @@ library(WriteXLS)
 # Input ORA:  input_genes = differentially expressed genes as a vector of Entrez IDs
 #             background_genes = vector of Entrez IDs of all studied genes (optional)
 
-# Input GSEA: input_genes = a named vector of fold changes ranked in the order of decreasing fold change, 
+# Input GSEA: input_genes = a named vector of fold changes of ALL genes ranked in the order of decreasing fold change, 
 #                           with Entrez IDs as names
 
 # Example: run_clusterProfiler_KEGG(DEG.results$ID, DEG.results.full$ID, file_name = "KEGG_enrichment").
@@ -16,7 +16,7 @@ library(WriteXLS)
 
 #' Runs clusterProfiler KEGG enrichment function for a DEG list or for a ranked gene list.
 #' @param input_genes A character vector of Entrez gene IDs (ORA) or a named, 
-#'                    ordered vector of fold changes with Entrez IDs as names (GSEA).
+#'                    ordered vector of fold changes of of ALL genes with Entrez IDs as names (GSEA).
 #' @param background_genes A character vector of background gene IDs. If not specified, by default uses all human genes
 #'                         annotated to term domain.
 #' @param file_name A character string used as a file name.

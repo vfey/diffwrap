@@ -7,7 +7,7 @@ library(WriteXLS)
 # Input ORA:  input_genes = differentially expressed genes as a vector of Ensembl IDs
 #             background_genes = vector of Ensembl IDs of all studied genes (optional)
 
-# Input GSEA: input_genes = a named vector of fold changes ranked in the order of decreasing fold change, 
+# Input GSEA: input_genes = a named vector of fold changes of ALL genes ranked in the order of decreasing fold change, 
 #                           with Ensembl IDs as names
 
 # Example: run_clusterProfiler_GO(DEG.results$ID, DEG.results.full$ID, file_name = "GOBP_enrichment").
@@ -15,7 +15,7 @@ library(WriteXLS)
 
 #' Runs clusterProfiler GO enrichment function for a DEG list or for a ranked gene list.
 #' @param input_genes A character vector of gene IDs (ORA) or a named, 
-#'                    ordered vector of fold changes with gene IDs as names (GSEA).
+#'                    ordered vector of fold changes of ALL genes with gene IDs as names (GSEA).
 #' @param background_genes A character vector of background gene IDs. If not specified, by default uses all human genes
 #'                         annotated to term domain.
 #' @param file_name A character string used as a file name.

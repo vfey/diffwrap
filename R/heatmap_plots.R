@@ -15,11 +15,11 @@
 pheatmap_plots <-
   function(d3, id, sym.col="gene_symbol", samp.info = samp.info, samples, groups, sample.plot.names,main=NULL, p.thr=0.05, fdr.thr=0.05, logfc.thr=1)
   {
-    #print(samples)
-    #print(groups)
-    #print(d3)
-    
-    #set rownames to gene_symbol names
+  
+    # elim row with duplicate sym.col entries, set rownames to gene_symbol names
+
+    d3 = as.data.table(d3)
+    d3 = as.data.frame(unique(d3, by = sym.col))
     rownames(d3) = as.character(d3[,sym.col])
     
     # find columns with P-Values or FDR values
@@ -28,14 +28,13 @@ pheatmap_plots <-
     
     g.l = list()
     cat("Heatmap plots...\n")
-    #cat(pv.col)
-    #cat(fdr.col)
+    
     #make two data frames for significant p-values and significant adj.p.values
     dat.sign.pv = d3[d3[[pv.col]] < 0.05,]
     dat.sign.fdr = d3[d3[[fdr.col]] < 0.05,]
-    #print(dat.sign.pv)
-    #print(samp.info)
     
+    #print(dat.sign.pv)
+    samp.info = as.data.frame(samp.info)
     #select only the columns representing the samples
     samp.names = as.character(samp.info[,"SampleNames"])
     #print(samp.names)    

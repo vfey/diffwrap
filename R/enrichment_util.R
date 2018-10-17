@@ -1,8 +1,37 @@
 # Wrapper function for performing various enrichment analyses
 # 
 # Author: Meeri Pekkarinen
+
+#' Wrapper for executing various enrichment analyses
+#' @description \command{runEnrichmentAnalyses} enables the auto-run of some over-representation analysis (ORA) and 
+#' gene set enrichment analysis (GSEA) for the output of diffExpr main wrapper. 
+#' Functions in various R-packages (clusterProfiler, topGO, gProfileR and RDAVIDWebService) 
+#' are integrated. Currently supports human or mouse!
+#' @param diffr.wrapper.output \code{list}.  Nested list system produced by diffrExpr-wrapper. 
+#' Has to contain element "contrasts" that contains contrast-specific expression tables
+#' @param analysis.name \code{character}. Descriptive character-tag used in output file names
+#' @param use.background.from.diffr.output \code{logical}. Whether the (ORA) analyses are run 
+#' with experiment-specific background obtained from pre-filtered expression matrix or with the default background of the functions (genome)
+#' @param out.dir \code{character}. Root directory for the resulting subdirectories 
+#' @param species \code{character}. Currently valid options are "human" or "mouse".
+#' @param p.thr \code{numeric}. Threshold for un-adjusted p-values (applied in both filtering of DE-genes and in enrichment results,
+#'  when relevant (i.e. no significant fdr-entries are found)). Default 0.05 
+#' @param fdr.thr \code{numeric}. Threshold for adjusted p-values (applied in both filtering of DE-genes and in enrichment results). Default 0.05
+#' @param logfc.thr \code{numeric}. 
+#' @param enrichment.methods \code{character}. Enrichment methods to be run. One or more of the following: c("clusterProfilerGO", "clusterProfilerKEGG","DAVID", "gProfileR", "topGO")
+#' @param clusterProfilerGO.params \code{list}. Method-specific parameters for clusterProfilerGO. One or more of the following (default values shown 
+#' and used for all such elements not given in the call):
+#' analysis.approach="ORA", do.similarity.filtering=F,min.gene.set.size=10,max.gene.set.size=1000, ontology="BP", min.overlap=2,p.adjust.method="BH". 
+#' Analysis approach can be "ORA" or "KEGG". If do.similarity.filtering is set to TRUE, clusterProfiler::simplify() is run.
+#' @param clusterProfilerKEGG.params \code{list}.
+#' @param david.params \code{list}.
+#' @param gProfileR.params \code{list}.
+#' @param topGO.params \code{list}.
+#'
+#' @details DAVID approach requires a registered email-address, correct java-version and an url configured with the settings
+#' @return A list of all relevant objects generated in the course of the enrichment analyses
 ###############################################################################
-runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="", 
+runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="", 
                                   use.background.from.diffr.output=TRUE, 
                                   out.dir=NULL,
                                   species="human",
@@ -51,11 +80,11 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
   #Creating subfolders
   lapply(enrichment.methods, function(x) dir.create(file.path(out.dir, method), showWarnings = F))
   
-  contrast.names = names(diffr_wrapper.output$contrasts)
+  contrast.names = names(diffr.wrapper.output$contrasts)
   cat("Performing enrichment analyses for ", length(contrast.names), " comparisons: \n")
   cat("  ", contrast.names, " \n")
   
-  dat <- diffr_wrapper.output$contrasts[[1]] ## extracting appropriate colnames using the first contrast
+  dat <- diffr.wrapper.output$contrasts[[1]] ## extracting appropriate colnames using the first contrast
   pv.col <- names(dat)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(dat)))]
   fdr.col <- names(dat)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(dat)))]
   fc.col <- names(dat)[grep("^logfc$|fold$", tolower(names(dat)))]
@@ -73,7 +102,7 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
   for (contrast in contrast.names) {
 
     cat("***", contrast, "*** \n")
-    de_table = diffr_wrapper.output$contrasts[[contrast]]
+    de_table = diffr.wrapper.output$contrasts[[contrast]]
     
     cat("   Filtering the DE genes (fdr < ", fdr.thr, "and abs. logFC >=", logfc.thr, ")...\n")
     filtered_de_table = de_table[de_table[[fdr.col]] < fdr.thr & abs(de_table[[fc.col]]) >= logfc.thr,]

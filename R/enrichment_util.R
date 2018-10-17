@@ -33,7 +33,7 @@
 #' @return A list of all relevant objects generated in the course of the enrichment analyses
 ###############################################################################
 runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="", 
-                                  use.background.from.diffr.output=TRUE, 
+                                  use.background.from.diffr.output=TRUE, use.pval.in.DE.filtering.if.no.sign.fdrs=FALSE,
                                   out.dir=NULL,
                                   species="human",
                                   p.thr=0.05, fdr.thr=0.05, logfc.thr=1, 
@@ -109,12 +109,17 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="",
     filtered_de_table = de_table[de_table[[fdr.col]] < fdr.thr & abs(de_table[[fc.col]]) >= logfc.thr,]
     
     #if there are no entries with significant fdr, then filter by p.value
-    if (!(nrow(filtered_de_table) > 0)) {
+    if (!(nrow(filtered_de_table) > 0) & use.pval.in.DE.filtering.if.no.sign.fdrs) {
       cat("      No entries with significant fdr. P-values used instead...\n")
       filtered_de_table = de_table[de_table[[pv.col]] < p.thr & abs(de_table[[fc.col]]) >= logfc.thr,]
     }
     
     input.genes = rownames(filtered_de_table)
+    if(length(input.genes) == 0){
+      cat("  ", length(input.genes), " genes considered significant for the analysis in contrast", contrast,". Skipping the contrast...\n")
+      next
+    }
+    
     cat("  ", length(input.genes), " genes used as input (expect in GSEA-analyses, where all measured genes is used) \n")
     
     for (method in enrichment.methods) { 

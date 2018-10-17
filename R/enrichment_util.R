@@ -79,7 +79,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="",
   enrichment_out.l$topGO <- list()
   
   #Creating subfolders
-  lapply(enrichment.methods, function(x) dir.create(file.path(out.dir, method), showWarnings = F))
+  lapply(enrichment.methods, function(method) dir.create(file.path(out.dir, method), showWarnings = F))
   
   contrast.names = names(diffr.wrapper.output$contrasts)
   cat("Performing enrichment analyses for ", length(contrast.names), " comparisons: \n")
@@ -123,9 +123,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="",
        
        ## Initial preparations: setting result directory and replacing missing parameters
        method.dir = dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
-       if(!dir.exists(method.dir)){
-         method.dir=out.dir
-       }
+     
        default.params = list(analysis.approach="ORA", do.similarity.filtering=F, min.gene.set.size=10, 
                              max.gene.set.size=1000, ontology="BP", min.overlap=2, p.adjust.method="BH")
        missing.params = default.params[names(default.params)[!(names(default.params) %in% names(clusterProfilerGO.params))]]
@@ -177,9 +175,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="",
       
         ## Initial preparations: setting result directory and replacing missing parameters
         method.dir = dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
-        if(!dir.exists(method.dir)){
-          method.dir=out.dir
-        }
+      
         default.params = list(analysis.approach="ORA", min.gene.set.size=10, max.gene.set.size=1000, 
                               ontology="BP", min.overlap=2, p.adjust.method="BH")
         missing.params = default.params[names(default.params)[!(names(default.params) %in% names(clusterProfilerKEGG.params))]]
@@ -252,9 +248,6 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="",
       if(method == "DAVID") {
         
         method.dir = dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
-        if(!dir.exists(method.dir)){
-          method.dir=out.dir
-        }
         
         default.params = list(email.address="", url="",time.out.value = 60000, 
                               annotation.category = "GOTERM_BP_FAT", max.gene.set.size = 1000)
@@ -285,9 +278,6 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="",
       if(method == "gProfileR") {
         
         method.dir = dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
-        if(!dir.exists(method.dir)){
-          method.dir=out.dir
-        }
         
         cat("   Performing GO BP enrichment with gProfileR... \n")
         org = as.character(enrich.resource.terms[species, method])

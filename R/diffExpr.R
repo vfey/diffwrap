@@ -102,7 +102,8 @@ NULL
 #' @param plot.ellipse.legend \code{logical}. Should a legend be addded for ellipses in PCA plots? NA, the default, includes
 #'     if any aesthetics are mapped. FALSE never includes, and TRUE always includes. It can also be a named logical vector to finely select
 #'     the aesthetics to display.
-#'
+#' @param do.enrichment=TRUE \code{logical}. Whether or not to call enrichment wrapper
+#' @param enrichment.methods \code{character}. One or more of the following: c("clusterProfilerGO", "clusterProfilerKEGG","DAVID", "gProfileR", "topGO"). By default, uses them all
 #' @details For experiemtal desgins involving comparisons within as well as between subjects inter-subject needs to be computed.
 #'     In this case, the column specified in the 'pairs' argument must assign the subjects to the treatment/tissue/etc groups.
 #'     For example, if we have two treatments the effects of which are to be observed in each two tissues, this design would apply.

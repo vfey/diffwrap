@@ -150,7 +150,6 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
         clusterProfilerKEGG.params = c(clusterProfilerKEGG.params, missing.params)
         
     
-        
         cat("   Performing KEGG enrichment with clusterProfiler... \n")
         cat("   ")
         print(unlist(clusterProfilerKEGG.params))
@@ -166,7 +165,7 @@ runEnrichmentAnalyses <- function(diffr_wrapper.output, analysis.name="",
         if(clusterProfilerKEGG.params$analysis.approach == "ORA"){
           
           if(length(background.genes)  > 1){
-            background.gene.entrez=de_table[[entrez.col]][!is.na(de_table[[entrez.col]])]
+            background.gene.entrez = as.character(de_table[[entrez.col]][!is.na(de_table[[entrez.col]])])
             cat("      ",length(background.gene.entrez), "/", length(background.genes), " of the all measured genes having corresponding entrez id used as background...\n")
             
           }

@@ -125,7 +125,8 @@ diffExpr <-
 				numlab=15, point.lab=TRUE, min.samp=NULL, strict = TRUE, disp=c("gene", "trend", "common"), do.voom=FALSE, voom.fun=voom,
 				norm.method=c("tmm", "quantile"), bayes.trend=FALSE, bayes.robust=FALSE, n=500, gene.selection="common", ellipse=TRUE,
 				ellipse.mapping.groups=NULL, label.samples=TRUE, geom.point.size=2, label.font.size = 5, plot.ellipse.legend=NA, circle=TRUE, varname.size=0,
-				var.axes=FALSE, PC=c(1,2,3), type=c("both", "uncorrected", "pseudo-corrected"), font.size=5, plots=TRUE, lists=TRUE,
+				var.axes=FALSE, PC=c(1,2,3), type=c("both", "uncorrected", "pseudo-corrected"), font.size=5, plots=TRUE, lists=TRUE, 
+				do.enrichment=TRUE, enrichment.methods=c("clusterProfilerGO", "clusterProfilerKEGG","DAVID", "gProfileR", "topGO"),
 				dry.run=FALSE)
 {
 	## initial checks
@@ -160,6 +161,22 @@ diffExpr <-
 		}
 	}
 	
+	#Checking whether the enrichment analyses can be run
+	kegg.enrichment.will.be.performed = sum(grepl("KEGG",enrichment.methods)) > 0
+	#kegg pathway enrichments needs entrez-IDs while other approaches are fine with ensemble IDs
+	if (do.enrichment & kegg.enrichment.will.be.performed) {
+	  if(!biomart){
+	    stop("Cannot run KEGG-pathway enrichment without entrez IDs. Set biomart to TRUE or remove KEGG enrichment approach from enrichment.methods")
+	  }
+	}
+	if(kegg.enrichment.will.be.performed){
+	  #entrez ids has to be retrieved (if not already included in biom.attributes)
+		if(sum(grepl("entrezgene",biom.attributes)) == 0){
+		  biom.attributes = c(biom.attributes, "entrezgene")
+		}
+	}	
+	
+		  
 	# setting standard ouput folder
 	if (is.null(out.dir)) {
 		cat("No output folder set. Using default\n")
@@ -355,7 +372,8 @@ diffExpr <-
 					type="pseudo-corrected, normalised DGEList", analysis.name=analysis.name, out.dir=out.dir)
 		}
 	}
-
+	
+	
 	cat("Extracting contrasts...\n")
 	if (do.voom) {
 		if (!block && !is.null(pairs)) {
@@ -384,7 +402,16 @@ diffExpr <-
 					host, biom.filter, biom.attributes, sym.col, rm.dups, p.thr, fdr.thr, logfc.thr, numlab, point.lab, font.size, plots, lists)
 		}
 	}
-	on.exit()
+	
+	if(do.enrichment){
+	  out.l$enrichment=runEnrichmentAnalyses(diffr.wrapper.output=out, analysis.name=analysis.name, 
+	                                         use.background.from.diffr.output=TRUE, out.dir=out.dir,
+	                                         use.pval.in.DE.filtering.if.no.sign.fdrs=FALSE,
+	                                         species=biom.data.set,
+	                                         enrichment.methods = enrichment.methods, 
+	                                         david.params = list(email.address = "meeri.pekkarinen@geneviatechnologies.com", url="https://david.ncifcrf.gov/webservice/services/DAVIDWebService.DAVIDWebServiceHttpSoap12Endpoint/"))
+	}
+	 on.exit()
 	return(out.l)
 }
 

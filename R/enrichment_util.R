@@ -4,7 +4,7 @@
 
 #' Wrapper for executing various enrichment analyses
 #' @description \command{runEnrichmentAnalyses} enables the auto-run of some over-representation analysis (ORA) and 
-#' gene set enrichment analysis (GSEA) for the output of diffExpr main wrapper. 
+#' gene set enrichment analysis (GSEA) functions for the output of diffExpr main wrapper. 
 #' Functions in various R-packages (clusterProfiler, topGO, gProfileR and RDAVIDWebService) 
 #' are integrated. Currently supports human or mouse!
 #' @param diffr.wrapper.output \code{list}.  Nested list system produced by diffrExpr-wrapper. 
@@ -28,7 +28,8 @@
 #' @param gProfileR.params \code{list}.
 #' @param topGO.params \code{list}.
 #'
-#' @details DAVID approach requires a registered email-address, correct java-version and an url configured with the settings
+#' @details DAVID approach requires a registered email-address, correct java-version and an url configured with the settings. 
+#' url="https://david.ncifcrf.gov/webservice/services/DAVIDWebService.DAVIDWebServiceHttpSoap12Endpoint/"
 #' @return A list of all relevant objects generated in the course of the enrichment analyses
 ###############################################################################
 runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="", 
@@ -122,6 +123,9 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="",
        
        ## Initial preparations: setting result directory and replacing missing parameters
        method.dir = dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
+       if(!dir.exists(method.dir)){
+         method.dir=out.dir
+       }
        default.params = list(analysis.approach="ORA", do.similarity.filtering=F, min.gene.set.size=10, 
                              max.gene.set.size=1000, ontology="BP", min.overlap=2, p.adjust.method="BH")
        missing.params = default.params[names(default.params)[!(names(default.params) %in% names(clusterProfilerGO.params))]]
@@ -173,6 +177,9 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="",
       
         ## Initial preparations: setting result directory and replacing missing parameters
         method.dir = dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
+        if(!dir.exists(method.dir)){
+          method.dir=out.dir
+        }
         default.params = list(analysis.approach="ORA", min.gene.set.size=10, max.gene.set.size=1000, 
                               ontology="BP", min.overlap=2, p.adjust.method="BH")
         missing.params = default.params[names(default.params)[!(names(default.params) %in% names(clusterProfilerKEGG.params))]]
@@ -245,6 +252,10 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="",
       if(method == "DAVID") {
         
         method.dir = dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
+        if(!dir.exists(method.dir)){
+          method.dir=out.dir
+        }
+        
         default.params = list(email.address="", url="",time.out.value = 60000, 
                               annotation.category = "GOTERM_BP_FAT", max.gene.set.size = 1000)
         missing.params = default.params[names(default.params)[!(names(default.params) %in% names(david.params))]]
@@ -274,6 +285,9 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="",
       if(method == "gProfileR") {
         
         method.dir = dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
+        if(!dir.exists(method.dir)){
+          method.dir=out.dir
+        }
         
         cat("   Performing GO BP enrichment with gProfileR... \n")
         org = as.character(enrich.resource.terms[species, method])

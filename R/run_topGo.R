@@ -1,4 +1,4 @@
-
+library(topGO)
 # Function: run.topGO()
 #
 # Author: Bogdan Iancu - Genevia Technologies Oy

@@ -12,6 +12,7 @@
 #' @param analysis.name \code{character}. Descriptive character-tag used in output file names
 #' @param use.background.from.diffr.output \code{logical}. Whether the (ORA) analyses are run 
 #' with experiment-specific background obtained from pre-filtered expression matrix or with the default background of the functions (genome)
+#' @param use.pval.in.DE.filtering.if.no.sign.fdrs \code{logical} Sometimes no DE genes with significant p-value is found. In such cases, should p-values be used in order to get at least some results
 #' @param out.dir \code{character}. Root directory for the resulting subdirectories 
 #' @param species \code{character}. Currently valid options are "human" or "mouse".
 #' @param p.thr \code{numeric}. Threshold for un-adjusted p-values (applied in both filtering of DE-genes and in enrichment results,

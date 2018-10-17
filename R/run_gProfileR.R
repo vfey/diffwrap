@@ -95,9 +95,11 @@ run_gprofiler <- function(input_genes,
 
     cols.res = colnames(results)
     cols.interest = c("term.id", "domain","term.name","term.size","query.size","overlap.size","p.value","intersection") 
+    
+    
     ids.list = list()
     for(col.intr in cols.interest) {
-      ids.list[[col.intr]] = grep(col.intr, col.res)
+      ids.list[[col.intr]] = grep(col.intr, cols.res)
     }
     ids.interest = as.vector(unlist(ids.list))
     

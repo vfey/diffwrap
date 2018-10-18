@@ -147,7 +147,7 @@ diffExpr <-
 		if (length(groups) == 1) {
 			stop("Need more than 1 groups!")
 		}
-		if (!is.null(ellipse.mapping.groups) && length(ellipse.mapping.groups)!=length(groups)) {
+		if (!is.null(ellipse.mapping.groups) && length(ellipse.mapping.groups) != length(groups)) {
 			stop("Ellipse mapping groups factor needs to be of same length as groups factor")
 		} 
 	} else {
@@ -166,14 +166,14 @@ diffExpr <-
 	kegg.enrichment.will.be.performed = sum(grepl("KEGG",enrichment.methods)) > 0
 	#kegg pathway enrichments needs entrez-IDs while other approaches are fine with ensemble IDs
 	if (do.enrichment & kegg.enrichment.will.be.performed) {
-	  if(!biomart){
+	  if (!biomart) {
 	    stop("Cannot run KEGG-pathway enrichment without entrez IDs. Set biomart to TRUE or remove KEGG enrichment approach from enrichment.methods")
 	  }
 	}
-	if(kegg.enrichment.will.be.performed){
+	if (kegg.enrichment.will.be.performed) {
 	  #entrez ids has to be retrieved (if not already included in biom.attributes)
-		if(sum(grepl("entrezgene",biom.attributes)) == 0){
-		  biom.attributes = c(biom.attributes, "entrezgene")
+		if (sum(grepl("entrezgene",biom.attributes)) == 0) {
+		  biom.attributes <- c(biom.attributes, "entrezgene")
 		}
 	}	
 	
@@ -404,13 +404,13 @@ diffExpr <-
 		}
 	}
 	
-	if(do.enrichment){
-	  out.l$enrichment=runEnrichmentAnalyses(diffr.wrapper.output=out.l, analysis.name=analysis.name, 
-	                                         use.background.from.diffr.output=TRUE, out.dir=out.dir,
-	                                         use.pval.in.DE.filtering.if.no.sign.fdrs=FALSE,
-	                                         species=biom.data.set,
+	if (do.enrichment) {
+	  out.l$enrichment <- runEnrichmentAnalyses(diffr.wrapper.output = out.l, analysis.name = analysis.name, 
+	                                         use.background.from.diffr.output = TRUE, out.dir = out.dir,
+	                                         use.pval.in.DE.filtering.if.no.sign.fdrs = FALSE,
+	                                         species = biom.data.set,
 	                                         enrichment.methods = enrichment.methods, 
-	                                         david.params = list(email.address = "meeri.pekkarinen@geneviatechnologies.com", url="https://david.ncifcrf.gov/webservice/services/DAVIDWebService.DAVIDWebServiceHttpSoap12Endpoint/"))
+	                                         david.params = list(email.address = "meeri.pekkarinen@geneviatechnologies.com", url = "https://david.ncifcrf.gov/webservice/services/DAVIDWebService.DAVIDWebServiceHttpSoap12Endpoint/"))
 	}
 	 on.exit()
 	return(out.l)

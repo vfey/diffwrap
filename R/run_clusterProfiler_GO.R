@@ -69,7 +69,7 @@ run_clusterProfiler_GO <- function(input_genes,
                                           pAdjustMethod = "BH",
                                           seed = T)
 
-    if(dim(GSE.results)[1] >= 1) {
+    if (dim(GSE.results)[1] >= 1) {
     
       GSE.results.df <- data.frame(GSE.results)
       GSE.results.df$Count <- sapply(GSE.results.df$core_enrichment, function(x) length(unlist(strsplit(x, split = "/"))))
@@ -78,6 +78,9 @@ run_clusterProfiler_GO <- function(input_genes,
       colnames(GSE.results.df) <- c("Term ID", "Term description", "Gene Set Size", "Normalized Enrichment Score", "P-Value", 
                                   "Adjusted P-Value", "DEGs Contributing to Enrichment", "No of DEGs Contributing to Enrichment")
     
+      # switching default gene separator of clusterProfiler into comma
+      GSE.results.df$`DEGs Annotated to Term` = gsub('/', ',', GSE.results.df$`DEGs Annotated to Term`)
+      
       # Write to Excel file
       cat("         Saving result into ", paste0(file_name, ".xlsx"), "...\n")
       WriteXLS(GSE.results.df, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = T)
@@ -104,7 +107,7 @@ run_clusterProfiler_GO <- function(input_genes,
                                             minGSSize = min_set_size,
                                             maxGSSize = max_set_size,
                                             readable = TRUE)
-    if(dim(ORA.results)[1] >= 1) {
+    if (dim(ORA.results)[1] >= 1) {
     
       if (similarity_filtering) {
         print("Simplifying results...")
@@ -117,6 +120,8 @@ run_clusterProfiler_GO <- function(input_genes,
       colnames(ORA.results.df) <- c("Term ID", "Term description", "Gene Ratio", "Background Ratio", "P-Value", 
                                   "Adjusted P-Value", "DEGs Annotated to Term", "No of DEGs Annotated to Term")
       
+      # switching default gene separator of clusterProfiler into comma
+      ORA.results.df$`DEGs Annotated to Term` = gsub('/', ',', ORA.results.df$`DEGs Annotated to Term`)
       
       # Write to Excel file  
       cat("         Saving result into ", paste0(file_name, ".xlsx"), "...\n")

@@ -69,6 +69,9 @@ run_clusterProfiler_KEGG <- function(input_genes,
     colnames(GSE.results.df) <- c("Term ID", "Term description", "Gene Set Size", "Normalized Enrichment Score", "P-Value", 
                                   "Adjusted P-Value", "DEGs Contributing to Enrichment", "No of DEGs Contributing to Enrichment")
     
+    # switching default gene separator of clusterProfiler into comma
+    GSE.results.df$`DEGs Annotated to Term` = gsub('/', ',', GSE.results.df$`DEGs Annotated to Term`)
+    
     # Write to Excel file  
     WriteXLS(GSE.results.df, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = T)
     
@@ -93,6 +96,9 @@ run_clusterProfiler_KEGG <- function(input_genes,
     ORA.results.df <- ORA.results.df[ORA.results.df$Count >= min_overlap, c(1:6,8:9)] 
     colnames(ORA.results.df) <- c("Term ID", "Term description", "Gene Ratio", "Background Ratio", "P-Value", 
                                   "Adjusted P-Value", "DEGs Annotated to Term", "No of DEGs Annotated to Term")
+    
+    # switching default gene separator of clusterProfiler into comma:
+    ORA.results.df$`DEGs Annotated to Term` = gsub('/', ',', ORA.results.df$`DEGs Annotated to Term`) 
     
     
     # Write to Excel file  

@@ -70,10 +70,10 @@ run_clusterProfiler_KEGG <- function(input_genes,
                                   "Adjusted P-Value", "DEGs Contributing to Enrichment", "No of DEGs Contributing to Enrichment")
     
     # switching default gene separator of clusterProfiler into comma
-    GSE.results.df$`DEGs Annotated to Term` = gsub('/', ',', GSE.results.df$`DEGs Annotated to Term`)
+    GSE.results.df$`DEGs Contributing to Enrichment` = gsub('/', ',', GSE.results.df$`DEGs Contributing to Enrichment`)
     
-    # Write to Excel file  
-    WriteXLS(GSE.results.df, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = T)
+    # Write to Excel file (in comment since wrapper does this)  
+    #WriteXLS(GSE.results.df, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = T)
     
     return(GSE.results.df)
   }
@@ -101,8 +101,9 @@ run_clusterProfiler_KEGG <- function(input_genes,
     ORA.results.df$`DEGs Annotated to Term` = gsub('/', ',', ORA.results.df$`DEGs Annotated to Term`) 
     
     
-    # Write to Excel file  
-    WriteXLS(ORA.results.df, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = T)
+    # Write to Excel file (in comment since wrapper does this) 
+    #WriteXLS(ORA.results.df, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = T)
+    
     return(ORA.results.df)
   }
 }

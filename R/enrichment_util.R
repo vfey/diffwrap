@@ -155,8 +155,8 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
        ## Initial preparations: setting result directory and replacing missing parameters
        method.dir <- dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
      
-       default.params <- list(analysis.approach="ORA", do.similarity.filtering=F, min.gene.set.size=10, 
-                             max.gene.set.size=1000, ontology="BP", min.overlap=2, p.adjust.method="BH")
+       default.params <- list(analysis.approach = "ORA", do.similarity.filtering = F, min.gene.set.size = 10, 
+                             max.gene.set.size = 1000, ontology = "BP", min.overlap = 2, p.adjust.method = "BH")
        missing.params <- default.params[names(default.params)[!(names(default.params) %in% names(clusterProfilerGO.params))]]
        clusterProfilerGO.params <- c(clusterProfilerGO.params, missing.params)
        
@@ -169,14 +169,13 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
          
          ordered.query <- FALSE
          genes <- input.genes
-         fname.no.suffix <- file.path(method.dir, paste(analysis.name, contrast, method, "ORA", sep = "_"))
          
        }
        else {
          
          ordered.query <- TRUE
          
-         #For GSEA,an ordered gene list of ALL genes must be prepared:
+         # For GSEA,an ordered gene list of ALL genes must be prepared:
          #### feature 1: numeric vector
          geneList <- de_table[[fc.col]]
          ## feature 2: named vector
@@ -184,23 +183,34 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
          ## feature 3: decreasing order
          geneList <- sort(geneList, decreasing = TRUE)
          genes <- geneList
-         fname.no.suffix <- file.path(method.dir, paste(analysis.name, contrast, method, "GSEA", sep = "_"))
+         
        }
-       enrichment_out.l$clusterProfiler_GO[[contrast]] <- run_clusterProfiler_GO(input_genes = genes,
-                                                                                 background_genes = background.genes,
-                                                                                 file_name = fname.no.suffix,
-                                                                                 ordered_query = ordered.query, 
-                                                                                 OrgDb = org.db,
-                                                                                 pvalueCutoff = fdr.thr,
-                                                                                 ontology = clusterProfilerGO.params$ontology,
-                                                                                 min_set_size = clusterProfilerGO.params$min.gene.set.size,
-                                                                                 max_set_size = clusterProfilerGO.params$max.gene.set.size,
-                                                                                 min_overlap = clusterProfilerGO.params$min.overlap,
-                                                                                 pAdjustMethod = clusterProfilerGO.params$p.adjust.method,
-                                                                                 similarity_filtering = clusterProfilerGO.params$do.similarity.filtering)
+       result <- run_clusterProfiler_GO(input_genes = genes,
+                                        background_genes = background.genes,
+                                        ordered_query = ordered.query, 
+                                        OrgDb = org.db,
+                                        pvalueCutoff = fdr.thr,
+                                        ontology = clusterProfilerGO.params$ontology,
+                                        min_set_size = clusterProfilerGO.params$min.gene.set.size,
+                                        max_set_size = clusterProfilerGO.params$max.gene.set.size,
+                                        min_overlap = clusterProfilerGO.params$min.overlap,
+                                        pAdjustMethod = clusterProfilerGO.params$p.adjust.method,
+                                        similarity_filtering = clusterProfilerGO.params$do.similarity.filtering)
 
-      
-     } 
+       #Saving the table, if relevant
+       if (is.data.frame(result) ) {
+         
+         filename <- paste0(analysis.name, ".", contrast,".", method, ".", 
+                            clusterProfilerGO.params$analysis.approach, ".", 
+                            clusterProfilerGO.params$ontology,".xls" )
+         full.filename <- file.path(method.dir, filename)
+         cat("      Saving ", method, " result table into ",  full.filename, "...\n")
+         WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
+        }
+       
+       enrichment_out.l$clusterProfiler_GO[[contrast]] = result
+       
+       } 
       
       if (method == "clusterProfilerKEGG") {
       

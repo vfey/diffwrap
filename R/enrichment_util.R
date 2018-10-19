@@ -284,16 +284,18 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
       
         #Saving the table, if relevant
         method.dir <- dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
-        if (is.data.frame(result) ) {
+        if (is.data.frame(result) & dim(result)[1] > 0) {
           
          
           gene.col <- colnames(result)[grepl("^DEGs", colnames(result))] #TODO: invent more robust approach to this?
-
           #First, fetching corresponding ensembles for entrez-IDs
           for (i in 1:length(result[[gene.col]])) {
-            genes <- unlist(strsplit(result[[gene.col]][i], split = ","))
+            #print(result[[gene.col]])
+            genes <- unlist(strsplit(result[[gene.col]][i], split = ','))
+            #print(head(genes))
             ensembls <- rownames(dat)[dat[[entrez.col]] %in% genes]
             new_names <- paste(ensembls,collapse = ",") #writing with comma-separator
+            #print(head(new_names))
             result[[gene.col]][i] <- new_names
           }
           #Then, converting the ensembles into symbolic names

@@ -98,13 +98,13 @@ run_gprofiler <- function(input_genes,
     
     
     ids.list = list()
-    for(col.intr in cols.interest) {
+    for (col.intr in cols.interest) {
       ids.list[[col.intr]] = grep(col.intr, cols.res)
     }
     ids.interest = as.vector(unlist(ids.list))
     
     results <- results[,ids.interest] # Extract only interesting columns
-    print(head(results))
+   
     colnames(results) <- c("Term ID", "Term Domain", "Term Description", "Term Size", "Query Size",
                        "No of DEGs annotated to Term", "Adjusted P-Value", "DEGs Annotated to Term")
     

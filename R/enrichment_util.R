@@ -1,7 +1,9 @@
 # Wrapper function for performing various enrichment analyses (+ a helper function)
 # 
 # Author: Meeri Pekkarinen
-
+#*********************************************************************************
+library(WriteXLS)
+library(medseqr)
 
 #Helper function for formatting the gene column of DAVID and gProfileR enrichment dataframe. 
 #Can be used even when biomart is not run within the full pipeline. Requires medseqr!
@@ -56,7 +58,7 @@ format_ensembl_ids_annotated_to_term <- function(result, organism.term, which.sp
 #' @return A list of all relevant objects generated in the course of the enrichment analyses
 ###############################################################################
 
-library(WriteXLS)
+
 runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichment", 
                                   use.background.from.diffr.output=TRUE, use.pval.in.DE.filtering.if.no.sign.fdrs=FALSE,
                                   out.dir=NULL,
@@ -152,9 +154,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
    
      if (method == "clusterProfilerGO") {
        
-       ## Initial preparations: setting result directory and replacing missing parameters
-       method.dir <- dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
-     
+       ## Replacing missing parameters
        default.params <- list(analysis.approach = "ORA", do.similarity.filtering = F, min.gene.set.size = 10, 
                              max.gene.set.size = 1000, ontology = "BP", min.overlap = 2, p.adjust.method = "BH")
        missing.params <- default.params[names(default.params)[!(names(default.params) %in% names(clusterProfilerGO.params))]]
@@ -198,6 +198,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                                         similarity_filtering = clusterProfilerGO.params$do.similarity.filtering)
 
        #Saving the table, if relevant
+       method.dir <- dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
        if (is.data.frame(result) ) {
          
          filename <- paste0(analysis.name, ".", contrast,".", method, ".", 
@@ -214,7 +215,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
       
       if (method == "clusterProfilerKEGG") {
       
-        ## Initial preparations: setting result directory and replacing missing parameters
+        ## Replacing missing parameters
         method.dir <- dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
       
         default.params <- list(analysis.approach = "ORA", min.gene.set.size = 10, max.gene.set.size = 1000, 
@@ -251,7 +252,6 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
           
           ordered.query <- FALSE
           genes <- as.character(input.gene.entrez)
-          fname.no.suffix <- file.path(method.dir, paste(analysis.name, contrast, method, "ORA", sep = "_"))
           
         }
         else {
@@ -269,12 +269,11 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
           geneList <- sort(geneList, decreasing = TRUE)
          
           genes <- geneList
-          fname.no.suffix <- file.path(method.dir, paste(analysis.name, contrast, method, "GSEA", sep = "_"))
+      
         }
         
-        enrichment_out.l$clusterProfiler_KEGG[[contrast]] = run_clusterProfiler_KEGG(input_genes = genes,
+       result = run_clusterProfiler_KEGG(input_genes = genes,
                                               background_genes = background.gene.entrez,
-                                              file_name = NULL,
                                               ordered_query = ordered.query,
                                               organism = org,
                                               pvalueCutoff = fdr.thr,
@@ -282,7 +281,20 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                                               max_set_size = clusterProfilerKEGG.params$max.gene.set.size,
                                               min_overlap = clusterProfilerKEGG.params$min.overlap,
                                               pAdjustMethod = clusterProfilerKEGG.params$p.adjust.method)
-         
+      
+        #Saving the table, if relevant
+        method.dir <- dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
+        if (is.data.frame(result) ) {
+          
+          filename <- paste0(analysis.name, ".", contrast,".", method, ".", 
+                             clusterProfilerKEGG.params$analysis.approach, ".", 
+                             clusterProfilerKEGG.params$ontology,".xls" )
+          full.filename <- file.path(method.dir, filename)
+          cat("      Saving ", method, " result table into ",  full.filename, "...\n")
+          WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
+        } 
+        
+        enrichment_out.l$clusterProfiler_KEGG[[contrast]] = result  
       }
       
       if (method == "DAVID") {

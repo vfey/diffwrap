@@ -8,13 +8,9 @@ doDavidEnrichmentAnalysis = function(background.ensembl.ids,
                                      time.out.value = 60000,
                                      annotation.category = "GOTERM_BP_FAT",
                                      pval.thr = 0.05,
-                                     max.gene.set.size = '',
-                                     save.result.table = FALSE,
-                                     out.dir=NULL,
-                                     analysis.name,
-                                     contrast.name){
+                                     max.gene.set.size = ''){
   
-  
+
   #Setting up the david interface
   david <- DAVIDWebService$new(email = email.address, url = url.address)
   
@@ -47,32 +43,28 @@ doDavidEnrichmentAnalysis = function(background.ensembl.ids,
       filtered_FuncAnnotChart = filtered_FuncAnnotChart[filtered_FuncAnnotChart$Count <= max.gene.set.size,]
     }
   
-    ##Requires medseqr!! Replacing ENSMBL IDS with symbolic names if found (otherwise ENSEMBL ID is kept)
-    for (i in 1:dim(filtered_FuncAnnotChart)[1]) {
-      genes <- unlist(strsplit(filtered_FuncAnnotChart$Genes[i], split = ", "))
-      syms <- convertId2(genes, "Human")
-      syms[is.na(syms)] <- genes[is.na(syms)]
-      new_names <- paste(syms,collapse = ",") #writing with comma-separator
-      filtered_FuncAnnotChart$Genes[i] = new_names
-    }
-  
+    # ##Requires medseqr!! Replacing ENSMBL IDS with symbolic names if found (otherwise ENSEMBL ID is kept)
+    # for (i in 1:dim(filtered_FuncAnnotChart)[1]) {
+    #   genes <- unlist(strsplit(filtered_FuncAnnotChart$Genes[i], split = ", "))
+    #   syms <- convertId2(genes, "Human")
+    #   syms[is.na(syms)] <- genes[is.na(syms)]
+    #   new_names <- paste(syms,collapse = ",") #writing with comma-separator
+    #   filtered_FuncAnnotChart$Genes[i] = new_names
+    # }
+    # 
   
     #splitting the Term-column of original output into two columns
     GO_terms <- sapply(strsplit(as.character(filtered_FuncAnnotChart$Term),'~'), "[", 1)
     descriptions <- sapply(strsplit(as.character(filtered_FuncAnnotChart$Term),'~'), "[", 2)
-  
+
     result.table <- data.frame(Term = GO_terms,
                             Description = descriptions)
     result.table <- cbind(result.table, filtered_FuncAnnotChart[, colnames(filtered_FuncAnnotChart) != "Term"])
+    result.table$Genes = gsub(', ', ',', result.table$Genes)
   
     result.table <- result.table[, c(1:2, 4, 8:10, 6, 13, 7)] #Taking only most interesting columns
   
-    if (save.result.table) {
-      filename <- paste0(contrast.name,".DAVID.", annotation.category,".enrichment_table.xls" )
-      cat("      Saving DAVID result table into ", file.path(out.dir, paste0(analysis.name, ".", filename)), "...\n")
-      WriteXLS(result.table, ExcelFileName = file.path(out.dir, paste0(analysis.name, ".", filename)), SheetNames = NULL, BoldHeaderRow = T)
-    }
-      return(result.table)
+    return(result.table)
   } 
   else {
     cat("      No significant enrichments found with DAVID...\n")

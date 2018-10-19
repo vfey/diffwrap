@@ -34,7 +34,9 @@
 #' url="https://david.ncifcrf.gov/webservice/services/DAVIDWebService.DAVIDWebServiceHttpSoap12Endpoint/"
 #' @return A list of all relevant objects generated in the course of the enrichment analyses
 ###############################################################################
-runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="", 
+
+library(WriteXLS)
+runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichment", 
                                   use.background.from.diffr.output=TRUE, use.pval.in.DE.filtering.if.no.sign.fdrs=FALSE,
                                   out.dir=NULL,
                                   species="human",
@@ -70,7 +72,8 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="",
                                      "clusterProfilerGO" = c("org.Hs.eg.db", "org.Mm.eg,db"),
                                      "clusterProfilerKEGG" = c("hsa","mmu"),
                                      "gProfileR" = c("hsapiens", "mmusculus"),
-                                     "topGO" = c("org.Hs.eg.db", "org.Mm.eg,db"))
+                                     "topGO" = c("org.Hs.eg.db", "org.Mm.eg,db"),
+                                     "medseqr" = c("Human", "Mouse"))
   rownames(enrich.resource.terms) <- c("human", "mouse")
   
   enrichment_out.l <- list()
@@ -254,8 +257,6 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="",
       
       if (method == "DAVID") {
         
-        method.dir <- dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
-        
         default.params <- list(email.address = "", url = "",time.out.value = 60000, 
                               annotation.category = "GOTERM_BP_FAT", max.gene.set.size = 1000)
         missing.params = default.params[names(default.params)[!(names(default.params) %in% names(david.params))]]
@@ -264,22 +265,44 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="",
         cat("   Performing DAVID... \n")
         if (david.params$email.address != "") {
           
-          enrichment_out.l$DAVID[[contrast]] <- doDavidEnrichmentAnalysis(background.ensembl.ids = background.genes,
+          result <- doDavidEnrichmentAnalysis(background.ensembl.ids = background.genes,
                                    foreground.ensembl.ids = input.genes, 
                                    email.address = david.params$email.address,
                                    url.address = david.params$url,
                                    time.out.value = david.params$time.out.value, 
                                    annotation.category = david.params$annotation.category, 
                                    pval.thr = p.thr, 
-                                   max.gene.set.size = david.params$max.gene.set.size, 
-                                   save.result.table = TRUE, out.dir = method.dir,analysis.name,
-                                   contrast.name = contrast)
+                                   max.gene.set.size = david.params$max.gene.set.size)
+          
+          
         
         }
         else{
           cat("      No e-mail address. No connection into DAVID...\n")
-          enrichment_out.l$DAVID[[contrast]] <- "No e-mail address. DAVID could not be performed."
+          result <- "No e-mail address. DAVID could not be performed."
         }
+       
+        method.dir <- dir(out.dir, pattern = paste0("^",method), full.names = TRUE) # detecting output directory
+        if (is.data.frame(result)) {
+           
+          gene.col = colnames(result)[grepl("ENS", result)]
+          organism.term = as.character(enrich.resource.terms[species, "medseqr"])
+          for (i in 1:length(result[[gene.col]])) {
+            genes <- unlist(strsplit(result[[gene.col]][i], split = ","))
+            syms <- convertId2(genes, organism.term)
+            syms[is.na(syms)] <- genes[is.na(syms)]
+            new_names <- paste(syms,collapse = ",") #writing with comma-separator
+            result[[gene.col]][i] = new_names
+          }
+          
+          
+          filename <- paste0(analysis.name, ".", contrast,".", method, ".", david.params$annotation.category,".xls" )
+          full.filename <- file.path(method.dir, filename)
+          cat("      Saving ", method, " result table into ",  full.filename, "...\n")
+          WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
+        }
+        
+        enrichment_out.l$DAVID[[contrast]] = result
       }
 
       if (method == "gProfileR") {

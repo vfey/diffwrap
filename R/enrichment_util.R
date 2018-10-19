@@ -11,12 +11,12 @@ format_ensembl_ids_annotated_to_term <- function(result, organism.term, which.sp
   
   for (i in 1:length(result[[gene.col]])) {
     genes <- unlist(strsplit(result[[gene.col]][i], split = which.split))
-    print(head(genes))
+    #print(head(genes))
     syms <- convertId2(genes, organism.term)
     syms[is.na(syms)] <- genes[is.na(syms)]
     
     new_names <- paste(syms,collapse = ",") #writing with comma-separator
-    print(head(new_names))
+    #print(head(new_names))
     result[[gene.col]][i] = new_names
   }
   return(result)
@@ -339,7 +339,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
           organism.term = as.character(enrich.resource.terms[species, "medseqr"])
           result = format_ensembl_ids_annotated_to_term(result, organism.term)
           
-          filename <- paste0(analysis.name, ".", contrast,".", method, ".", gProfiler.params$annotation.category,".xls" )
+          filename <- paste0(analysis.name, ".", contrast,".", method, ".", gProfiler.params$data.sources,".xls" )
           full.filename <- file.path(method.dir, filename)
           cat("      Saving ", method, " result table into ",  full.filename, "...\n")
           WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)

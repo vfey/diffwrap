@@ -1,6 +1,25 @@
-# Wrapper function for performing various enrichment analyses
+# Wrapper function for performing various enrichment analyses (+ a helper function)
 # 
 # Author: Meeri Pekkarinen
+
+
+#Helper function for formatting the gene column of DAVID and gProfileR enrichment dataframe. 
+#Can be used even when biomart is not run within the full pipeline. Requires medseqr!
+format_ensembl_ids_annotated_to_term <- function(result, organism.term, which.split = ",") 
+{
+  gene.col = colnames(result)[grepl("ENS", result)]
+  
+  for (i in 1:length(result[[gene.col]])) {
+    genes <- unlist(strsplit(result[[gene.col]][i], split = which.split))
+    syms <- convertId2(genes, organism.term)
+    syms[is.na(syms)] <- genes[is.na(syms)]
+    
+    new_names <- paste(syms,collapse = ",") #writing with comma-separator
+    result[[gene.col]][i] = new_names
+  }
+  return(result)
+}
+
 
 #' Wrapper for executing various enrichment analyses
 #' @description \command{runEnrichmentAnalyses} enables the auto-run of some over-representation analysis (ORA) and 
@@ -282,19 +301,14 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
           result <- "No e-mail address. DAVID could not be performed."
         }
        
+        # Formattig and saving the table, if relevant
         method.dir <- dir(out.dir, pattern = paste0("^",method), full.names = TRUE) # detecting output directory
         if (is.data.frame(result)) {
-           
-          gene.col = colnames(result)[grepl("ENS", result)]
-          organism.term = as.character(enrich.resource.terms[species, "medseqr"])
-          for (i in 1:length(result[[gene.col]])) {
-            genes <- unlist(strsplit(result[[gene.col]][i], split = ","))
-            syms <- convertId2(genes, organism.term)
-            syms[is.na(syms)] <- genes[is.na(syms)]
-            new_names <- paste(syms,collapse = ",") #writing with comma-separator
-            result[[gene.col]][i] = new_names
-          }
           
+          organism.term = as.character(enrich.resource.terms[species, "medseqr"])
+          result = format_ensembl_ids_annotated_to_term(result, organism.term)
+          
+          }
           
           filename <- paste0(analysis.name, ".", contrast,".", method, ".", david.params$annotation.category,".xls" )
           full.filename <- file.path(method.dir, filename)

@@ -286,6 +286,20 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
         method.dir <- dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
         if (is.data.frame(result) ) {
           
+         
+          gene.col = colnames(result)[grepl("^DEGs", colnames(result))] #TODO: invent more robust approach to this?
+
+          #First, fetching corresponding ensembles for entrez-IDs
+          for (i in 1:length(result[[gene.col]])) {
+            genes <- unlist(strsplit(result[[gene.col]][i], split = ","))
+            ensembls = rownames(dat)[dat[[entrez.col]] %in% genes]
+            new_names <- paste(ensembls,collapse = ",") #writing with comma-separator
+            result[[gene.col]][i] = new_names
+          }
+          #Then, converting the ensembles into symbolic names
+          organism.term = as.character(enrich.resource.terms[species, "medseqr"])
+          result = format_ensembl_ids_annotated_to_term(result, organism.term)
+          
           filename <- paste0(analysis.name, ".", contrast,".", method, ".", 
                              clusterProfilerKEGG.params$analysis.approach, ".", 
                              clusterProfilerKEGG.params$ontology,".xls" )

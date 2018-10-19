@@ -208,7 +208,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
         method.dir <- dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
       
         default.params <- list(analysis.approach = "ORA", min.gene.set.size = 10, max.gene.set.size = 1000, 
-                              ontology="BP", min.overlap = 2, p.adjust.method = "BH")
+                              ontology = "BP", min.overlap = 2, p.adjust.method = "BH")
         missing.params <- default.params[names(default.params)[!(names(default.params) %in% names(clusterProfilerKEGG.params))]]
         clusterProfilerKEGG.params <- c(clusterProfilerKEGG.params, missing.params)
         
@@ -222,7 +222,6 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
           cat("      No entrez IDs found  from the data. skipping KEGG-enrichment...\n")
           break 
         }
-        
         
         background.gene.entrez <- ""
         if (clusterProfilerKEGG.params$analysis.approach == "ORA") {
@@ -348,7 +347,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
           result <- "No significant enrichment found"
         }
     
-      enrichment_out.l$gProfileR[[contrast]] = result
+        enrichment_out.l$gProfileR[[contrast]] = result
   
       }
       
@@ -361,10 +360,23 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
         print(paste0("Organism: ",topGO.params$org))
         
         org.db <- as.character(enrich.resource.terms[species, method])
-        enrichment_out.l$topGO[[contrast]] <- run.topGO(background = background.genes, foreground = input.genes,ontologies =  topGO.params$ontologies.used, organism = org.db)
+        result <- run.topGO(background = background.genes, foreground = input.genes,ontologies =  topGO.params$ontologies.used, organism = org.db)
+      
+        #Saving the table, if relevant
+        if (is.data.frame(result) & dim(result)[1] > 0) {
+          
+          filename <- paste0(analysis.name, ".", contrast,".", method, ".", topGO.params$ontologies.used,".xls" )
+          full.filename <- file.path(method.dir, filename)
+          cat("      Saving ", method, " result table into ",  full.filename, "...\n")
+          WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
+        }
+        else {
+          result <- "No significant enrichment found"
+        }
+        
+        enrichment_out.l$topGO[[contrast]] = result
       }
     }
-
-  }
+  } 
   return(enrichment_out.l)
 }

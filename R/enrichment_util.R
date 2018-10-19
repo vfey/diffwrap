@@ -11,10 +11,12 @@ format_ensembl_ids_annotated_to_term <- function(result, organism.term, which.sp
   
   for (i in 1:length(result[[gene.col]])) {
     genes <- unlist(strsplit(result[[gene.col]][i], split = which.split))
+    print(head(genes))
     syms <- convertId2(genes, organism.term)
     syms[is.na(syms)] <- genes[is.na(syms)]
     
     new_names <- paste(syms,collapse = ",") #writing with comma-separator
+    print(head(new_names))
     result[[gene.col]][i] = new_names
   }
   return(result)
@@ -308,8 +310,6 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
           organism.term = as.character(enrich.resource.terms[species, "medseqr"])
           result = format_ensembl_ids_annotated_to_term(result, organism.term)
           
-          }
-          
           filename <- paste0(analysis.name, ".", contrast,".", method, ".", david.params$annotation.category,".xls" )
           full.filename <- file.path(method.dir, filename)
           cat("      Saving ", method, " result table into ",  full.filename, "...\n")
@@ -321,20 +321,35 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
 
       if (method == "gProfileR") {
         
-        method.dir <- dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
-        
         cat("   Performing GO BP enrichment with gProfileR... \n")
         org <- as.character(enrich.resource.terms[species, method])
         print(paste0("Organism: ",org))
         print(paste0("Data sources: ",gProfiler.params$data.sources))
-        fname.no.suffix <- file.path(method.dir, paste(analysis.name, contrast, method, sep = "_"))
-        enrichment_out.l$gProfileR[[contrast]] <- run_gprofiler(input.genes, background.genes, 
-                                                                file_name = fname.no.suffix,
-                                                                organism = org,
-                                                                data_sources = gProfiler.params$data.sources,
-                                                                show_only_significant = gProfiler.params$show.only.significant
-                                                                ) 
-                                                        
+        
+        result <- run_gprofiler(input.genes, background.genes, 
+                                organism = org,
+                                data_sources = gProfiler.params$data.sources,
+                                show_only_significant = gProfiler.params$show.only.significant
+                                ) 
+        
+        # Formattig and saving the table, if relevant
+        method.dir <- dir(out.dir, pattern = paste0("^",method), full.names = TRUE) # detecting output directory
+        if (is.data.frame(result) & dim(result)[1] > 0) {
+          
+          organism.term = as.character(enrich.resource.terms[species, "medseqr"])
+          result = format_ensembl_ids_annotated_to_term(result, organism.term)
+          
+          filename <- paste0(analysis.name, ".", contrast,".", method, ".", gProfiler.params$annotation.category,".xls" )
+          full.filename <- file.path(method.dir, filename)
+          cat("      Saving ", method, " result table into ",  full.filename, "...\n")
+          WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
+        }
+        else {
+          result <- "No significant enrichment found"
+        }
+    
+      enrichment_out.l$gProfileR[[contrast]] = result
+  
       }
       
       if (method == "topGO") {

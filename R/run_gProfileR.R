@@ -104,10 +104,11 @@ run_gprofiler <- function(input_genes,
     ids.interest = as.vector(unlist(ids.list))
     
     results <- results[,ids.interest] # Extract only interesting columns
+    print(head(results))
     colnames(results) <- c("Term ID", "Term Domain", "Term Description", "Term Size", "Query Size",
                        "No of DEGs annotated to Term", "Adjusted P-Value", "DEGs Annotated to Term")
     
-    cat("         Saving result into ", paste0(file_name, ".xlsx"), "...\n")
-    WriteXLS(results, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = T)
+    #cat("         Saving result into ", paste0(file_name, ".xlsx"), "...\n")
+    #WriteXLS(results, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = T)
     return(results)
 }

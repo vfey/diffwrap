@@ -46,7 +46,7 @@ run_clusterProfiler_GO <- function(input_genes,
                                    ordered_query = FALSE, 
                                    id_type = "ENSEMBL", 
                                    ontology = "BP", 
-                                   OrgDb = org.Hs.eg.db, 
+                                   OrgDb = "org.Hs.eg.db", 
                                    pvalueCutoff = 0.05, 
                                    min_set_size = 10, 
                                    max_set_size = 1000, 
@@ -79,11 +79,11 @@ run_clusterProfiler_GO <- function(input_genes,
                                   "Adjusted P-Value", "DEGs Contributing to Enrichment", "No of DEGs Contributing to Enrichment")
     
       # switching default gene separator of clusterProfiler into comma
-      GSE.results.df$`DEGs Annotated to Term` = gsub('/', ',', GSE.results.df$`DEGs Annotated to Term`)
+      GSE.results.df$`DEGs Contributing to Enrichment` = gsub('/', ',', GSE.results.df$`DEGs Contributing to Enrichment`)
       
-      # Write to Excel file
-      cat("         Saving result into ", paste0(file_name, ".xlsx"), "...\n")
-      WriteXLS(GSE.results.df, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = T)
+      # Write to Excel file (in comment since this is also done by wrapper)
+      #cat("         Saving result into ", paste0(file_name, ".xlsx"), "...\n")
+      #WriteXLS(GSE.results.df, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = T)
     
       return(GSE.results.df)
       
@@ -123,9 +123,9 @@ run_clusterProfiler_GO <- function(input_genes,
       # switching default gene separator of clusterProfiler into comma
       ORA.results.df$`DEGs Annotated to Term` = gsub('/', ',', ORA.results.df$`DEGs Annotated to Term`)
       
-      # Write to Excel file  
-      cat("         Saving result into ", paste0(file_name, ".xlsx"), "...\n")
-      WriteXLS(ORA.results.df, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = T)
+      # Write to Excel file  (in comment since this is also done by wrapper)
+      #cat("         Saving result into ", paste0(file_name, ".xlsx"), "...\n")
+      #WriteXLS(ORA.results.df, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = T)
       return(ORA.results.df)
       }
       else {

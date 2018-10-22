@@ -474,7 +474,8 @@ plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, 
   edges <- c()
   genes = c()
   for (i in 1:length(enrichment.table[[termColumn]])) {
-    x <- strsplit(as.character(enrichment.table[i, DEGcolumn]), split = "/")[[1]]
+    x <- strsplit(as.character(enrichment.table[i, DEGcolumn]), split = ",")[[1]]
+    print(x)
     x <- x[x %in% DE.table[[geneSymbolColumn]]] # Remove genes that are not in DE table
     y <- rep(as.character(enrichment.table[i, termColumn]), times =  length(x))
     edge <- as.vector(rbind(y,x))
@@ -482,10 +483,12 @@ plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, 
     genes <- append(genes, x)
   }
   # Generate graph object
-  g <- make_graph(edges, directed = F)
+  g <- graph(edges, directed = F)
+  print(g)
   
   # Acquire vertices names
   vertices <- V(g)$name
+  print(vertices)
   
   # Assign categories to vertices
   categories <- c()
@@ -551,7 +554,7 @@ plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, 
   
   # Produce the plot
   tiff(paste0(plot.filename, ".tiff"), width = 20, height = 20, units = 'cm', res = 300)
-  layout(matrix(1:2, ncol = 2), width = c(4,1),height = c(1,1))  
+  layout(matrix(1:2, ncol = 2), widths = c(4,1),heights = c(1,1))  
   plot(g, vertex.label.color = "black", vertex.size = 6, vertex.frame.color = "white",
        vertex.color  =V(g)$colors, vertex.label.cex = 0.3, vertex.shape = V(g)$shapes,
        layout = layout_nicely, vertex.label.font = 2, vertex.label.family = "sans")

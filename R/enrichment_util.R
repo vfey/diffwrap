@@ -400,8 +400,11 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
         org.db <- as.character(enrich.resource.terms[species, method])
         result <- run.topGO(background = background.genes, foreground = input.genes,ontologies =  topGO.params$ontologies.used, organism = org.db)
       
-        #Saving the table, if relevant
+        #Formatting and saving the table, if relevant
         if (is.data.frame(result) & dim(result)[1] > 0) {
+          
+          organism.term <- as.character(enrich.resource.terms[species, "medseqr"])
+          result <- format_ensembl_ids_annotated_to_term(result, organism.term)
           
           filename <- paste0(analysis.name, ".", contrast,".", method, ".", topGO.params$ontologies.used,".xls" )
           full.filename <- file.path(method.dir, filename)

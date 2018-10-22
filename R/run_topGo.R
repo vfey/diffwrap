@@ -68,25 +68,26 @@ run.topGO <- function(background, foreground, ontologies = c("BP"), organism, ID
   }
   
   # create the file with all the statistics from GO analysis
-  topGO.results <- rbind.fill(table.go)
-  print(length(topGO.results$GO.ID))
+  topGO.results <- as.data.frame(rbind.fill(table.go))
+  
   
   # list containg genes annotated to significant GO terms
-  annotated.genes = lapply(topGO.results$GO.ID, function(x) as.character(unlist(genesInTerm(object = GOdata, whichGO = x)))) 
-  #print(head(AnnotatedGenes))
+  annotated.genes <- lapply(topGO.results$GO.ID, function(x) as.character(unlist(genesInTerm(object = GOdata, whichGO = x)))) 
+ 
   
   ## Selecting only the genes that are among foreground set:
-  significant.genes = lapply(annotated.genes, function(x) intersect(x, gene.of.interest.names)) 
-  #print(head(SignificantGenes))
-
+  significant.genes <- lapply(annotated.genes, function(x) intersect(x, gene.of.interest.names)) 
+  
   
   #performing BH correction on the weight01 p-values
-  p.adj.weight01 = round(p.adjust(topGO.results$Fisher.weight01, method = pAdjustMethod), digits = 5)
+  p.adj.weight01 <- round(p.adjust(topGO.results$Fisher.weight01, method = pAdjustMethod), digits = 5)
   
   #bind new p.adj.wieght01 col
-  topGO.results$p.adj.weight01 = p.adj.weight01
+  topGO.results$p.adj.weight01 <- p.adj.weight01
   
-  topGO.results$Genes = significant.genes
-  
+  #Binding the DEGs (ensembl ids) associated into the term into result table and switching the gene separator
+  topGO.results$Genes <- significant.genes
+  topGO.results$Genes <- unlist(lapply(topGO.results$Genes, function(x) paste(x, collapse = ","))) #To make the column compatible for wrapper formatting
+ 
   return(topGO.results)
 } 

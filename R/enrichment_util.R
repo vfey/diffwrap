@@ -4,6 +4,9 @@
 #*********************************************************************************
 library(WriteXLS)
 library(medseqr)
+library(igraph)
+library(RColorBrewer)
+library(readxl)
 
 #Helper function for formatting the gene column of DAVID and gProfileR enrichment dataframe. 
 #Can be used even when biomart is not run within the full pipeline. Requires medseqr!
@@ -420,4 +423,150 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
     }
   } 
   return(enrichment_out.l)
+}
+
+
+
+
+
+plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, show.terms = 5, logfc.thr = NULL, fdr.thr = NULL) {
+  
+  if (typeof(enrichment.result) == "character") {
+    # Read in enrichment result table
+    enrichment.table <- data.frame(read_excel(enrichment.result))
+    DE.table <- data.frame(read_excel(DE.result)) 
+  } else{
+    enrichment.table = enrichment.result
+    DE.table = DE.result
+  }
+  
+  
+  geneSymbolColumn = names(DE.table)[grep("ymbol", tolower(names(DE.table)))]
+  logFoldChangeColumn = names(DE.table)[grep("foldch|logfc", tolower(names(DE.table)))]
+  adjPvalColumn = names(DE.table)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(DE.table)))]
+  termColumn = names(enrichment.table)[grep("description", tolower(names(enrichment.table)))]
+  DEGcolumn =   names(enrichment.table)[grep("^degs|^genes", tolower(names(enrichment.table)))]
+  print(logFoldChangeColumn)
+  print(adjPvalColumn)
+  print(DEGcolumn)
+  print(termColumn)
+  
+  
+  # Take only n enriched terms
+  enrichment.table <- enrichment.table[1:show.terms,]
+  # Remove rows without HGNC symbol from DE table
+  DE.table <- DE.table[!DE.table[[geneSymbolColumn]] == "",]
+  DE.table <- DE.table[!is.na(DE.table[[geneSymbolColumn]]),]
+  
+  
+  # Filter DE.table by log2FC
+  if (!is.null(logfc.thr)) {
+    DE.table <- DE.table[abs(DE.table[[logFoldChangeColumn]]) > logfc.thr, ]
+    
+  }
+  
+  # Filter DE.table by p-value
+  if (!is.null(fdr.thr)) {
+    DE.table <- DE.table[DE.table[[adjPvalColumn]] < fdr.thr, ]
+  }
+  
+  # Parse the pathway table to create edges
+  edges <- c()
+  genes = c()
+  for (i in 1:length(enrichment.table[[termColumn]])) {
+    x <- strsplit(as.character(enrichment.table[i, DEGcolumn]), split = "/")[[1]]
+    x <- x[x %in% DE.table[[geneSymbolColumn]]] # Remove genes that are not in DE table
+    y <- rep(as.character(enrichment.table[i, termColumn]), times =  length(x))
+    edge <- as.vector(rbind(y,x))
+    edges <- append(edges, edge)
+    genes <- append(genes, x)
+  }
+  # Generate graph object
+  g <- make_graph(edges, directed = F)
+  
+  # Acquire vertices names
+  vertices <- V(g)$name
+  
+  # Assign categories to vertices
+  categories <- c()
+  shapes <- c()
+  for (i in 1:length(vertices)) {
+    if (vertices[i] %in% enrichment.table[[termColumn]]) {
+      categories <- append(categories, "pathway")
+      shapes <- append(shapes, "circle")
+    } else {
+      categories <- append(categories, "gene")
+      shapes <- append(shapes, "circle")
+    }
+  }
+  V(g)$categories <- categories
+  V(g)$shapes <- shapes
+  
+  # Based on foldchange, create color palette for the genes
+  # Set a separate color for pathways
+  palette <- colorRampPalette(rev(brewer.pal(11,"RdBu")))
+  #genes = unique(genes)
+  
+  #foldchanges <- DE.table[[logFoldChangeColumn]] #origiginal plot
+  gene_indices = which(DE.table[[geneSymbolColumn]] %in% genes)
+  foldchanges <- DE.table[gene_indices,logFoldChangeColumn]
+  
+  #print(hist(foldchanges, 50))
+  negatives = foldchanges[foldchanges < 0]
+  positives = foldchanges[foldchanges > 0]
+  lower_limit = quantile(negatives,1/4) - 3*IQR(negatives)
+  upper_limit = quantile(positives,3/4) + 3*IQR(positives)
+  #outliers = boxplot(foldchanges, range = 2, plot=FALSE)$out
+  outliers = foldchanges[foldchanges > upper_limit | foldchanges < lower_limit]
+  cat(length(outliers), "  outliers (r-boxplot method) found")
+  if (length(outliers) > 0) {
+    to_be_removed = which(foldchanges %in% outliers)
+    
+    gene_indices = gene_indices[-to_be_removed]
+    foldchanges = foldchanges[-to_be_removed]
+  }
+  
+  
+  # 
+  if (max(foldchanges, na.rm = T) > abs(min(foldchanges, na.rm = T))){
+    foldchanges <- append(foldchanges, - max(foldchanges, na.rm = T))
+  } else {
+    foldchanges <- append(foldchanges, -min(foldchanges, na.rm = T))
+  }
+  print(foldchanges)
+  centered_pal <- palette(length(foldchanges) + 1)[as.numeric(cut(foldchanges,breaks = length(foldchanges)))]
+  DE.table = DE.table[gene_indices,]
+  DE.table$color <- centered_pal[-length(centered_pal)]
+  
+  # Assign colors to their respective vertices
+  colors <- c()
+  for (i in 1:length(V(g)$name)) {
+    if (V(g)$categories[i] == "pathway") {
+      colors <- append(colors, "white")
+    } else {
+      colors <- append(colors, DE.table[DE.table[[geneSymbolColumn]] == V(g)$name[i],"color"])
+    }
+  }
+  V(g)$colors <- colors
+  
+  # Produce the plot
+  tiff(paste0(plot.filename, ".tiff"), width = 20, height = 20, units = 'cm', res = 300)
+  layout(matrix(1:2, ncol = 2), width = c(4,1),height = c(1,1))  
+  plot(g, vertex.label.color = "black", vertex.size = 6, vertex.frame.color = "white",
+       vertex.color  =V(g)$colors, vertex.label.cex = 0.3, vertex.shape = V(g)$shapes,
+       layout = layout_nicely, vertex.label.font = 2, vertex.label.family = "sans")
+  
+  # Add the legend
+  legend_image <- as.raster(matrix(rev(palette(100)), ncol=1))
+  
+  # Add legend title
+  plot(c(0,0.5), c(0,1), type = 'n', axes = F, xlab = '', ylab = '', main = "Log2 foldchange", cex.main = .8)
+  
+  # Add legend labels
+  text(x=0.4, y = seq(0.8,1,l=3), labels = c(round(min(foldchanges), digits = 2), 0 , round(max(foldchanges),
+                                                                                            digits = 2)))
+  # Add legend image                                                                                                                              
+  rasterImage(legend_image, 0.1, 0.8, 0.2,1)
+  
+  dev.off()
 }

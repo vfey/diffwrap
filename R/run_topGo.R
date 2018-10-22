@@ -50,6 +50,7 @@ run.topGO <- function(background, foreground, ontologies = c("BP"), organism, ID
     GOdata <- new( "topGOdata", ontology = ontologies[i], allGenes = gene.list, nodeSize = 10,
                    annot = annFUN.org , mapping = organism, ID = ID_type )
     
+    
     ## run tests
     result.topGO.elim <- runTest(GOdata, algorithm = "elim", statistic = "Fisher", cutOff = 0.05)
     result.topGO.classic <- runTest(GOdata, algorithm = "classic", statistic = "Fisher", cutOff = 0.05)
@@ -68,12 +69,24 @@ run.topGO <- function(background, foreground, ontologies = c("BP"), organism, ID
   
   # create the file with all the statistics from GO analysis
   topGO.results <- rbind.fill(table.go)
+  print(length(topGO.results$GO.ID))
+  
+  # list containg genes annotated to significant GO terms
+  annotated.genes = lapply(topGO.results$GO.ID, function(x) as.character(unlist(genesInTerm(object = GOdata, whichGO = x)))) 
+  #print(head(AnnotatedGenes))
+  
+  ## Selecting only the genes that are among foreground set:
+  significant.genes = lapply(annotated.genes, function(x) intersect(x, gene.of.interest.names)) 
+  #print(head(SignificantGenes))
+
   
   #performing BH correction on the weight01 p-values
   p.adj.weight01 = round(p.adjust(topGO.results$Fisher.weight01, method = pAdjustMethod), digits = 5)
   
   #bind new p.adj.wieght01 col
   topGO.results$p.adj.weight01 = p.adj.weight01
+  
+  topGO.results$Genes = significant.genes
   
   return(topGO.results)
 } 

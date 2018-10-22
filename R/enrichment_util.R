@@ -531,8 +531,8 @@ plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, 
   
   
   # 
-  if (max(foldchanges, na.rm = T) > abs(min(foldchanges, na.rm = T))){
-    foldchanges <- append(foldchanges, - max(foldchanges, na.rm = T))
+  if (max(foldchanges, na.rm = T) > abs(min(foldchanges, na.rm = T))) {
+    foldchanges <- append(foldchanges, -max(foldchanges, na.rm = T))
   } else {
     foldchanges <- append(foldchanges, -min(foldchanges, na.rm = T))
   }
@@ -554,20 +554,20 @@ plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, 
   
   # Produce the plot
   #tiff(paste0(plot.filename, ".tiff"), width = 10, height = 10, units = 'cm', res = 300)
-  pdf(paste0(plot.filename, ".pdf"))
+  pdf(paste0(plot.filename, ".pdf"), width = 20, height = 15)
   layout(matrix(1:2, ncol = 2), widths = c(4,1),heights = c(1,1))  
-  plot(g, vertex.label.color = "black", vertex.size = 6, vertex.frame.color = "white",
-       vertex.color = V(g)$colors, vertex.label.cex = 0.3, vertex.shape = V(g)$shapes,
+  plot(g, vertex.label.color = "black", vertex.size = 10, vertex.frame.color = "white",
+       vertex.color = V(g)$colors, vertex.label.cex = 1.6, vertex.shape = V(g)$shapes,
        layout = layout_nicely, vertex.label.font = 2, vertex.label.family = "sans")
   
   # Add the legend
   legend_image <- as.raster(matrix(rev(palette(100)), ncol = 1))
   
   # Add legend title
-  plot(c(0,0.5), c(0,1), type = 'n', axes = F, xlab = '', ylab = '', main = "Log. foldchange", cex.main = .8)
+  plot(c(0,0.5), c(0,1), type = 'n', axes = F, xlab = '', ylab = '', main = "Log. foldchange", cex.main = 2.5)
   
   # Add legend labels
-  text(x = 0.4, y = seq(0.8,1,l  =3), labels = c(round(min(foldchanges), digits = 2), 0 , round(max(foldchanges),
+  text(x = 0.4, y = seq(0.8,1,l = 3), cex = 1.5, labels = c(round(min(foldchanges), digits = 2), 0 , round(max(foldchanges),
                                                                                             digits = 2)))
   # Add legend image                                                                                                                              
   rasterImage(legend_image, 0.1, 0.8, 0.2,1)

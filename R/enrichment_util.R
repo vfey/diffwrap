@@ -429,6 +429,25 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
 
 
 
+
+#ottaa sisään maksimi- ja minimiykoordinaatin, 
+#maksimi- ja minimiarvon fold changeille ja vektorin, 
+#jossa on kokonaisluvut joille halutaan 1. y-koordinaatti ja 2. label-tekstit
+#Sitten se palauttaisi y-koordinaatit ja label-tekstit joita voidaan käyttää legendin kokoamisessa
+
+#Helper function
+prepare_scale_for_legend = function(scale.minimum, scale.maximum, int.values.for.ticks=NULL){
+  
+  int.values.for.ticks = NULL
+  legend.params = list()
+  legend.params$scale.y.coordinates = seq(0.8,1,l = 3)
+  legend.params$scale.labels = c(round(scale.minimum, digits = 2), 0 , round(scale.maximum,
+                                                                             digits = 2))
+  return(legend.params) 
+}
+
+
+
 plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, show.terms = 5, logfc.thr = NULL, fdr.thr = NULL, 
                                    pdf.width = 20, pdf.heigth = 15, vertex.cex.label = 1.3, legend.cex.main = 2.0, legend.cex.text = 1.5) {
   
@@ -513,7 +532,7 @@ plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, 
   #genes = unique(genes)
   
   #foldchanges <- DE.table[[logFoldChangeColumn]] #origiginal plot
-  gene_indices = which(DE.table[[geneSymbolColumn]] %in% genes) #upgrade: taking only genes associated with the terms to be plotted (?!)
+  gene_indices = which(DE.table[[geneSymbolColumn]] %in% genes) #upgrade: taking fold changes only for genes associated with the terms to be plotted 
   foldchanges <- DE.table[gene_indices,logFoldChangeColumn]
   
   
@@ -577,10 +596,12 @@ plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, 
   plot(c(0,0.5), c(0,1), type = 'n', axes = F, xlab = '', ylab = '', main = "Log. foldchange", cex.main = legend.cex.main)
   
   # Add legend labels
-  text(x = 0.4, y = seq(0.8,1,l = 3), cex = legend.cex.text, labels = c(round(min(foldchanges), digits = 2), 0 , round(max(foldchanges),
-                                                                                            digits = 2)))
+  legend.element = prepare_scale_for_legend(min(foldchanges), max(foldchanges))
+  text(x = 0.4, y = legend.element$scale.y.coordinates, cex = legend.cex.text, labels = legend.element$scale.labels)
   # Add legend image                                                                                                                              
   rasterImage(legend_image, 0.1, 0.8, 0.2,1)
   
   dev.off()
 }
+
+

@@ -511,15 +511,22 @@ plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, 
   #genes = unique(genes)
   
   #foldchanges <- DE.table[[logFoldChangeColumn]] #origiginal plot
-  gene_indices = which(DE.table[[geneSymbolColumn]] %in% genes)
+  gene_indices = which(DE.table[[geneSymbolColumn]] %in% genes) #upgrade: taking only genes associated with the terms to be plotted (?!)
   foldchanges <- DE.table[gene_indices,logFoldChangeColumn]
   
-  #print(hist(foldchanges, 50))
+  
+  # ***NOTE*** because genes are filtered based on logfc, the fc-histogram has "gap" in the middle and is not actually a histogram!!
+  #print(hist(foldchanges, 50)) 
+  # ---> PROBLEM: How to define outliers??? (pure boxplot outlier method i.e. 'boxplot(foldchanges, range = 1.5, plot=FALSE)$out' 
+  # "thinks" we have two separate distributions and calculates outliers for both of them
+  # - thus, it removes also values that are members of "the other" distribution)
+  
+  #Current solution: separating negatives and positives and taking the relevant IQR outliers separately
   negatives = foldchanges[foldchanges < 0]
   positives = foldchanges[foldchanges > 0]
-  lower_limit = quantile(negatives,1/4) - 3*IQR(negatives)
+  lower_limit = quantile(negatives,1/4) - 3*IQR(negatives)  #originally quantile(negatives,1/4) - 1.5*IQR(negatives), but this filters quite a lot
   upper_limit = quantile(positives,3/4) + 3*IQR(positives)
-  #outliers = boxplot(foldchanges, range = 2, plot=FALSE)$out
+  
   outliers = foldchanges[foldchanges > upper_limit | foldchanges < lower_limit]
   cat(length(outliers), "  outliers (r-boxplot method) found... \n")
   if (length(outliers) > 0) {
@@ -530,7 +537,7 @@ plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, 
   }
   
   
-  # 
+  # Making symmetric range for fold changes
   if (max(foldchanges, na.rm = T) > abs(min(foldchanges, na.rm = T))) {
     foldchanges <- append(foldchanges, -max(foldchanges, na.rm = T))
   } else {
@@ -538,6 +545,7 @@ plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, 
   }
   print(foldchanges)
   centered_pal <- palette(length(foldchanges) + 1)[as.numeric(cut(foldchanges,breaks = length(foldchanges)))]
+  
   DE.table = DE.table[gene_indices,]
   DE.table$color <- centered_pal[-length(centered_pal)]
   
@@ -557,14 +565,14 @@ plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, 
   pdf(paste0(plot.filename, ".pdf"), width = 20, height = 15)
   layout(matrix(1:2, ncol = 2), widths = c(4,1),heights = c(1,1))  
   plot(g, vertex.label.color = "black", vertex.size = 10, vertex.frame.color = "white",
-       vertex.color = V(g)$colors, vertex.label.cex = 1.6, vertex.shape = V(g)$shapes,
+       vertex.color = V(g)$colors, vertex.label.cex = 1.3, vertex.shape = V(g)$shapes,
        layout = layout_nicely, vertex.label.font = 2, vertex.label.family = "sans")
   
   # Add the legend
   legend_image <- as.raster(matrix(rev(palette(100)), ncol = 1))
   
   # Add legend title
-  plot(c(0,0.5), c(0,1), type = 'n', axes = F, xlab = '', ylab = '', main = "Log. foldchange", cex.main = 2.5)
+  plot(c(0,0.5), c(0,1), type = 'n', axes = F, xlab = '', ylab = '', main = "Log. foldchange", cex.main = 2.0)
   
   # Add legend labels
   text(x = 0.4, y = seq(0.8,1,l = 3), cex = 1.5, labels = c(round(min(foldchanges), digits = 2), 0 , round(max(foldchanges),

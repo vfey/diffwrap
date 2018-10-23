@@ -477,6 +477,7 @@ plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, 
     x <- strsplit(as.character(enrichment.table[i, DEGcolumn]), split = ",")[[1]]
     print(x)
     x <- x[x %in% DE.table[[geneSymbolColumn]]] # Remove genes that are not in DE table
+    print(x)
     y <- rep(as.character(enrichment.table[i, termColumn]), times =  length(x))
     edge <- as.vector(rbind(y,x))
     edges <- append(edges, edge)

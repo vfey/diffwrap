@@ -611,7 +611,7 @@ plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, 
   
   # Add legend labels
   legend.element = prepare_scale_for_legend(min(foldchanges), max(foldchanges))
-  text(x = 0.4, y = legend.element$scale.y.coordinates, cex = legend.cex.text, labels = legend.element$scale.labels)
+  text(x = 0.3, y = legend.element$scale.y.coordinates, cex = legend.cex.text, labels = legend.element$scale.labels)
   # Add legend image                                                                                                                              
   rasterImage(legend_image, 0.1, 0.8, 0.2,1)
   

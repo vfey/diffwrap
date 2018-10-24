@@ -438,11 +438,25 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
 #Helper function
 prepare_scale_for_legend = function(scale.minimum, scale.maximum, int.values.for.ticks=NULL){
   
+  scale.minimum = round(scale.minimum, digits = 0)
+  scale.maximum = round(scale.maximum, digits = 0)
+  
   int.values.for.ticks = NULL
+  if (scale.maximum <= 3) {
+    scale.range = seq(scale.minimum,scale.maximum,1)
+  }
+  else if ((scale.maximum %% 2) == 0) { #even
+    scale.range = seq(scale.minimum,scale.maximum,2)
+  }
+  else { #odd
+    scale.range = seq(scale.minimum,scale.maximum, (scale.maximum / 2))
+  }
+  
   legend.params = list()
-  legend.params$scale.y.coordinates = seq(0.8,1,l = 3)
-  legend.params$scale.labels = c(round(scale.minimum, digits = 2), 0 , round(scale.maximum,
-                                                                             digits = 2))
+  legend.params$scale.y.coordinates = seq(0.8,1,l = length(scale.range))
+  legend.params$scale.labels = scale.range
+  #legend.params$scale.labels = c(round(scale.minimum, digits = 2), 0 , round(scale.maximum,
+  #                                                                           digits = 2))
   return(legend.params) 
 }
 

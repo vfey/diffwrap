@@ -1,4 +1,5 @@
-# Wrapper function for performing various enrichment analyses (+ a helper function)
+# Utilities for for performing various enrichment analyses and visualisations.
+# Major function that wraps other enrichment functions is runEnrichmentAnalyses
 # 
 # Author: Meeri Pekkarinen
 #*********************************************************************************
@@ -7,6 +8,195 @@ library(medseqr)
 library(igraph)
 library(RColorBrewer)
 library(readxl)
+
+
+
+
+#Helper function for enrichment visualisations:
+prepare_scale_for_legend = function(scale.minimum, scale.maximum, int.values.for.ticks=NULL){
+  
+  scale.minimum = round(scale.minimum, digits = 0)
+  scale.maximum = round(scale.maximum, digits = 0)
+  
+  int.values.for.ticks = NULL
+  if (scale.maximum <= 3) {
+    scale.range = seq(scale.minimum,scale.maximum,1)
+  }
+  else if ((scale.maximum %% 2) == 0) { #even
+    scale.range = seq(scale.minimum,scale.maximum,2)
+  }
+  else { #odd
+    scale.range = seq(scale.minimum,scale.maximum, (scale.maximum / 2))
+  }
+  
+  legend.params = list()
+  legend.params$scale.y.coordinates = seq(0.8,1,l = length(scale.range))
+  legend.params$scale.labels = scale.range
+  #legend.params$scale.labels = c(round(scale.minimum, digits = 2), 0 , round(scale.maximum,
+  #                                                                           digits = 2))
+  return(legend.params) 
+}
+
+
+#Function for making network visualisation based on enrichment result, DE gene table and thresholding. 
+#Can take the input tables either as dataframes or excel-files
+plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, show.terms = 5, logfc.thr = NULL, fdr.thr = NULL, 
+                                   pdf.width = 20, pdf.heigth = 15, vertex.cex.label = 1.3, legend.cex.main = 2.0, legend.cex.text = 1.5) {
+  
+  if (typeof(enrichment.result) == "character") {
+    # Read in enrichment result table
+    enrichment.table <- data.frame(read_excel(enrichment.result))
+    DE.table <- data.frame(read_excel(DE.result)) 
+  } else{
+    enrichment.table = enrichment.result
+    DE.table = DE.result
+  }
+  
+  
+  geneSymbolColumn = names(DE.table)[grep("ymbol", tolower(names(DE.table)))]
+  logFoldChangeColumn = names(DE.table)[grep("foldch|logfc", tolower(names(DE.table)))]
+  adjPvalColumn = names(DE.table)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(DE.table)))]
+  termColumn = names(enrichment.table)[grep("description", tolower(names(enrichment.table)))]
+  DEGcolumn =   names(enrichment.table)[grep("^degs|^genes", tolower(names(enrichment.table)))]
+  print(logFoldChangeColumn)
+  print(adjPvalColumn)
+  print(DEGcolumn)
+  print(termColumn)
+  
+  
+  # Take only n enriched terms
+  enrichment.table <- enrichment.table[1:show.terms,]
+  # Remove rows without HGNC symbol from DE table
+  DE.table <- DE.table[!DE.table[[geneSymbolColumn]] == "",]
+  DE.table <- DE.table[!is.na(DE.table[[geneSymbolColumn]]),]
+  
+  
+  # Filter DE.table by log2FC
+  if (!is.null(logfc.thr)) {
+    DE.table <- DE.table[abs(DE.table[[logFoldChangeColumn]]) > logfc.thr, ]
+    
+  }
+  
+  # Filter DE.table by p-value
+  if (!is.null(fdr.thr)) {
+    DE.table <- DE.table[DE.table[[adjPvalColumn]] < fdr.thr, ]
+  }
+  
+  # Parse the pathway table to create edges
+  edges <- c()
+  genes = c()
+  for (i in 1:length(enrichment.table[[termColumn]])) {
+    x <- strsplit(as.character(enrichment.table[i, DEGcolumn]), split = ",")[[1]]
+    print(x)
+    x <- x[x %in% DE.table[[geneSymbolColumn]]] # Remove genes that are not in DE table
+    print(x)
+    y <- rep(as.character(enrichment.table[i, termColumn]), times =  length(x))
+    edge <- as.vector(rbind(y,x))
+    edges <- append(edges, edge)
+    genes <- append(genes, x)
+  }
+  # Generate graph object
+  g <- graph(edges, directed = F)
+  print(g)
+  
+  # Acquire vertices names
+  vertices <- V(g)$name
+  print(vertices)
+  
+  # Assign categories to vertices
+  categories <- c()
+  shapes <- c()
+  for (i in 1:length(vertices)) {
+    if (vertices[i] %in% enrichment.table[[termColumn]]) {
+      categories <- append(categories, "pathway")
+      shapes <- append(shapes, "circle")
+    } else {
+      categories <- append(categories, "gene")
+      shapes <- append(shapes, "circle")
+    }
+  }
+  V(g)$categories <- categories
+  V(g)$shapes <- shapes
+  
+  # Based on foldchange, create color palette for the genes
+  # Set a separate color for pathways
+  palette <- colorRampPalette(rev(brewer.pal(11,"RdBu")))
+  #genes = unique(genes)
+  
+  #foldchanges <- DE.table[[logFoldChangeColumn]] #origiginal plot
+  gene_indices = which(DE.table[[geneSymbolColumn]] %in% genes) #upgrade: taking fold changes only for genes associated with the terms to be plotted 
+  foldchanges <- DE.table[gene_indices,logFoldChangeColumn]
+  
+  
+  # ***NOTE*** because genes are filtered based on logfc, the fc-histogram has "gap" in the middle and is not actually a histogram!!
+  #print(hist(foldchanges, 50)) 
+  # ---> PROBLEM: How to define outliers??? (pure boxplot outlier method i.e. 'boxplot(foldchanges, range = 1.5, plot=FALSE)$out' 
+  # "thinks" we have two separate distributions and calculates outliers for both of them
+  # - thus, it removes also values that are members of "the other" distribution)
+  
+  #Current solution: separating negatives and positives and taking the relevant IQR outliers separately
+  negatives = foldchanges[foldchanges < 0]
+  positives = foldchanges[foldchanges > 0]
+  lower_limit = quantile(negatives,1/4) - 3*IQR(negatives)  #originally quantile(negatives,1/4) - 1.5*IQR(negatives), but this filters quite a lot
+  upper_limit = quantile(positives,3/4) + 3*IQR(positives)
+  
+  outliers = foldchanges[foldchanges > upper_limit | foldchanges < lower_limit]
+  cat(length(outliers), "  outliers (r-boxplot method) found... \n")
+  if (length(outliers) > 0) {
+    to_be_removed = which(foldchanges %in% outliers)
+    
+    gene_indices = gene_indices[-to_be_removed]
+    foldchanges = foldchanges[-to_be_removed]
+  }
+  
+  
+  # Making symmetric range for fold changes
+  if (max(foldchanges, na.rm = T) > abs(min(foldchanges, na.rm = T))) {
+    foldchanges <- append(foldchanges, -max(foldchanges, na.rm = T))
+  } else {
+    foldchanges <- append(foldchanges, -min(foldchanges, na.rm = T))
+  }
+  print(foldchanges)
+  centered_pal <- palette(length(foldchanges) + 1)[as.numeric(cut(foldchanges,breaks = length(foldchanges)))]
+  
+  DE.table = DE.table[gene_indices,]
+  DE.table$color <- centered_pal[-length(centered_pal)]
+  
+  # Assign colors to their respective vertices
+  colors <- c()
+  for (i in 1:length(V(g)$name)) {
+    if (V(g)$categories[i] == "pathway") {
+      colors <- append(colors, "white")
+    } else {
+      colors <- append(colors, DE.table[DE.table[[geneSymbolColumn]] == V(g)$name[i],"color"])
+    }
+  }
+  V(g)$colors <- colors
+  
+  # Produce the plot
+  #tiff(paste0(plot.filename, ".tiff"), width = 10, height = 10, units = 'cm', res = 300)
+  pdf(paste0(plot.filename, ".pdf"), width = pdf.width, height = pdf.heigth)
+  layout(matrix(1:2, ncol = 2), widths = c(4,1),heights = c(1,1))  
+  plot(g, vertex.label.color = "black", vertex.size = 10, vertex.frame.color = "white",
+       vertex.color = V(g)$colors, vertex.label.cex = vertex.cex.label, vertex.shape = V(g)$shapes,
+       layout = layout_nicely, vertex.label.font = 2, vertex.label.family = "sans")
+  
+  # Add the legend
+  legend_image <- as.raster(matrix(rev(palette(100)), ncol = 1))
+  
+  # Add legend title
+  plot(c(0,0.5), c(0,1), type = 'n', axes = F, xlab = '', ylab = '', main = "Log. foldchange", cex.main = legend.cex.main)
+  
+  # Add legend labels
+  legend.element = prepare_scale_for_legend(min(foldchanges), max(foldchanges))
+  text(x = 0.3, y = legend.element$scale.y.coordinates, cex = legend.cex.text, labels = legend.element$scale.labels)
+  # Add legend image                                                                                                                              
+  rasterImage(legend_image, 0.1, 0.8, 0.2,1)
+  
+  dev.off()
+}
+
+
 
 #Helper function for formatting the gene column of DAVID and gProfileR enrichment dataframe. 
 #Can be used even when biomart is not run within the full pipeline. Requires medseqr!
@@ -210,6 +400,12 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
          full.filename <- file.path(method.dir, filename)
          cat("      Saving ", method, " result table into ",  full.filename, "...\n")
          WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
+         
+         #Making the graph visualisation
+         graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)
+         cat("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
+         plot_enrichment_network(enrichment.result = result, DE.result = de_table, 
+                                 plot.filename = graph.name, show.terms = 5, logfc.thr = 1, fdr.thr = 0.05)
         }
        
        enrichment_out.l$clusterProfiler_GO[[contrast]] <- result
@@ -311,6 +507,12 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
           full.filename <- file.path(method.dir, filename)
           cat("      Saving ", method, " result table into ",  full.filename, "...\n")
           WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
+          
+          #Making the graph visualisation
+          graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)
+          cat("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
+          plot_enrichment_network(enrichment.result = result, DE.result = de_table, 
+                                  plot.filename = graph.name, show.terms = 5, logfc.thr = 1, fdr.thr = 0.05)
         } 
         
         enrichment_out.l$clusterProfiler_KEGG[[contrast]] <- result  
@@ -354,6 +556,12 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
           full.filename <- file.path(method.dir, filename)
           cat("      Saving ", method, " result table into ",  full.filename, "...\n")
           WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
+          
+          #Making the graph visualisation
+          graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)
+          cat("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
+          plot_enrichment_network(enrichment.result = result, DE.result = de_table, 
+                                  plot.filename = graph.name, show.terms = 5, logfc.thr = 1, fdr.thr = 0.05)
         }
         
         enrichment_out.l$DAVID[[contrast]] = result
@@ -383,6 +591,12 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
           full.filename <- file.path(method.dir, filename)
           cat("      Saving ", method, " result table into ",  full.filename, "...\n")
           WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
+          
+          #Making the graph visualisation
+          graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)
+          cat("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
+          plot_enrichment_network(enrichment.result = result, DE.result = de_table, 
+                                  plot.filename = graph.name, show.terms = 5, logfc.thr = 1, fdr.thr = 0.05)
         }
         else {
           result <- "No significant enrichment found"
@@ -413,7 +627,13 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
           full.filename <- file.path(method.dir, filename)
           cat("      Saving ", method, " result table into ",  full.filename, "...\n")
           WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
-        }
+          
+          #Making the graph visualisation
+          graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)
+          cat("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
+          plot_enrichment_network(enrichment.result = result, DE.result = de_table, 
+                                  plot.filename = graph.name, show.terms = 5, logfc.thr = 1, fdr.thr = 0.05)
+        }  
         else {
           result <- "No significant enrichment found"
         }
@@ -425,197 +645,5 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
   return(enrichment_out.l)
 }
 
-
-
-
-
-
-#ottaa sisään maksimi- ja minimiykoordinaatin, 
-#maksimi- ja minimiarvon fold changeille ja vektorin, 
-#jossa on kokonaisluvut joille halutaan 1. y-koordinaatti ja 2. label-tekstit
-#Sitten se palauttaisi y-koordinaatit ja label-tekstit joita voidaan käyttää legendin kokoamisessa
-
-#Helper function
-prepare_scale_for_legend = function(scale.minimum, scale.maximum, int.values.for.ticks=NULL){
-  
-  scale.minimum = round(scale.minimum, digits = 0)
-  scale.maximum = round(scale.maximum, digits = 0)
-  
-  int.values.for.ticks = NULL
-  if (scale.maximum <= 3) {
-    scale.range = seq(scale.minimum,scale.maximum,1)
-  }
-  else if ((scale.maximum %% 2) == 0) { #even
-    scale.range = seq(scale.minimum,scale.maximum,2)
-  }
-  else { #odd
-    scale.range = seq(scale.minimum,scale.maximum, (scale.maximum / 2))
-  }
-  
-  legend.params = list()
-  legend.params$scale.y.coordinates = seq(0.8,1,l = length(scale.range))
-  legend.params$scale.labels = scale.range
-  #legend.params$scale.labels = c(round(scale.minimum, digits = 2), 0 , round(scale.maximum,
-  #                                                                           digits = 2))
-  return(legend.params) 
-}
-
-
-
-plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, show.terms = 5, logfc.thr = NULL, fdr.thr = NULL, 
-                                   pdf.width = 20, pdf.heigth = 15, vertex.cex.label = 1.3, legend.cex.main = 2.0, legend.cex.text = 1.5) {
-  
-  if (typeof(enrichment.result) == "character") {
-    # Read in enrichment result table
-    enrichment.table <- data.frame(read_excel(enrichment.result))
-    DE.table <- data.frame(read_excel(DE.result)) 
-  } else{
-    enrichment.table = enrichment.result
-    DE.table = DE.result
-  }
-  
-  
-  geneSymbolColumn = names(DE.table)[grep("ymbol", tolower(names(DE.table)))]
-  logFoldChangeColumn = names(DE.table)[grep("foldch|logfc", tolower(names(DE.table)))]
-  adjPvalColumn = names(DE.table)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(DE.table)))]
-  termColumn = names(enrichment.table)[grep("description", tolower(names(enrichment.table)))]
-  DEGcolumn =   names(enrichment.table)[grep("^degs|^genes", tolower(names(enrichment.table)))]
-  print(logFoldChangeColumn)
-  print(adjPvalColumn)
-  print(DEGcolumn)
-  print(termColumn)
-  
-  
-  # Take only n enriched terms
-  enrichment.table <- enrichment.table[1:show.terms,]
-  # Remove rows without HGNC symbol from DE table
-  DE.table <- DE.table[!DE.table[[geneSymbolColumn]] == "",]
-  DE.table <- DE.table[!is.na(DE.table[[geneSymbolColumn]]),]
-  
-  
-  # Filter DE.table by log2FC
-  if (!is.null(logfc.thr)) {
-    DE.table <- DE.table[abs(DE.table[[logFoldChangeColumn]]) > logfc.thr, ]
-    
-  }
-  
-  # Filter DE.table by p-value
-  if (!is.null(fdr.thr)) {
-    DE.table <- DE.table[DE.table[[adjPvalColumn]] < fdr.thr, ]
-  }
-  
-  # Parse the pathway table to create edges
-  edges <- c()
-  genes = c()
-  for (i in 1:length(enrichment.table[[termColumn]])) {
-    x <- strsplit(as.character(enrichment.table[i, DEGcolumn]), split = ",")[[1]]
-    print(x)
-    x <- x[x %in% DE.table[[geneSymbolColumn]]] # Remove genes that are not in DE table
-    print(x)
-    y <- rep(as.character(enrichment.table[i, termColumn]), times =  length(x))
-    edge <- as.vector(rbind(y,x))
-    edges <- append(edges, edge)
-    genes <- append(genes, x)
-  }
-  # Generate graph object
-  g <- graph(edges, directed = F)
-  print(g)
-  
-  # Acquire vertices names
-  vertices <- V(g)$name
-  print(vertices)
-  
-  # Assign categories to vertices
-  categories <- c()
-  shapes <- c()
-  for (i in 1:length(vertices)) {
-    if (vertices[i] %in% enrichment.table[[termColumn]]) {
-      categories <- append(categories, "pathway")
-      shapes <- append(shapes, "circle")
-    } else {
-      categories <- append(categories, "gene")
-      shapes <- append(shapes, "circle")
-    }
-  }
-  V(g)$categories <- categories
-  V(g)$shapes <- shapes
-  
-  # Based on foldchange, create color palette for the genes
-  # Set a separate color for pathways
-  palette <- colorRampPalette(rev(brewer.pal(11,"RdBu")))
-  #genes = unique(genes)
-  
-  #foldchanges <- DE.table[[logFoldChangeColumn]] #origiginal plot
-  gene_indices = which(DE.table[[geneSymbolColumn]] %in% genes) #upgrade: taking fold changes only for genes associated with the terms to be plotted 
-  foldchanges <- DE.table[gene_indices,logFoldChangeColumn]
-  
-  
-  # ***NOTE*** because genes are filtered based on logfc, the fc-histogram has "gap" in the middle and is not actually a histogram!!
-  #print(hist(foldchanges, 50)) 
-  # ---> PROBLEM: How to define outliers??? (pure boxplot outlier method i.e. 'boxplot(foldchanges, range = 1.5, plot=FALSE)$out' 
-  # "thinks" we have two separate distributions and calculates outliers for both of them
-  # - thus, it removes also values that are members of "the other" distribution)
-  
-  #Current solution: separating negatives and positives and taking the relevant IQR outliers separately
-  negatives = foldchanges[foldchanges < 0]
-  positives = foldchanges[foldchanges > 0]
-  lower_limit = quantile(negatives,1/4) - 3*IQR(negatives)  #originally quantile(negatives,1/4) - 1.5*IQR(negatives), but this filters quite a lot
-  upper_limit = quantile(positives,3/4) + 3*IQR(positives)
-  
-  outliers = foldchanges[foldchanges > upper_limit | foldchanges < lower_limit]
-  cat(length(outliers), "  outliers (r-boxplot method) found... \n")
-  if (length(outliers) > 0) {
-    to_be_removed = which(foldchanges %in% outliers)
-    
-    gene_indices = gene_indices[-to_be_removed]
-    foldchanges = foldchanges[-to_be_removed]
-  }
-  
-  
-  # Making symmetric range for fold changes
-  if (max(foldchanges, na.rm = T) > abs(min(foldchanges, na.rm = T))) {
-    foldchanges <- append(foldchanges, -max(foldchanges, na.rm = T))
-  } else {
-    foldchanges <- append(foldchanges, -min(foldchanges, na.rm = T))
-  }
-  print(foldchanges)
-  centered_pal <- palette(length(foldchanges) + 1)[as.numeric(cut(foldchanges,breaks = length(foldchanges)))]
-  
-  DE.table = DE.table[gene_indices,]
-  DE.table$color <- centered_pal[-length(centered_pal)]
-  
-  # Assign colors to their respective vertices
-  colors <- c()
-  for (i in 1:length(V(g)$name)) {
-    if (V(g)$categories[i] == "pathway") {
-      colors <- append(colors, "white")
-    } else {
-      colors <- append(colors, DE.table[DE.table[[geneSymbolColumn]] == V(g)$name[i],"color"])
-    }
-  }
-  V(g)$colors <- colors
-  
-  # Produce the plot
-  #tiff(paste0(plot.filename, ".tiff"), width = 10, height = 10, units = 'cm', res = 300)
-  pdf(paste0(plot.filename, ".pdf"), width = pdf.width, height = pdf.heigth)
-  layout(matrix(1:2, ncol = 2), widths = c(4,1),heights = c(1,1))  
-  plot(g, vertex.label.color = "black", vertex.size = 10, vertex.frame.color = "white",
-       vertex.color = V(g)$colors, vertex.label.cex = vertex.cex.label, vertex.shape = V(g)$shapes,
-       layout = layout_nicely, vertex.label.font = 2, vertex.label.family = "sans")
-  
-  # Add the legend
-  legend_image <- as.raster(matrix(rev(palette(100)), ncol = 1))
-  
-  # Add legend title
-  plot(c(0,0.5), c(0,1), type = 'n', axes = F, xlab = '', ylab = '', main = "Log. foldchange", cex.main = legend.cex.main)
-  
-  # Add legend labels
-  legend.element = prepare_scale_for_legend(min(foldchanges), max(foldchanges))
-  text(x = 0.3, y = legend.element$scale.y.coordinates, cex = legend.cex.text, labels = legend.element$scale.labels)
-  # Add legend image                                                                                                                              
-  rasterImage(legend_image, 0.1, 0.8, 0.2,1)
-  
-  dev.off()
-}
 
 

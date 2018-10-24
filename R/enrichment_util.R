@@ -58,11 +58,13 @@ plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, 
   adjPvalColumn = names(DE.table)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(DE.table)))]
   termColumn = names(enrichment.table)[grep("description", tolower(names(enrichment.table)))]
   DEGcolumn =   names(enrichment.table)[grep("^degs|^genes", tolower(names(enrichment.table)))]
-  print(logFoldChangeColumn)
-  print(adjPvalColumn)
-  print(DEGcolumn)
-  print(termColumn)
-  
+  cat("         Detected following columns in data inputted for network visualisation: \n")
+  cat("         DE (log) fold changes: ", logFoldChangeColumn,  "\n")
+  cat("         FDR: ",adjPvalColumn, "\n")
+  cat("         Genes associated with the term: ", DEGcolumn, "\n")
+  cat("         Term descriptions used in nodes: ", termColumn, "\n", "\n")
+  cat("         Filtering the the genes (fdr < ", fdr.thr, "and abs. logFC >=", logfc.thr, ") and", "\n",
+                "by the existence of symbolic names...\n")
   
   # Take only n enriched terms
   enrichment.table <- enrichment.table[1:show.terms,]
@@ -86,10 +88,11 @@ plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, 
   edges <- c()
   genes = c()
   for (i in 1:length(enrichment.table[[termColumn]])) {
+    cat("\n")
     x <- strsplit(as.character(enrichment.table[i, DEGcolumn]), split = ",")[[1]]
-    print(x)
+    cat("         Genes associated with the term '", enrichment.table[i, termColumn], "': ", length(x), "\n")
     x <- x[x %in% DE.table[[geneSymbolColumn]]] # Remove genes that are not in DE table
-    print(x)
+    cat("         Genes associated with the term after removing those not found in filtered DE-table: ", length(x), "\n")
     y <- rep(as.character(enrichment.table[i, termColumn]), times =  length(x))
     edge <- as.vector(rbind(y,x))
     edges <- append(edges, edge)
@@ -97,11 +100,11 @@ plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, 
   }
   # Generate graph object
   g <- graph(edges, directed = F)
-  print(g)
+  #print(g)
   
   # Acquire vertices names
   vertices <- V(g)$name
-  print(vertices)
+  #print(vertices)
   
   # Assign categories to vertices
   categories <- c()
@@ -141,7 +144,7 @@ plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, 
   upper_limit = quantile(positives,3/4) + 3*IQR(positives)
   
   outliers = foldchanges[foldchanges > upper_limit | foldchanges < lower_limit]
-  cat(length(outliers), "  outliers (r-boxplot method) found... \n")
+  cat("         ", length(outliers), "  outliers (r-boxplot method) found... \n")
   if (length(outliers) > 0) {
     to_be_removed = which(foldchanges %in% outliers)
     
@@ -156,7 +159,7 @@ plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, 
   } else {
     foldchanges <- append(foldchanges, -min(foldchanges, na.rm = T))
   }
-  print(foldchanges)
+  #print(foldchanges)
   centered_pal <- palette(length(foldchanges) + 1)[as.numeric(cut(foldchanges,breaks = length(foldchanges)))]
   
   DE.table = DE.table[gene_indices,]

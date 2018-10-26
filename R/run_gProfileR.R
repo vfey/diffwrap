@@ -56,19 +56,29 @@ run_gprofiler <- function(input_genes,
                           background_genes = "",
                           file_name = NULL,
                           ordered_query = FALSE,
-                          show_only_significant = T,
+                          show_only_significant = F,
                           data_sources = NULL,
                           organism = "hsapiens",
                           exclude_iea = FALSE,
-                          max_p_value = 0.05,
+                          max_p_value = 0.5,
                           sort_by_structure = FALSE,
                           min_set_size = 10,
                           max_set_size = 1000,
                           min_overlap = 2,
                           correction_method = "fdr",
                           hier_filtering = "none") {
-
-    results <- gprofiler(query = input_genes,
+    print(paste0("ordered_query :",ordered_query))
+    print(paste0("show_only_significant: ",show_only_significant))
+    print(paste0("exclude_iea: ",exclude_iea))
+    print(paste0("max_p_value: ",max_p_value))
+    print(paste0("sort_by_structure: ",sort_by_structure))
+    print(paste0("min_set_size: ", min_set_size))
+    print(paste0("max_set_size: ", max_set_size))
+    print(paste0("min_overlap: ", min_overlap))
+    print(paste0("correction_method: ", correction_method))
+    print(paste0("hier_filtering: ", hier_filtering))
+          
+    results <- gprofiler(query = as.character(input_genes),
                      organism = organism,
                      sort_by_structure = sort_by_structure,
                      ordered_query = ordered_query,
@@ -83,9 +93,22 @@ run_gprofiler <- function(input_genes,
                      custom_bg = background_genes,
                      src_filter = data_sources)
 
-    results <- results[,c(9,10,12,4:6,3,14)] # Extract only interesting columns
+    cols.res = colnames(results)
+    cols.interest = c("term.id", "domain","term.name","term.size","query.size","overlap.size","p.value","intersection") 
+    
+    
+    ids.list = list()
+    for (col.intr in cols.interest) {
+      ids.list[[col.intr]] = grep(col.intr, cols.res)
+    }
+    ids.interest = as.vector(unlist(ids.list))
+    
+    results <- results[,ids.interest] # Extract only interesting columns
+   
     colnames(results) <- c("Term ID", "Term Domain", "Term Description", "Term Size", "Query Size",
                        "No of DEGs annotated to Term", "Adjusted P-Value", "DEGs Annotated to Term")
-    WriteXLS(results, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = T)
+    
+    #cat("         Saving result into ", paste0(file_name, ".xlsx"), "...\n")
+    #WriteXLS(results, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = T)
     return(results)
 }

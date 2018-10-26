@@ -7,7 +7,7 @@ library(WriteXLS)
 # Input ORA:  input_genes = differentially expressed genes as a vector of Ensembl IDs
 #             background_genes = vector of Ensembl IDs of all studied genes (optional)
 
-# Input GSEA: input_genes = a named vector of fold changes ranked in the order of decreasing fold change, 
+# Input GSEA: input_genes = a named vector of fold changes of ALL genes ranked in the order of decreasing fold change, 
 #                           with Ensembl IDs as names
 
 # Example: run_clusterProfiler_GO(DEG.results$ID, DEG.results.full$ID, file_name = "GOBP_enrichment").
@@ -15,7 +15,7 @@ library(WriteXLS)
 
 #' Runs clusterProfiler GO enrichment function for a DEG list or for a ranked gene list.
 #' @param input_genes A character vector of gene IDs (ORA) or a named, 
-#'                    ordered vector of fold changes with gene IDs as names (GSEA).
+#'                    ordered vector of fold changes of ALL genes with gene IDs as names (GSEA).
 #' @param background_genes A character vector of background gene IDs. If not specified, by default uses all human genes
 #'                         annotated to term domain.
 #' @param file_name A character string used as a file name.
@@ -46,7 +46,7 @@ run_clusterProfiler_GO <- function(input_genes,
                                    ordered_query = FALSE, 
                                    id_type = "ENSEMBL", 
                                    ontology = "BP", 
-                                   OrgDb = org.Hs.eg.db, 
+                                   OrgDb = "org.Hs.eg.db", 
                                    pvalueCutoff = 0.05, 
                                    min_set_size = 10, 
                                    max_set_size = 1000, 
@@ -69,18 +69,29 @@ run_clusterProfiler_GO <- function(input_genes,
                                           pAdjustMethod = "BH",
                                           seed = T)
 
-    GSE.results.df <- data.frame(GSE.results)
-    GSE.results.df$Count <- sapply(GSE.results.df$core_enrichment, function(x) length(unlist(strsplit(x, split = "/"))))
-    # Filter by minimun overlap and extract only interesting columns
-    GSE.results.df <- GSE.results.df[GSE.results.df$Count >= min_overlap, c(1:3,5:7,11:12)] 
-    colnames(GSE.results.df) <- c("Term ID", "Term description", "Gene Set Size", "Normalized Enrichment Score", "P-Value", 
+    if (dim(GSE.results)[1] >= 1) {
+    
+      GSE.results.df <- data.frame(GSE.results)
+      GSE.results.df$Count <- sapply(GSE.results.df$core_enrichment, function(x) length(unlist(strsplit(x, split = "/"))))
+      # Filter by minimun overlap and extract only interesting columns
+      GSE.results.df <- GSE.results.df[GSE.results.df$Count >= min_overlap, c(1:3,5:7,11:12)] 
+      colnames(GSE.results.df) <- c("Term ID", "Term description", "Gene Set Size", "Normalized Enrichment Score", "P-Value", 
                                   "Adjusted P-Value", "DEGs Contributing to Enrichment", "No of DEGs Contributing to Enrichment")
     
-    # Write to Excel file  
-    WriteXLS(GSE.results.df, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = T)
+      # switching default gene separator of clusterProfiler into comma
+      GSE.results.df$`DEGs Contributing to Enrichment` = gsub('/', ',', GSE.results.df$`DEGs Contributing to Enrichment`)
+      
+      # Write to Excel file (in comment since this is also done by wrapper)
+      #cat("         Saving result into ", paste0(file_name, ".xlsx"), "...\n")
+      #WriteXLS(GSE.results.df, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = T)
     
-    return(GSE.results.df)
+      return(GSE.results.df)
+      
+    } else {
+      return("No enrichments found")
+      
     }
+  }
   
   if (!ordered_query) {
     
@@ -96,22 +107,30 @@ run_clusterProfiler_GO <- function(input_genes,
                                             minGSSize = min_set_size,
                                             maxGSSize = max_set_size,
                                             readable = TRUE)
-  
+    if (dim(ORA.results)[1] >= 1) {
+    
       if (similarity_filtering) {
         print("Simplifying results...")
         ORA.results <- clusterProfiler::simplify(ORA.results)
       }
 
-    ORA.results.df <- data.frame(ORA.results)
-    # Filter by minimun overlap and extract only interesting columns
-    ORA.results.df <- ORA.results.df[ORA.results.df$Count >= min_overlap, c(1:6,8:9)]
-    colnames(ORA.results.df) <- c("Term ID", "Term description", "Gene Ratio", "Background Ratio", "P-Value", 
+      ORA.results.df <- data.frame(ORA.results)
+      # Filter by minimun overlap and extract only interesting columns
+      ORA.results.df <- ORA.results.df[ORA.results.df$Count >= min_overlap, c(1:6,8:9)]
+      colnames(ORA.results.df) <- c("Term ID", "Term description", "Gene Ratio", "Background Ratio", "P-Value", 
                                   "Adjusted P-Value", "DEGs Annotated to Term", "No of DEGs Annotated to Term")
       
+      # switching default gene separator of clusterProfiler into comma
+      ORA.results.df$`DEGs Annotated to Term` = gsub('/', ',', ORA.results.df$`DEGs Annotated to Term`)
       
-    # Write to Excel file  
-    WriteXLS(ORA.results.df, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = T)
-    return(ORA.results.df)
+      # Write to Excel file  (in comment since this is also done by wrapper)
+      #cat("         Saving result into ", paste0(file_name, ".xlsx"), "...\n")
+      #WriteXLS(ORA.results.df, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = T)
+      return(ORA.results.df)
+      }
+      else {
+        return("No enrichments found")
+      }
   }
 }
 

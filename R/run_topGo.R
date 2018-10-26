@@ -88,6 +88,6 @@ run.topGO <- function(background, foreground, ontologies = c("BP"), organism, ID
   #Binding the DEGs (ensembl ids) associated into the term into result table and switching the gene separator
   topGO.results$Genes <- significant.genes
   topGO.results$Genes <- unlist(lapply(topGO.results$Genes, function(x) paste(x, collapse = ","))) #To make the column compatible for wrapper formatting
- 
+  names(topGO.results)[2] = "Description" # To make the result more analogous with other enrichment approaches
   return(topGO.results)
 } 

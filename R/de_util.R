@@ -84,7 +84,7 @@ diffr_expr_generate_cleaned_de_table_output <-
     cat("   Samples outside the contrast were removed...\n")
     
     if (filtered.lists) {
-      cat("     Filtering the DE list to be saved by fdr <", fdr.thr, "and logfc > ", logfc.thr , "...\n")
+      cat("     Filtering the DE list to be saved by fdr <", fdr.thr, "and logfc >= ", logfc.thr , "...\n")
       fdr.col <- names(annotated.normcnt)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(annotated.normcnt)))]
       fc.col <- names(annotated.normcnt)[grep("^logfc$|fold$", tolower(names(annotated.normcnt)))]
       
@@ -94,7 +94,7 @@ diffr_expr_generate_cleaned_de_table_output <-
       nrow.before.filtering <- nrow(annotated.normcnt)
       
       annotated.normcnt <- annotated.normcnt[(annotated.normcnt[[fdr.col]] < fdr.thr &
-                                 abs(annotated.normcnt[[fc.col]]) > logfc.thr),]
+                                 abs(annotated.normcnt[[fc.col]]) >= logfc.thr),]
       
       nrow.removed <- nrow.before.filtering - nrow(annotated.normcnt)
       cat("       ", nrow.removed, "unsignifcant genes were filtered out...\n")

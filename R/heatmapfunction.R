@@ -27,6 +27,28 @@ reorderFactors <- function(df, column = "my_column_name",
 }
 
 
+make_pheatmap_anno_color = function(clinical.mat) {
+  #create the annotation colour list
+  anno.vars = list()
+  for (j in 1:length(colnames(clinical.mat))) {
+    #find unique annotation terms and exclude NAs
+    unique.anno.terms = unique(clinical.mat[,j])
+    anno.vars[[j]] = unique.anno.terms[!is.na(unique.anno.terms)]
+  }
+  
+  #annotation palette of 11 colours for the categories in the annotation 
+  anno.palette  = c('#FFC125','#8B0A50','#8A2BE2','#FFA07A','#8B4500','#CD5555','#FF8C00','#8B7500','#CD6090','#8B0000','#53868B')
+  
+  anno.color = list()
+  #choose number of colors from the annotation palette to be equal with the annotation.vars.count
+  for (i in 1:length(colnames(clinical.mat))) {
+    anno.color[[names(clinical.mat)[i]]] = anno.palette[1:length(anno.vars[[i]])]
+    names(anno.color[[i]]) = levels(as.factor(clinical.mat[,i]))
+  }
+  return(anno.color)
+}
+
+
 # Function: correlogram_pheatmap
 #
 # Author: Bogdan Iancu - Genevia Technologies Oy
@@ -38,18 +60,24 @@ reorderFactors <- function(df, column = "my_column_name",
 # Output: pheatmap object that represents a correlogram
 #
 #
-correlogram_pheatmap = function(expr.mat, scale.fl = "none", legend.fl = TRUE, 
+correlogram_pheatmap = function(expr.mat, clinical.mat, scale.fl = "none", legend.fl = TRUE, 
                                 row.clust = TRUE, col.clust = TRUE,
                                 signif.stars.fl = FALSE, cell.size = 8, 
-                                font.size = 10, color.blind.pal = "PuOr", main.correl = "Correlogram") {
+                                font.size = 10, color.blind.pal = "PuOr", 
+                                main.correl = "Correlogram", sample.correl = FALSE) {
   #calculate the correlation matrix using Hmisc package
   
   corr_hmap = Hmisc::rcorr(expr.mat)
   cor.mat = as.matrix(corr_hmap$r)
   pv.mat = as.matrix(corr_hmap$P)
-  
+  mat.breaks.correl = NULL
   #correlogram scale and breaks
-  mat.breaks.correl = seq(-1, 1, by = 0.05)
+  if(!sample.correl) {
+    mat.breaks.correl  = seq(-1, 1, by = 0.05)  
+  } else {
+    mat.breaks.correl = seq(0, 1, by = 0.05)
+  }
+
   colour.correl = colorRampPalette(rev(brewer.pal(n = 11, name = color.blind.pal)))(length(mat.breaks.correl) - 1)
   
   #define new clustering distance
@@ -66,7 +94,7 @@ correlogram_pheatmap = function(expr.mat, scale.fl = "none", legend.fl = TRUE,
     sign.stars <- ifelse(pv.mat < .001, "***", ifelse(pv.mat < .01, "** ", ifelse(pv.mat < .05, "* ", " ")))
     sign.stars <- ifelse(is.na(sign.stars),"",sign.stars)
     #build the correlogram using pheatmap
-    p.cor = pheatmap::pheatmap(as.matrix(corr_hmap$r),
+    p.cor = pheatmap::pheatmap(cor.mat,
                                show_colnames = T, show_rownames = T,
                                cluster_rows = T, cluster_cols = T,
                                legend = legend.fl, border_color = "white",
@@ -77,17 +105,49 @@ correlogram_pheatmap = function(expr.mat, scale.fl = "none", legend.fl = TRUE,
                                fontsize_row = cell.size, fontsize_col = cell.size, silent = TRUE, main = main.correl)
     
   }
-  else {print("mat.breaks.correl")
-    print(mat.breaks.correl)
-    p.cor = pheatmap::pheatmap(as.matrix(corr_hmap$r),
-                               show_colnames = T, show_rownames = T,
-                               cluster_rows = T, cluster_cols = T,
-                               legend = legend.fl, border_color = "white",
-                               scale = scale.fl, color = colour.correl,
-                               clustering_distance_rows = dist.clust, clustering_distance_cols = dist.clust,
-                               display_numbers = FALSE,breaks = mat.breaks.correl,
-                               cellwidth = cell.size, cellheight = cell.size, fontsize = font.size,
-                               fontsize_row = cell.size, fontsize_col = cell.size, silent = TRUE, main = main.correl)
+  else {#print("mat.breaks.correl")
+    #print(mat.breaks.correl)
+    
+    
+    anno.color = make_pheatmap_anno_color(clinical.mat = clinical.mat)
+   
+    if(sample.correl) {
+      
+      p.cor = pheatmap::pheatmap(cor.mat,
+                                 show_colnames = T, show_rownames = T,
+                                 cluster_rows = T, cluster_cols = T,
+                                 legend = legend.fl, border_color = "white",
+                                 scale = scale.fl, color = colour.correl,
+                                 clustering_distance_rows = dist.clust, clustering_distance_cols = dist.clust,
+                                 display_numbers = FALSE,
+                                 cellwidth = cell.size, cellheight = cell.size, fontsize = font.size,
+                                 fontsize_row = cell.size, fontsize_col = cell.size, silent = TRUE, main = main.correl, 
+                                 annotation_color = anno.color,
+                                 annotation = clinical.mat, annotation_row = clinical.mat)
+      
+    } else{
+      p.cor = pheatmap::pheatmap(cor.mat,
+                                 show_colnames = T, show_rownames = T,
+                                 cluster_rows = T, cluster_cols = T,
+                                 legend = legend.fl, border_color = "white",
+                                 scale = scale.fl, color = colour.correl,
+                                 clustering_distance_rows = dist.clust, clustering_distance_cols = dist.clust,
+                                 display_numbers = FALSE,breaks = mat.breaks.correl,
+                                 cellwidth = cell.size, cellheight = cell.size, fontsize = font.size,
+                                 fontsize_row = cell.size, fontsize_col = cell.size, silent = TRUE, main = main.correl, 
+                                 annotation_color = anno.color)
+    }
+    
+    
+    # 
+    # p = pheatmap::pheatmap(expr.mat,
+    #                        show_colnames = T, show_rownames = T,
+    #                        cluster_rows = row.clust, cluster_cols = col.clust,
+    #                        legend = legend.fl, border_color = "white",
+    #                        scale = scale.fl, color = colour,annotation_color = anno.color,
+    #                        annotation = clinical.mat, breaks = breaks.hm,
+    #                        cellwidth = cell.size, cellheight = cell.size, fontsize = font.size,
+    #                        fontsize_row = cell.size, fontsize_col = cell.size, silent = TRUE, main = "Heatmap of genes over samples")  
   }
   
   return(p.cor)
@@ -137,8 +197,8 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
                           scale.fl = "none", legend.fl = TRUE, 
                           row.clust = TRUE, col.clust = TRUE,
                           biserial.fl = FALSE, quantile.breaks.fl = FALSE,
-                          signif.stars.fl = FALSE, cell.size = 8, 
-                          font.size = 10, color.blind.pal = "PuOr") {
+                          signif.stars.fl = FALSE, cell.size = 10, 
+                          font.size = 12, color.blind.pal = "PuOr") {
   
   required_packages = c('ggplot2','pheatmap','RColorBrewer','Hmisc','ltm')
   for (p in required_packages) {
@@ -188,24 +248,25 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
     
   }
   else {
+    anno.color = make_pheatmap_anno_color(clinical.mat = clinical.mat)
     
-    #create the annotation colour list
-    anno.vars = list()
-    for (j in 1:length(colnames(clinical.mat))) {
-      #find unique annotation terms and exclude NAs
-      unique.anno.terms = unique(clinical.mat[,j])
-      anno.vars[[j]] = unique.anno.terms[!is.na(unique.anno.terms)]
-    }
-    
-    #annotation palette of 11 colours for the categories in the annotation 
-    anno.palette  = c('#FFC125','#8B0A50','#8A2BE2','#FFA07A','#8B4500','#CD5555','#FF8C00','#8B7500','#CD6090','#8B0000','#53868B')
-    
-    anno.color = list()
-    #choose number of colors from the annotation palette to be equal with the annotation.vars.count
-    for (i in 1:length(colnames(clinical.mat))) {
-      anno.color[[names(clinical.mat)[i]]] = anno.palette[1:length(anno.vars[[i]])]
-      names(anno.color[[i]]) = levels(as.factor(clinical.mat[,i]))
-    }
+    # #create the annotation colour list
+    # anno.vars = list()
+    # for (j in 1:length(colnames(clinical.mat))) {
+    #   #find unique annotation terms and exclude NAs
+    #   unique.anno.terms = unique(clinical.mat[,j])
+    #   anno.vars[[j]] = unique.anno.terms[!is.na(unique.anno.terms)]
+    # }
+    # 
+    # #annotation palette of 11 colours for the categories in the annotation 
+    # anno.palette  = c('#FFC125','#8B0A50','#8A2BE2','#FFA07A','#8B4500','#CD5555','#FF8C00','#8B7500','#CD6090','#8B0000','#53868B')
+    # 
+    # anno.color = list()
+    # #choose number of colors from the annotation palette to be equal with the annotation.vars.count
+    # for (i in 1:length(colnames(clinical.mat))) {
+    #   anno.color[[names(clinical.mat)[i]]] = anno.palette[1:length(anno.vars[[i]])]
+    #   names(anno.color[[i]]) = levels(as.factor(clinical.mat[,i]))
+    # }
     #if biserial flag is TRUE it calculates the biserial correlation based on the first column of the annotation file
     if (!biserial.fl) {
       
@@ -217,7 +278,7 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
                              annotation = clinical.mat, breaks = breaks.hm,
                              cellwidth = cell.size, cellheight = cell.size, fontsize = font.size,
                              fontsize_row = cell.size, fontsize_col = cell.size, silent = TRUE, main = "Heatmap of genes over samples")
-      
+
     }
     else {
       
@@ -270,8 +331,13 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
   #create the heatmap list and populate it
   heatmap.list = list()
   heatmap.list[["regular"]] = p
-  heatmap.list[["correlogram"]] = correlogram_pheatmap(t_data_heat_map, scale.fl = scale.fl, signif.stars.fl = signif.stars.fl, main.correl = "Gene Correlogram")
-  heatmap.list[["correlogram.sample"]] = correlogram_pheatmap(as.matrix(expr.mat), scale.fl = scale.fl, signif.stars.fl = signif.stars.fl, cell.size =10, font.size = 12, main.correl = "Sample Correlogram")
+  heatmap.list[["correlogram"]] = correlogram_pheatmap(t_data_heat_map, clinical.mat, scale.fl = scale.fl, signif.stars.fl = signif.stars.fl, main.correl = "Gene Correlogram")
+  heatmap.list[["correlogram.small"]] = correlogram_pheatmap(t_data_heat_map, clinical.mat, scale.fl = scale.fl, signif.stars.fl = signif.stars.fl, 
+                                                             main.correl = "Gene Correlogram",  cell.size =  cell.size + 5, font.size = font.size +5)
+
+  heatmap.list[["correlogram.sample"]] = correlogram_pheatmap(as.matrix(expr.mat), clinical.mat, scale.fl = scale.fl, signif.stars.fl = signif.stars.fl,
+                                                              main.correl = "Sample Correlogram", sample.correl = TRUE)
+  
   
   if (biserial.fl) {
     heatmap.list[["biserial.cor"]] = p.biserial

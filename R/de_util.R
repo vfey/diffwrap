@@ -140,6 +140,10 @@ diff_expr_extract_contrasts <-
 	out.l$volcanoPlots <- list()
 	for (contr in cn) {
 		cat("Calculating differential expression for", contr, "\n")
+	  dir.create(file.path(out.dir, contr))
+		contr.out.dir  <- dir(out.dir, pattern = paste0("^",contr), full.names = TRUE)
+	  cat("Storing all results under", contr.out.dir, "\n")
+	  
 		if (do.voom) {
 			cat("Generating output table of differentially expressed features...\n")
 			tt <- topTable(fit2, coef=contr, number=nrow(fit2), sort.by="P")
@@ -201,9 +205,9 @@ diff_expr_extract_contrasts <-
 			pv.col <- names(d3)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
 			cat("The result table is ordered in increasing order by column ", pv.col, "...\n")
 			d3 = d3[order(d3[[pv.col]]),]
-			write.table(d3, file.path(out.dir, DE.out), sep="\t", quote=FALSE, row.names=FALSE)
+			write.table(d3, file.path(contr.out.dir, DE.out), sep="\t", quote=FALSE, row.names=FALSE)
 		
-			diffr_expr_generate_cleaned_de_table_output(contrast=contr, annotated.normcnt=d3, samp.name.and.group.key = fit$samples, out.dir,
+			diffr_expr_generate_cleaned_de_table_output(contrast=contr, annotated.normcnt=d3, samp.name.and.group.key = fit$samples, out.dir=contr.out.dir,
 			                                            analysis.name, filtered.lists = TRUE, fdr.thr=fdr.thr, logfc.thr=logfc.thr)
 			}
 		
@@ -211,10 +215,10 @@ diff_expr_extract_contrasts <-
 		# genes selected as differentially expressed (with a 5% false discovery rate)
 		if (plots) {
 			cat("Plotting...\n")
-			pdf(file.path(out.dir, paste(analysis.name, contr, "_plots.pdf", sep="_")), width=11, height=8.5)
+			pdf(file.path(contr.out.dir, paste(analysis.name, contr, "_plots.pdf", sep="_")), width=11, height=8.5)
 			par(mar = c(6,6,5,3))
 			cat(" MA-plot...\n")
-			out.l$MAplots[[contr]] <- diff_expr_ma_plot(d3, contr, id.col, sym.col, p.thr, fdr.thr, logfc.thr, numlab, out.dir, analysis.name, point.lab, biom.attributes, font.size, lists)
+			out.l$MAplots[[contr]] <- diff_expr_ma_plot(d3, contr, id.col, sym.col, p.thr, fdr.thr, logfc.thr, numlab, out.dir=contr.out.dir, analysis.name, point.lab, biom.attributes, font.size, lists)
 			
 			## Volcano plot
 			cat(" Volcano plot...\n")

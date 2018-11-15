@@ -233,7 +233,7 @@ format_ensembl_ids_annotated_to_term <- function(result, organism.term, which.sp
 #' with experiment-specific background obtained from pre-filtered expression matrix or with the default background of the functions (genome)
 #' @param use.pval.in.DE.filtering.if.no.sign.fdrs \code{logical} Sometimes no DE genes with significant adjusted p-value is found. 
 #' In such cases, should uncorrected p-values be used in order to get at least some results
-#' @param out.dir \code{character}. Root directory for the resulting subdirectories 
+#' @param out.dir \code{character}. Root directory for the resulting subdirectories. Must contain subfolders for contrasts.  
 #' @param species \code{character}. Currently valid options are "human" or "mouse".
 #' @param p.thr \code{numeric}. Threshold for un-adjusted p-values (applied in both filtering of DE-genes and in enrichment results,
 #'  when relevant (i.e. no significant fdr-entries are found)). Default 0.05 
@@ -302,8 +302,6 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
   enrichment_out.l$gProfileR <- list()
   enrichment_out.l$topGO <- list()
   
-  #Creating subfolders
-  lapply(enrichment.methods, function(method) dir.create(file.path(out.dir, method), showWarnings = F))
   
   contrast.names <- names(diffr.wrapper.output$contrasts)
   cat("Performing enrichment analyses for ", length(contrast.names), " comparisons: \n")
@@ -325,6 +323,11 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
   }
  
   for (contrast in contrast.names) {
+    
+    contr.out.dir  <- dir(out.dir, pattern = paste0("^",contrast), full.names = TRUE)
+    #Creating subfolders
+    lapply(enrichment.methods, function(method) dir.create(file.path(contr.out.dir, method), showWarnings = F))
+    
 
     cat("***", contrast, "*** \n")
     de_table <- diffr.wrapper.output$contrasts[[contrast]]
@@ -394,7 +397,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                                         similarity_filtering = clusterProfilerGO.params$do.similarity.filtering)
 
        #Saving the table, if relevant
-       method.dir <- dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
+       method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE)
        if (is.data.frame(result) ) {
          
          filename <- paste0(analysis.name, ".", contrast,".", method, ".", 
@@ -418,7 +421,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
       if (method == "clusterProfilerKEGG") {
       
         ## Replacing missing parameters
-        method.dir <- dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
+        method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE)
       
         default.params <- list(analysis.approach = "ORA", min.gene.set.size = 10, max.gene.set.size = 1000, 
                               ontology = "BP", min.overlap = 2, p.adjust.method = "BH")
@@ -485,7 +488,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                                               pAdjustMethod = clusterProfilerKEGG.params$p.adjust.method)
       
         #Saving the table, if relevant
-        method.dir <- dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
+        method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE)
         if (is.data.frame(result) & dim(result)[1] > 0) {
           
          
@@ -549,7 +552,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
         }
        
         # Formattig and saving the table, if relevant
-        method.dir <- dir(out.dir, pattern = paste0("^",method), full.names = TRUE) # detecting output directory
+        method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE) # detecting output directory
         if (is.data.frame(result)) {
           
           organism.term <- as.character(enrich.resource.terms[species, "medseqr"])
@@ -584,7 +587,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                                 ) 
         
         # Formattig and saving the table, if relevant
-        method.dir <- dir(out.dir, pattern = paste0("^",method), full.names = TRUE) # detecting output directory
+        method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE) # detecting output directory
         if (is.data.frame(result) & dim(result)[1] > 0) {
           
           organism.term <- as.character(enrich.resource.terms[species, "medseqr"])
@@ -611,7 +614,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
       
       if (method == "topGO") {
         
-        method.dir <- dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
+        method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE)
         
         cat("Performing topGO.... \n")
         print(paste0("Ontologies used: ",topGO.params$ontologies.used))

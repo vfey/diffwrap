@@ -171,7 +171,8 @@ diff_expr_extract_contrasts <-
 			cat("Heatmap plots...\n")
 			out.l$heatmapPlots[[contr]] <- pheatmap_plots(d3, id, sym.col="gene_symbol", samp.info = samp.info, samples, groups, sample.plot.names = sample.plot.names, main=NULL, p.thr=0.05, fdr.thr=0.05, logfc.thr=1)
 			
-		
+			dev.off()
+			cat("done\n")
 		}
 	}
 	print("==========================================================================================")
@@ -196,8 +197,7 @@ diff_expr_extract_contrasts <-
 	
 	
 	print(diffr_venn(list.comp.tables = sign.de.tables,join_vec = join_vec))
-	dev.off()
-	cat("done\n")
+
 	print("CONTRASTS LIST")
 	print("==========================================================================================")
 	return(out.l)

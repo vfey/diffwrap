@@ -3,26 +3,19 @@ library(purrr)
 library(dplyr)
 library(venn)
 library(VennDiagram)
- # compar.table1 <- as.data.frame(fread("./diffr_test_results_new_20181109_184403/test_run_CRPC-Advanced.PC_differential_expression.tsv", stringsAsFactors = TRUE))
- # compar.table2 <- as.data.frame(fread("./diffr_test_results_new_20181109_184403/test_run_Advanced.PC-Localized.PC_differential_expression.tsv", stringsAsFactors = TRUE))
- # compar.table3 <- as.data.frame(fread("./diffr_test_results_new_20181109_184403/test_run_Localized.PC-BPH_differential_expression.tsv", stringsAsFactors = TRUE))  
 
-compar.table1 <- as.data.frame(fread("./data/finvector_test_data/DEGresults_M1_vs_M0_SIGN.csv", stringsAsFactors = TRUE))
-compar.table2 <- as.data.frame(fread("./data/finvector_test_data/DEGresults_Mreg_Kiel_vs_M0_SIGN.csv", stringsAsFactors = TRUE))
-compar.table3 <- as.data.frame(fread("./data/finvector_test_data/DEGresults_Mreg_Kiel_vs_M1_SIGN.csv", stringsAsFactors = TRUE))
-compar.table4 <- as.data.frame(fread("./data/finvector_test_data/DEGresults_Mreg_Kiel_vs_Mreg_ML_SIGN.csv", stringsAsFactors = TRUE))
+# Function: diffr_venn
+#
+# Author: Bogdan Iancu - Genevia Technologies Oy
+#
+# Arguments:
+#         list.comp.tables  = list of DE tables, preferably a list of data.frames
+#         join_vec = vector that the join is made by in the Venn diagram intersections tables 
+#         
 
-compar.table1 <- compar.table1 %>%  dplyr::select("Ensembl ID","HGNC symbol","Gene description","Gene biotype","Average expression","Log2 foldchange","P-value","Adjusted p-value")
-compar.table2 <- compar.table2 %>%  dplyr::select("Ensembl ID","HGNC symbol","Gene description","Gene biotype","Average expression","Log2 foldchange","P-value","Adjusted p-value")
-compar.table3 <- compar.table3 %>%  dplyr::select("Ensembl ID","HGNC symbol","Gene description","Gene biotype","Average expression","Log2 foldchange","P-value","Adjusted p-value")
-compar.table4 <- compar.table4 %>%  dplyr::select("Ensembl ID","HGNC symbol","Gene description","Gene biotype","Average expression","Log2 foldchange","P-value","Adjusted p-value")
-
-list.comp.tables2 <- list("A" = compar.table1, "B" = compar.table2)
-list.comp.tables3 <- list("A" = compar.table1, "B" = compar.table2, "C" = compar.table3)
-list.comp.tables4 <- list("A" = compar.table1, "B" = compar.table2, "C" = compar.table3, "D" =compar.table4)
-
-join_vec <- c("Ensembl ID","HGNC symbol","Gene description","Gene biotype")
-list.comp.tables4 <- list("A" = compar.table1, "B" = compar.table2, "C" = compar.table3, "D" =compar.table4)
+# Output: returns the Venn diagram of DE tables and the Venn intersections tables 
+#
+#
 
 diffr_venn <- function(list.comp.tables, join_vec) {
   
@@ -42,7 +35,7 @@ diffr_venn <- function(list.comp.tables, join_vec) {
   fill.color = c("darkblue", "deepskyblue", "darkturquoise", "darkorchid4")
   venn.diag <- venn.diagram(DEGs.list, 
                             col = "transparent", fill = fill.color[1:length(DEGs.list)],  height = 8000, width = 8000, print.mode = c("raw", "percent"),
-                            cat.cex = 1.5, cex = 2.5, imagetype = "png", filename = NULL)
+                            cat.cex = 1.2, cex = 2.2, imagetype = "png", filename = NULL)
   venn.sets.lists = venn(DEGs.list)
   venn.sets.intersections = attr(venn.sets.lists, "intersections")
   
@@ -83,10 +76,10 @@ diffr_venn <- function(list.comp.tables, join_vec) {
       hgnc.col <- names(res.join)[grep("symbol|hgnc", tolower(names(res.join)))]
       res.join <- res.join[res.join[[hgnc.col]] != "",]
       list.venn.tables[[rownames(venn.tt)[j]]] <- res.join
-      print(paste0("clams, clams everywhere - ",rownames(venn.tt)[j],"--",nrow(res.join[unique(res.join[[hgnc.col]]),])))
+      print(paste0("Venn sections summary - ",rownames(venn.tt)[j],"--",nrow(res.join[unique(res.join[[hgnc.col]]),])))
     }
     
   }
-  
-  return(venn.diag)
+  res.venn <- list("venn.diagram" = venn.diag,"venn.sections" = list.venn.tables)
+  return(res.venn)
 }

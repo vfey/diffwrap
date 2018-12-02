@@ -170,9 +170,8 @@ diff_expr_extract_contrasts <-
 			
 			cat("Heatmap plots...\n")
 			out.l$heatmapPlots[[contr]] <- pheatmap_plots(d3, id, sym.col="gene_symbol", samp.info = samp.info, samples, groups, sample.plot.names = sample.plot.names, main=NULL, p.thr=0.05, fdr.thr=0.05, logfc.thr=1)
-			
+			print(class(out.l$heatmapPlots[[contr]]))
 			dev.off()
-			cat("done\n")
 		}
 	}
 	print("==========================================================================================")
@@ -196,8 +195,18 @@ diff_expr_extract_contrasts <-
 	}
 	
 	
-	print(diffr_venn(list.comp.tables = sign.de.tables,join_vec = join_vec))
-
+	v <- diffr_venn(list.comp.tables = sign.de.tables,join_vec = join_vec)
+	print(class(v))
+	#browser()
+	pdf(file.path(out.dir,"Venn_Diagram.pdf"), width = 15, height= 15)
+	grid.draw(v[["venn.diagram"]])
+	dev.off()
+	browser()
+	for(j in 1:length(v[["venn.sections"]])){
+	  print(names(v[["venn.sections"]])[j])
+	  write.xlsx2(v[["venn.sections"]][[j]], file = file.path(out.dir, paste0(names(v[["venn.sections"]])[j],".xlsx")))
+	}
+	cat("done\n")
 	print("CONTRASTS LIST")
 	print("==========================================================================================")
 	return(out.l)

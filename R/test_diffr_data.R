@@ -1,4 +1,4 @@
-test_data_location = "/data/diffr_test_data"
+test_data_location ="/Users/bogdaniancu/Gitlab/diffr/data/diffr_test_data"
 
 # NOTE: Set this to your diffr git directory and checkout branch bogdan
 setwd("~/Gitlab/diffr/")
@@ -27,7 +27,7 @@ source("./R/qc_plots.R")
 source("./R/qc_util.R")
 source("./R/heatmapfunction.R")
 source("./R/heatmap_plots.R")
-
+source("./R/venn_functions.R")
 # Load enrichment analysis scripts
 # source("./R/run_clusterProfiler_GO.R")
 # source("./R/run_clusterProfiler_KEGG.R")
@@ -37,7 +37,7 @@ source("./R/heatmap_plots.R")
 # source("./R/run_topGo.R")
 
 # Set output directory
-out.dir="/data/diffr_test_results"
+out.dir="diffr_test_results"
 dir.create(out.dir, showWarnings = F)
 
 # Read in and preprocess files
@@ -57,7 +57,7 @@ out <- diffExpr(expr.file = samp.info$countFile,
                 design=design1,
                 contrasts=c("Localized.PC-BPH", "Advanced.PC-Localized.PC", "CRPC-Advanced.PC"),
                 samp.info = samp.info, 
-                do.voom = TRUE,
+                do.voom = TRUE, 
                 strict=FALSE,
                 samples = "SampleName", 
                 sample.plot.names = "Sample.name", 

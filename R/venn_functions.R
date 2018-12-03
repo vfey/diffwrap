@@ -19,6 +19,11 @@ library(VennDiagram)
 
 diffr_venn <- function(list.comp.tables, join_vec) {
   
+  required_packages = c('data.table','purrr','dplyr','venn','VennDiagram')
+  for (p in required_packages) {
+    if(!require(p,character.only = TRUE)) install.packages(p)
+    library(p,character.only = TRUE)
+  }
   #extract DEGs list from the contrast tables list 
   DEGs.list <- lapply(list.comp.tables, function(x) {
     #extract hgnc colname
@@ -33,6 +38,7 @@ diffr_venn <- function(list.comp.tables, join_vec) {
   })
   
   fill.color = c("darkblue", "deepskyblue", "darkturquoise", "darkorchid4")
+  futile.logger::flog.threshold(futile.logger::ERROR, name = "VennDiagramLogger")
   venn.diag <- venn.diagram(DEGs.list, 
                             col = "transparent", fill = fill.color[1:length(DEGs.list)],  height = 8000, width = 8000, print.mode = c("raw", "percent"),
                             cat.cex = 1.2, cex = 2.2, imagetype = "png", filename = NULL)

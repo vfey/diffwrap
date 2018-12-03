@@ -197,14 +197,15 @@ diff_expr_extract_contrasts <-
 	
 	v <- diffr_venn(list.comp.tables = sign.de.tables,join_vec = join_vec)
 	print(class(v))
-	#browser()
+
 	pdf(file.path(out.dir,"Venn_Diagram.pdf"), width = 15, height= 15)
 	grid.draw(v[["venn.diagram"]])
 	dev.off()
-	browser()
+  #sbrowser()
+  ifelse(!dir.exists(file.path(out.dir, "Venn sections")), dir.create(file.path(out.dir, "Venn sections")), FALSE)
 	for(j in 1:length(v[["venn.sections"]])){
 	  print(names(v[["venn.sections"]])[j])
-	  write.xlsx2(v[["venn.sections"]][[j]], file = file.path(out.dir, paste0(names(v[["venn.sections"]])[j],".xlsx")))
+	  write.xlsx2(v[["venn.sections"]][[j]], file = file.path(out.dir, "Venn sections", paste0(names(v[["venn.sections"]])[j],".xlsx")))
 	}
 	cat("done\n")
 	print("CONTRASTS LIST")

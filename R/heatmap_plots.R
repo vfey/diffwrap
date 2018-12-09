@@ -26,7 +26,7 @@ pheatmap_plots <-
     fdr.col = names(d3)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
     
     g.l = list()
-    cat("Heatmap plots...\n")
+    #cat("Heatmap plots...\n")
     
     #make two data frames for significant p-values and significant adj.p.values
     dat.sign.pv = d3[d3[[pv.col]] < 0.05,]
@@ -89,7 +89,7 @@ pheatmap_plots <-
         gl.pv = list()
         gl.pv$regular = pv_hm_list$row$regular
         gl.pv$gene.correlogram = pv_hm_list$none$correlogram
-        gl.pv$gene.correlogram.small = pv_hm_list$nonesmall$correlogram
+        gl.pv$gene.correlogram.small = pv_hm_list$nonesmall$correlogram.small
         gl.pv$samp.correlogram = pv_hm_list$none$correlogram.sample
         grid.newpage()
         print(gl.pv$regular )
@@ -108,7 +108,7 @@ pheatmap_plots <-
       gl.fdr = list()
       gl.fdr$regular = fdr_hm_list$row$regular
       gl.fdr$gene.correlogram = fdr_hm_list$none$correlogram
-      gl.fdr$gene.correlogram.small = fdr_hm_list$nonesmall$correlogram
+      gl.fdr$gene.correlogram.small = fdr_hm_list$nonesmall$correlogram.small
       gl.fdr$samp.correlogram = fdr_hm_list$none$correlogram.sample
       grid.newpage()
       print(gl.fdr$regular )

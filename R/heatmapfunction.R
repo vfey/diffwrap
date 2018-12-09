@@ -63,7 +63,7 @@ make_pheatmap_anno_color = function(clinical.mat) {
 correlogram_pheatmap = function(expr.mat, clinical.mat, scale.fl = "none", legend.fl = TRUE, 
                                 row.clust = TRUE, col.clust = TRUE,
                                 signif.stars.fl = FALSE, cell.size = 8, 
-                                font.size = 10, color.blind.pal = "PuOr", 
+                                font.size = 11, color.blind.pal = "PuOr", 
                                 main.correl = "Correlogram", sample.correl = FALSE) {
   #calculate the correlation matrix using Hmisc package
   
@@ -105,14 +105,13 @@ correlogram_pheatmap = function(expr.mat, clinical.mat, scale.fl = "none", legen
                                fontsize_row = cell.size, fontsize_col = cell.size, silent = TRUE, main = main.correl)
     
   }
-  else {#print("mat.breaks.correl")
+  else {
+    #print("mat.breaks.correl")
     #print(mat.breaks.correl)
-    
-    
     anno.color = make_pheatmap_anno_color(clinical.mat = clinical.mat)
    
     if(sample.correl) {
-      
+     
       p.cor = pheatmap::pheatmap(cor.mat,
                                  show_colnames = T, show_rownames = T,
                                  cluster_rows = T, cluster_cols = T,
@@ -197,8 +196,8 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
                           scale.fl = "none", legend.fl = TRUE, 
                           row.clust = TRUE, col.clust = TRUE,
                           biserial.fl = FALSE, quantile.breaks.fl = FALSE,
-                          signif.stars.fl = FALSE, cell.size = 10, 
-                          font.size = 12, color.blind.pal = "PuOr") {
+                          signif.stars.fl = FALSE, cell.size =8, 
+                          font.size = 10, color.blind.pal = "PuOr") {
   
   required_packages = c('ggplot2','pheatmap','RColorBrewer','Hmisc','ltm')
   for (p in required_packages) {
@@ -332,11 +331,13 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
   heatmap.list = list()
   heatmap.list[["regular"]] = p
   heatmap.list[["correlogram"]] = correlogram_pheatmap(t_data_heat_map, clinical.mat, scale.fl = scale.fl, signif.stars.fl = signif.stars.fl, main.correl = "Gene Correlogram")
+  cell.new = cell.size + 2
+  font.new = font.size + 2
   heatmap.list[["correlogram.small"]] = correlogram_pheatmap(t_data_heat_map, clinical.mat, scale.fl = scale.fl, signif.stars.fl = signif.stars.fl, 
-                                                             main.correl = "Gene Correlogram",  cell.size =  cell.size + 5, font.size = font.size +5)
+                                                             main.correl = "Gene Correlogram",  cell.size =  cell.new, font.size = font.new)
 
   heatmap.list[["correlogram.sample"]] = correlogram_pheatmap(as.matrix(expr.mat), clinical.mat, scale.fl = scale.fl, signif.stars.fl = signif.stars.fl,
-                                                              main.correl = "Sample Correlogram", sample.correl = TRUE)
+                                                              main.correl = "Sample Correlogram", sample.correl = TRUE, cell.size =  cell.new, font.size = font.new)
   
   
   if (biserial.fl) {

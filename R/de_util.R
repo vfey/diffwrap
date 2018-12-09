@@ -170,12 +170,12 @@ diff_expr_extract_contrasts <-
 			
 			cat("Heatmap plots...\n")
 			out.l$heatmapPlots[[contr]] <- pheatmap_plots(d3, id, sym.col="gene_symbol", samp.info = samp.info, samples, groups, sample.plot.names = sample.plot.names, main=NULL, p.thr=0.05, fdr.thr=0.05, logfc.thr=1)
-			print(class(out.l$heatmapPlots[[contr]]))
+			#print(class(out.l$heatmapPlots[[contr]]))
 			dev.off()
 		}
 	}
-	print("==========================================================================================")
-	print("CONTRASTS LIST")
+	print("=============================================================================")
+	print("Venn sections list")
 	join_vec = c("ensembl_gene_id","gene_symbol","description","entrezgene")
 	cols.interest.de.table = c("ensembl","symbol|hgnc","description","entrez","^average$|^ave[a-r]{0,4}expr[e-s]{0,6}$","^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$","^p\\.{0,1}val[e-u]{0,2}$")
 	pv.col = names(out.l$contrasts[[1]])[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(out.l$contrasts[[1]])))]
@@ -194,22 +194,21 @@ diff_expr_extract_contrasts <-
 	  sign.de.tables = lapply(sign.de.tables, function(x) x[x[[pv.col]] < 0.05,])
 	}
 	
-	
+	# v = list with the venn.diagram plot and all venn sections tables 
 	v <- diffr_venn(list.comp.tables = sign.de.tables,join_vec = join_vec)
-	print(class(v))
+	#print(class(v))
 
 	pdf(file.path(out.dir,"Venn_Diagram.pdf"), width = 15, height= 15)
 	grid.draw(v[["venn.diagram"]])
 	dev.off()
-  #sbrowser()
+  #browser()
   ifelse(!dir.exists(file.path(out.dir, "Venn sections")), dir.create(file.path(out.dir, "Venn sections")), FALSE)
 	for(j in 1:length(v[["venn.sections"]])){
 	  print(names(v[["venn.sections"]])[j])
 	  write.xlsx2(v[["venn.sections"]][[j]], file = file.path(out.dir, "Venn sections", paste0(names(v[["venn.sections"]])[j],".xlsx")))
 	}
+	print("Venn sections list end")
 	cat("done\n")
-	print("CONTRASTS LIST")
-	print("==========================================================================================")
 	return(out.l)
 }
 

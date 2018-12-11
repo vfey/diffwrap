@@ -40,8 +40,13 @@ prepare_scale_for_legend = function(scale.minimum, scale.maximum, int.values.for
 
 #Function for making network visualisation based on enrichment result, DE gene table and thresholding. 
 #Can take the input tables either as dataframes or excel-files
-plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, show.terms = 5, logfc.thr = NULL, fdr.thr = NULL, 
-                                   pdf.width = 20, pdf.heigth = 15, vertex.cex.label = 1.3, legend.cex.main = 2.0, legend.cex.text = 1.5) {
+plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, show.terms = 5, 
+                                   logfc.thr = NULL, 
+                                   fdr.thr = NULL, 
+                                   pdf.width = 11, 
+                                   pdf.heigth = 8, 
+                                   legend.cex.main = 0.8, 
+                                   legend.cex.text = 0.7) {
   
   if (typeof(enrichment.result) == "character") {
     # Read in enrichment result table
@@ -72,10 +77,13 @@ plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, 
   DE.table <- DE.table[!DE.table[[geneSymbolColumn]] == "",]
   DE.table <- DE.table[!is.na(DE.table[[geneSymbolColumn]]),]
   
+  #Filter also by unique gene symbols (SHOULD THIS BE DONE OR NOT?)
+  DE.table = DE.table[!duplicated(DE.table[[geneSymbolColumn]]),]
+  
   
   # Filter DE.table by log2FC
   if (!is.null(logfc.thr)) {
-    DE.table <- DE.table[abs(DE.table[[logFoldChangeColumn]]) > logfc.thr, ]
+    DE.table <- DE.table[abs(DE.table[[logFoldChangeColumn]]) >= logfc.thr, ]
     
   }
   
@@ -83,6 +91,41 @@ plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, 
   if (!is.null(fdr.thr)) {
     DE.table <- DE.table[DE.table[[adjPvalColumn]] < fdr.thr, ]
   }
+  
+  # Outlier detection:
+  all.foldchanges = DE.table[[logFoldChangeColumn]]
+  
+  # ***NOTE*** because genes are already potentially filtered based on logfc, the fc-histogram might have a "gap" in the middle and is not actually a histogram!!
+  #print(hist(all.foldchanges, 50)) 
+  # ---> PROBLEM: How to define outliers??? (pure boxplot outlier method i.e. 'boxplot(foldchanges, range = 1.5, plot=FALSE)$out' 
+  # "thinks" we have two separate distributions and calculates outliers for both of them
+  # - thus, it removes also values that are members of "the other" distribution)
+  
+  #Current solution: separating negatives and positives and taking the relevant IQR outliers separately
+  negatives = all.foldchanges[all.foldchanges < 0]
+  positives = all.foldchanges[all.foldchanges > 0]
+  lower_limit = quantile(negatives,1/4) - 3*IQR(negatives)  #originally quantile(negatives,1/4) - 1.5*IQR(negatives), but this filters quite a lot
+  upper_limit = quantile(positives,3/4) + 3*IQR(positives)
+  
+  outliers = all.foldchanges[all.foldchanges > upper_limit | all.foldchanges < lower_limit]
+  cat("         ", length(outliers), "  outliers (r-boxplot method) found... \n")
+  
+  if (length(outliers) > 0) {
+    to_be_saturated = all.foldchanges %in% outliers
+    
+    negSaturated = to_be_saturated & all.foldchanges < 0
+    print(sum(negSaturated))
+    all.foldchanges[negSaturated] <- lower_limit
+    
+    posSaturated = to_be_saturated & all.foldchanges > 0
+    print(sum(posSaturated))
+    all.foldchanges[posSaturated] <- upper_limit
+    
+    #replacing the fold change column with saturated values
+    DE.table[[logFoldChangeColumn]] <- all.foldchanges
+  } 
+  
+  
   
   # Parse the pathway table to create edges
   edges <- c()
@@ -99,7 +142,9 @@ plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, 
     genes <- append(genes, x)
   }
   # Generate graph object
-  g <- graph(edges, directed = F)
+  g <- make_undirected_graph(edges=as.vector(edges))
+  genes = unique(genes)
+  
   #print(g)
   
   # Acquire vertices names
@@ -108,18 +153,15 @@ plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, 
   
   # Assign categories to vertices
   categories <- c()
-  shapes <- c()
   for (i in 1:length(vertices)) {
     if (vertices[i] %in% enrichment.table[[termColumn]]) {
       categories <- append(categories, "pathway")
-      shapes <- append(shapes, "circle")
     } else {
       categories <- append(categories, "gene")
-      shapes <- append(shapes, "circle")
     }
   }
   V(g)$categories <- categories
-  V(g)$shapes <- shapes
+  
   
   # Based on foldchange, create color palette for the genes
   # Set a separate color for pathways
@@ -129,28 +171,6 @@ plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, 
   #foldchanges <- DE.table[[logFoldChangeColumn]] #origiginal plot
   gene_indices = which(DE.table[[geneSymbolColumn]] %in% genes) #upgrade: taking fold changes only for genes associated with the terms to be plotted 
   foldchanges <- DE.table[gene_indices,logFoldChangeColumn]
-  
-  
-  # ***NOTE*** because genes are filtered based on logfc, the fc-histogram has "gap" in the middle and is not actually a histogram!!
-  #print(hist(foldchanges, 50)) 
-  # ---> PROBLEM: How to define outliers??? (pure boxplot outlier method i.e. 'boxplot(foldchanges, range = 1.5, plot=FALSE)$out' 
-  # "thinks" we have two separate distributions and calculates outliers for both of them
-  # - thus, it removes also values that are members of "the other" distribution)
-  
-  #Current solution: separating negatives and positives and taking the relevant IQR outliers separately
-  negatives = foldchanges[foldchanges < 0]
-  positives = foldchanges[foldchanges > 0]
-  lower_limit = quantile(negatives,1/4) - 3*IQR(negatives)  #originally quantile(negatives,1/4) - 1.5*IQR(negatives), but this filters quite a lot
-  upper_limit = quantile(positives,3/4) + 3*IQR(positives)
-  
-  outliers = foldchanges[foldchanges > upper_limit | foldchanges < lower_limit]
-  cat("         ", length(outliers), "  outliers (r-boxplot method) found... \n")
-  if (length(outliers) > 0) {
-    to_be_removed = which(foldchanges %in% outliers)
-    
-    gene_indices = gene_indices[-to_be_removed]
-    foldchanges = foldchanges[-to_be_removed]
-  }
   
   
   # Making symmetric range for fold changes
@@ -163,32 +183,56 @@ plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, 
   centered_pal <- palette(length(foldchanges) + 1)[as.numeric(cut(foldchanges,breaks = length(foldchanges)))]
   
   DE.table = DE.table[gene_indices,]
+  DE.table = DE.table[order(DE.table[[logFoldChangeColumn]], decreasing = TRUE),]
   DE.table$color <- centered_pal[-length(centered_pal)]
   
-  # Assign colors to their respective vertices
+  # Assign graphical properties to their respective vertices
+  shapes <- c()
   colors <- c()
+  sizes <- c()
+  vert.label.sizes <- c()
+  vertex.label.dists <- c()
   for (i in 1:length(V(g)$name)) {
     if (V(g)$categories[i] == "pathway") {
+      print(vertices[i])
+      shapes <- append(shapes, "circle")
       colors <- append(colors, "white")
+      sizes <- append(sizes, 7)
+      vert.label.sizes <- append(vert.label.sizes, 0.55)
+      vertex.label.dists = append(vertex.label.dists, 0)
+      V(g)$name[i] = gsub('(.{1,15})(\\s|$)', '\\1\n', V(g)$name[i])
+      #print(gsub('(.{1,15})(\\s|$)', '\\1\n', V(g)$name[i]))
+      print(V(g)$name[i])
     } else {
+      shapes <- append(shapes, "circle")
       colors <- append(colors, DE.table[DE.table[[geneSymbolColumn]] == V(g)$name[i],"color"])
+      sizes <- append(sizes, 7)
+      vert.label.sizes <- append(vert.label.sizes, 0.6)
+      vertex.label.dists = append(vertex.label.dists, -0.2)
+      
     }
   }
+  print(length(colors))
+  V(g)$shapes <- shapes
   V(g)$colors <- colors
+  V(g)$sizes <- sizes
+  V(g)$vert.label.sizes <- vert.label.sizes
+  V(g)$vertex.label.dists <- vertex.label.dists
+  
   
   # Produce the plot
   #tiff(paste0(plot.filename, ".tiff"), width = 10, height = 10, units = 'cm', res = 300)
   pdf(paste0(plot.filename, ".pdf"), width = pdf.width, height = pdf.heigth)
-  layout(matrix(1:2, ncol = 2), widths = c(4,1),heights = c(1,1))  
-  plot(g, vertex.label.color = "black", vertex.size = 10, vertex.frame.color = "white",
-       vertex.color = V(g)$colors, vertex.label.cex = vertex.cex.label, vertex.shape = V(g)$shapes,
-       layout = layout_nicely, vertex.label.font = 2, vertex.label.family = "sans")
-  
+  layout(matrix(1:2, ncol = 2), widths = c(0.85*pdf.width,0.15*pdf.width),heights = c(1,0.25))   
+  plot(g, vertex.label.color = "black", vertex.size = V(g)$sizes, vertex.frame.color = "white",
+       vertex.color = V(g)$colors, vertex.label.cex = V(g)$vert.label.sizes, vertex.shape = V(g)$shapes, 
+       vertex.label.dist = V(g)$vertex.label.dists,
+       layout = layout.graphopt(g, spring.length = 1.3, spring.constant = 1.3), vertex.label.family = "sans", vertex.label.font = 2)
   # Add the legend
   legend_image <- as.raster(matrix(rev(palette(100)), ncol = 1))
   
   # Add legend title
-  plot(c(0,0.5), c(0,1), type = 'n', axes = F, xlab = '', ylab = '', main = "Log. foldchange", cex.main = legend.cex.main)
+  plot(c(0,0.5), c(0,1), type = 'n', axes = F, xlab = '', ylab = '', main = "Log2 foldchange", cex.main = legend.cex.main)
   
   # Add legend labels
   legend.element = prepare_scale_for_legend(min(foldchanges), max(foldchanges))
@@ -233,7 +277,7 @@ format_ensembl_ids_annotated_to_term <- function(result, organism.term, which.sp
 #' with experiment-specific background obtained from pre-filtered expression matrix or with the default background of the functions (genome)
 #' @param use.pval.in.DE.filtering.if.no.sign.fdrs \code{logical} Sometimes no DE genes with significant adjusted p-value is found. 
 #' In such cases, should uncorrected p-values be used in order to get at least some results
-#' @param out.dir \code{character}. Root directory for the resulting subdirectories 
+#' @param out.dir \code{character}. Root directory for the resulting subdirectories. Must contain subfolders for contrasts.  
 #' @param species \code{character}. Currently valid options are "human" or "mouse".
 #' @param p.thr \code{numeric}. Threshold for un-adjusted p-values (applied in both filtering of DE-genes and in enrichment results,
 #'  when relevant (i.e. no significant fdr-entries are found)). Default 0.05 
@@ -302,8 +346,6 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
   enrichment_out.l$gProfileR <- list()
   enrichment_out.l$topGO <- list()
   
-  #Creating subfolders
-  lapply(enrichment.methods, function(method) dir.create(file.path(out.dir, method), showWarnings = F))
   
   contrast.names <- names(diffr.wrapper.output$contrasts)
   cat("Performing enrichment analyses for ", length(contrast.names), " comparisons: \n")
@@ -325,6 +367,11 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
   }
  
   for (contrast in contrast.names) {
+    
+    contr.out.dir  <- dir(out.dir, pattern = paste0("^",contrast), full.names = TRUE)
+    #Creating subfolders
+    lapply(enrichment.methods, function(method) dir.create(file.path(contr.out.dir, method), showWarnings = F))
+    
 
     cat("***", contrast, "*** \n")
     de_table <- diffr.wrapper.output$contrasts[[contrast]]
@@ -394,7 +441,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                                         similarity_filtering = clusterProfilerGO.params$do.similarity.filtering)
 
        #Saving the table, if relevant
-       method.dir <- dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
+       method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE)
        if (is.data.frame(result) ) {
          
          filename <- paste0(analysis.name, ".", contrast,".", method, ".", 
@@ -418,7 +465,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
       if (method == "clusterProfilerKEGG") {
       
         ## Replacing missing parameters
-        method.dir <- dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
+        method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE)
       
         default.params <- list(analysis.approach = "ORA", min.gene.set.size = 10, max.gene.set.size = 1000, 
                               ontology = "BP", min.overlap = 2, p.adjust.method = "BH")
@@ -485,7 +532,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                                               pAdjustMethod = clusterProfilerKEGG.params$p.adjust.method)
       
         #Saving the table, if relevant
-        method.dir <- dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
+        method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE)
         if (is.data.frame(result) & dim(result)[1] > 0) {
           
          
@@ -549,7 +596,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
         }
        
         # Formattig and saving the table, if relevant
-        method.dir <- dir(out.dir, pattern = paste0("^",method), full.names = TRUE) # detecting output directory
+        method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE) # detecting output directory
         if (is.data.frame(result)) {
           
           organism.term <- as.character(enrich.resource.terms[species, "medseqr"])
@@ -584,7 +631,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                                 ) 
         
         # Formattig and saving the table, if relevant
-        method.dir <- dir(out.dir, pattern = paste0("^",method), full.names = TRUE) # detecting output directory
+        method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE) # detecting output directory
         if (is.data.frame(result) & dim(result)[1] > 0) {
           
           organism.term <- as.character(enrich.resource.terms[species, "medseqr"])
@@ -611,7 +658,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
       
       if (method == "topGO") {
         
-        method.dir <- dir(out.dir, pattern = paste0("^",method), full.names = TRUE)
+        method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE)
         
         cat("Performing topGO.... \n")
         print(paste0("Ontologies used: ",topGO.params$ontologies.used))

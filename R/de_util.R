@@ -1,4 +1,4 @@
-# Functions for erforming differential expression analysis
+# Functions for performing differential expression analysis
 # 
 # Author: vidal
 ###############################################################################
@@ -59,13 +59,64 @@ diff_expr_fit <-
 	}
 }
 
+
+
+#' Helper function to generate an output table with only most relevant columns
+##' @param samp.name.and.group.key \code{data.frame}. Sample names (matching with annotated.normcnt cols) as rownames, groups in 1st column
+#' @export
+diffr_expr_generate_cleaned_de_table_output <-
+  function(contrast, annotated.normcnt, out.dir=".", samp.name.and.group.key, analysis.name=NULL, filtered.lists = TRUE,  fdr.thr=0.05, logfc.thr=1 )
+{
+    cat("Generating a cleaned version of expression table...\n")
+    DE.out <- paste(analysis.name, contrast, "differential_expression_clean.tsv", sep="_")
+  
+    group1 <- unlist(strsplit(contrast, split="-",fixed = TRUE))[1]
+    group2 <- unlist(strsplit(contrast, split="-",fixed = TRUE))[2]
+   
+    contrast.samples <- rownames(samp.name.and.group.key)[samp.name.and.group.key$group == group1 | samp.name.and.group.key$group == group2]
+    not.contrast.samples <- rownames(samp.name.and.group.key)[!(samp.name.and.group.key$group == group1 | samp.name.and.group.key$group == group2)]
+    
+    annotated.normcnt <- annotated.normcnt[,!colnames(annotated.normcnt) %in% not.contrast.samples]
+    
+    cleaned.colnames <- gsub("ReadsPerGene.out", "", colnames(annotated.normcnt))
+    #print(cleaned.colnames)
+    colnames(annotated.normcnt) <- cleaned.colnames 
+    cat("   Samples outside the contrast were removed...\n")
+    
+    if (filtered.lists) {
+      cat("     Filtering the DE list to be saved by fdr <", fdr.thr, "and logfc >= ", logfc.thr , "...\n")
+      fdr.col <- names(annotated.normcnt)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(annotated.normcnt)))]
+      fc.col <- names(annotated.normcnt)[grep("^logfc$|fold$", tolower(names(annotated.normcnt)))]
+      
+      #print(fdr.col)
+      #print(fc.col)
+      
+      nrow.before.filtering <- nrow(annotated.normcnt)
+      
+      annotated.normcnt <- annotated.normcnt[(annotated.normcnt[[fdr.col]] < fdr.thr &
+                                 abs(annotated.normcnt[[fc.col]]) >= logfc.thr),]
+      
+      nrow.removed <- nrow.before.filtering - nrow(annotated.normcnt)
+      cat("       ", nrow.removed, "unsignifcant genes were filtered out...\n")
+      cat("        The dimensions of the table to be saved:", dim(annotated.normcnt), "...\n")
+      
+      
+      DE.out <- paste("filtered", DE.out, sep="_")
+    }
+    
+    cat("   Saving cleanded DE-list to", DE.out, "...\n")
+    write.table(annotated.normcnt, file.path(out.dir, DE.out), sep="\t", quote=FALSE, row.names=FALSE)
+
+}
+        
 #' Function to extract contrasts and generate top tables and plots
 #' @export
 diff_expr_extract_contrasts <-
 		function(contrasts=NULL, fit, fit2=NULL, normcnt, out.l, do.voom=TRUE, out.dir=".",
 				analysis.name=NULL, biomart=FALSE, biom.data.set="hsapiens_gene_ensembl", biom.mart=c("ensembl", "snp", "funcgen", "vega", "pride", "plants"),
 				host="www.ensembl.org", biom.filter="ensembl_gene_id", biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"), sym.col="hgnc_symbol",
-				rm.dups=FALSE, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE, font.size=5, plots=TRUE, lists=TRUE, samp.info = samp.info, samples = samples, groups = groups, sample.plot.names = sample.plot.names)
+				rm.dups=FALSE, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE, font.size=5, plots=TRUE, lists=TRUE, filtered.lists = TRUE,
+				samp.info = samp.info, samples = samples, groups = groups, sample.plot.names = sample.plot.names)
 {
 	if (!length(grep("contrasts", names(out.l)))) {
 		out.l$contrasts <- list()
@@ -85,10 +136,15 @@ diff_expr_extract_contrasts <-
 		# which means contrasts are inherent to the design and only need to be extracted
 		cn <- contrasts
 	}
+
 	out.l$MAplots <- list()
 	out.l$volcanoPlots <- list()
 	for (contr in cn) {
 		cat("Calculating differential expression for", contr, "\n")
+	  dir.create(file.path(out.dir, contr))
+		contr.out.dir  <- dir(out.dir, pattern = paste0("^",contr), full.names = TRUE)
+	  cat("Storing all results under", contr.out.dir, "\n")
+	  
 		if (do.voom) {
 			cat("Generating output table of differentially expressed features...\n")
 			tt <- topTable(fit2, coef=contr, number=nrow(fit2), sort.by="P")
@@ -147,21 +203,31 @@ diff_expr_extract_contrasts <-
 		if (lists) {
 			DE.out <- paste(analysis.name, contr, "differential_expression.tsv", sep="_")
 			cat("Saving list to", DE.out, "...\n")
-			write.table(d3, file.path(out.dir, DE.out), sep="\t", quote=FALSE, row.names=FALSE)
-		}
+			pv.col <- names(d3)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
+			cat("The result table is ordered in increasing order by column ", pv.col, "...\n")
+			d3 = d3[order(d3[[pv.col]]),]
+			write.table(d3, file.path(contr.out.dir, DE.out), sep="\t", quote=FALSE, row.names=FALSE)
+		
+			diffr_expr_generate_cleaned_de_table_output(contrast=contr, annotated.normcnt=d3, samp.name.and.group.key = fit$samples, out.dir=contr.out.dir,
+			                                            analysis.name, filtered.lists = TRUE, fdr.thr=fdr.thr, logfc.thr=logfc.thr)
+			}
 		
 		# Create a graphical summary, such as an M (log-fold change) versus A (log-average expression) plot, here showing the
 		# genes selected as differentially expressed (with a 5% false discovery rate)
 		if (plots) {
 			cat("Plotting...\n")
-			pdf(file.path(out.dir, paste(analysis.name, contr, "_plots.pdf", sep="_")), width=15, height=15)
+			pdf(file.path(contr.out.dir, paste(analysis.name, contr, "_plots.pdf", sep="_")), width = 15, height = 15)
 			par(mar = c(6,6,5,3))
 			cat(" MA-plot...\n")
-			out.l$MAplots[[contr]] <- diff_expr_ma_plot(d3, contr, id.col, sym.col, p.thr, fdr.thr, logfc.thr, numlab, out.dir, analysis.name, point.lab, biom.attributes, font.size, lists)
+			out.l$MAplots[[contr]] <- diff_expr_ma_plot(d3, contr, id.col, sym.col, p.thr, fdr.thr, logfc.thr, numlab, out.dir=contr.out.dir, analysis.name, point.lab, biom.attributes, font.size, lists)
 			
 			## Volcano plot
 			cat(" Volcano plot...\n")
-			out.l$volcanoPlots[[contr]] <- diff_expr_volcano_plot(d3, id.col, sym.col="gene_symbol", p.thr=p.thr, fdr.thr=fdr.thr, logfc.thr=logfc.thr, numlab=numlab, point.lab=point.lab)
+			#The following three lines would probably be wise to do using regular expression
+			volcano.name = gsub(".", " ", contr, fixed=TRUE)
+			volcano.name = gsub("_", " ", volcano.name, fixed=TRUE)
+			volcano.name = gsub("-", " vs. ", volcano.name, fixed=TRUE)
+			out.l$volcanoPlots[[contr]] <- diff_expr_volcano_plot(d3, id.col, sym.col="gene_symbol", main=volcano.name, p.thr=p.thr, fdr.thr=fdr.thr, logfc.thr=logfc.thr, numlab=numlab, point.lab=point.lab)
 			
 #png(paste(out.dir,"/",analysis.name,".Pvalue_distribution.png",sep=""),width=1280,height=960,res=150)
 			## Histogram of P-value distribution

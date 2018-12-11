@@ -19,7 +19,7 @@ library(VennDiagram)
 
 diffr_venn <- function(list.comp.tables, join_vec) {
   
-  required_packages = c('data.table','purrr','dplyr','venn','VennDiagram')
+  required_packages = c('data.table','purrr','dplyr','venn','VennDiagram','xlsx')
   for (p in required_packages) {
     if(!require(p,character.only = TRUE)) install.packages(p)
     library(p,character.only = TRUE)

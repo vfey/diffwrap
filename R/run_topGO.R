@@ -1,5 +1,5 @@
-
-# Function: run.topGo()
+library(topGO)
+# Function: run.topGO()
 #
 # Author: Bogdan Iancu - Genevia Technologies Oy
 #
@@ -7,6 +7,7 @@
 #         background = path to the background set of genes
 #         foreground = path to the foreground set of genes
 #         ontologies = character string specifying the ontology of interest (BP,MF,CC), default = "BP"
+#         organism = the organism database used, eg. for Human: "org.Hs.eg.db"
 #                         
 
 # Output: table with enriched terms and p-values from Fisher's exact test, using differeng algorithms: elim, classic, weight01. 
@@ -20,14 +21,19 @@
 
 #           column: p.adj.weight01 - represents the adjusted p-value for the weight01 algorithm    
 #           requires packages: topGO, readxl, org.Hs.eg.db
-run.topG0 <- function(background, foreground, ontologies = c("BP")) {
+run.topGO <- function(background, foreground, ontologies = c("BP"), organism, ID_type = "ENSEMBL", pAdjustMethod = "BH") {
   
-  genes.full = data.frame(readxl::read_excel(background, skip = 1))
-  gene.full.names = genes.full$Ensembl.ID
+  # genes.full = data.frame(readxl::read_excel(background, skip = 1))
+  # gene.full.names = genes.full$Ensembl.ID
+  # 
+  # genes.of.interest = data.frame(readxl::read_excel(foreground, skip = 1))
+  # gene.of.interest.names = genes.of.interest$Ensembl.ID
+  # 
+  print(paste0("pAdjustMethod: ", pAdjustMethod))
+  print(paste0("ID_type: ",ID_type))
   
-  genes.of.interest = data.frame(readxl::read_excel(foreground, skip = 1))
-  gene.of.interest.names = genes.of.interest$Ensembl.ID
-  
+  gene.full.names = background
+  gene.of.interest.names = foreground
   gene.list <- factor(as.integer(gene.full.names %in% gene.of.interest.names))
   names(gene.list) = gene.full.names
   
@@ -42,7 +48,8 @@ run.topG0 <- function(background, foreground, ontologies = c("BP")) {
     
     ## prepare data
     GOdata <- new( "topGOdata", ontology = ontologies[i], allGenes = gene.list, nodeSize = 10,
-                   annot = annFUN.org , mapping = "org.Hs.eg.db", ID = "ensembl" )
+                   annot = annFUN.org , mapping = organism, ID = ID_type )
+    
     
     ## run tests
     result.topGO.elim <- runTest(GOdata, algorithm = "elim", statistic = "Fisher", cutOff = 0.05)
@@ -61,13 +68,26 @@ run.topG0 <- function(background, foreground, ontologies = c("BP")) {
   }
   
   # create the file with all the statistics from GO analysis
-  topGO.results <- rbind.fill(table.go)
+  topGO.results <- as.data.frame(rbind.fill(table.go))
+  
+  
+  # list containg genes annotated to significant GO terms
+  annotated.genes <- lapply(topGO.results$GO.ID, function(x) as.character(unlist(genesInTerm(object = GOdata, whichGO = x)))) 
+ 
+  
+  ## Selecting only the genes that are among foreground set:
+  significant.genes <- lapply(annotated.genes, function(x) intersect(x, gene.of.interest.names)) 
+  
   
   #performing BH correction on the weight01 p-values
-  p.adj.weight01 = round(p.adjust(topGO.results$Fisher.weight01, method = "BH"), digits = 5)
+  p.adj.weight01 <- round(p.adjust(topGO.results$Fisher.weight01, method = pAdjustMethod), digits = 5)
   
   #bind new p.adj.wieght01 col
-  topGO.results$p.adj.weight01 = p.adj.weight01
+  topGO.results$p.adj.weight01 <- p.adj.weight01
   
+  #Binding the DEGs (ensembl ids) associated into the term into result table and switching the gene separator
+  topGO.results$Genes <- significant.genes
+  topGO.results$Genes <- unlist(lapply(topGO.results$Genes, function(x) paste(x, collapse = ","))) #To make the column compatible for wrapper formatting
+  names(topGO.results)[2] = "Description" # To make the result more analogous with other enrichment approaches
   return(topGO.results)
 } 

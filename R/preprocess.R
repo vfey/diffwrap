@@ -19,20 +19,20 @@ diff_expr_get_samp_info <-
 			cat("  Renaming ellipse mapping column...\n")
 			names(samp.info)[names(samp.info) == ellipse.mapping.groups] <- "Ellipse"
 		}
-		cat("  Factorizing columns... \n")
-		samp.info$SampleNames <- edgeR::dropEmptyLevels(as.factor(samp.info$SampleNames))
-		samp.info$Groups <- edgeR::dropEmptyLevels(as.factor(samp.info$Groups))
-		if (!is.null(ellipse.mapping.groups)) {
-			samp.info$Ellipse <- edgeR::dropEmptyLevels(as.factor(samp.info$Ellipse))
-		}
 	} else {
 		samp.info <- data.frame(SampleNames=samples, Groups=groups, Ellipse={ if (is.null(ellipse.mapping.groups)) { groups } else { ellipse.mapping.groups } })
 	}
 	if (is.numeric(samp.info$Groups)) {
 		samp.info$Groups <- paste0("group_", samp.info$Groups)
 	}
-	if (is.numeric(samp.info$Ellipse)) {
+	if (!is.null(ellipse.mapping.groups) && is.numeric(samp.info$Ellipse)) {
 		samp.info$Ellipse <- paste0("ellipse_group_", samp.info$Ellipse)
+	}
+	cat("  Factorizing columns... \n")
+	samp.info$SampleNames <- edgeR::dropEmptyLevels(as.factor(samp.info$SampleNames))
+	samp.info$Groups <- edgeR::dropEmptyLevels(as.factor(samp.info$Groups))
+	if (!is.null(ellipse.mapping.groups)) {
+		samp.info$Ellipse <- edgeR::dropEmptyLevels(as.factor(samp.info$Ellipse))
 	}
 	cat("  Reordering by sample names...\n")
 	samp.info <- samp.info[order(samp.info$SampleNames), ]
@@ -50,9 +50,10 @@ diff_expr_make_design <-
 		colnames(design) <- gsub("groups", "", colnames(design))
 	} else if (!is.null(pairs)) {
 		cat("Creating design matrix for paired samples. Using column", sQuote(pairs), "as 'pairs' variable...\n")
+		pairs_col <- pairs
 		pairs <- samp.info[[pairs]]
 		if (!is.numeric(pairs)) {
-			pairs <- dropEmptyLevels(as.factor(samp.info[[pairs]]))
+			pairs <- dropEmptyLevels(as.factor(samp.info[[pairs.col]]))
 			cat(" ", levels(pairs), "\n")
 			design <- model.matrix(~pairs+groups)
 		} else {

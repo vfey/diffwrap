@@ -4,7 +4,12 @@
 \alias{diff_expr_get_samp_info}
 \title{Function to standardize `samp.info` sample information data frame}
 \usage{
-diff_expr_get_samp_info(samp.info, samples, groups)
+diff_expr_get_samp_info(
+  samp.info,
+  samples,
+  groups,
+  ellipse.mapping.groups = NULL
+)
 }
 \description{
 Function to standardize `samp.info` sample information data frame

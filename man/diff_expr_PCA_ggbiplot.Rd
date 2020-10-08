@@ -4,9 +4,19 @@
 \alias{diff_expr_PCA_ggbiplot}
 \title{Function to generate a PCA biplot using `medseqr::ggbiplot`}
 \usage{
-diff_expr_PCA_ggbiplot(PCA, groups, grp.nam = NULL, ellipse = TRUE,
-  circle = TRUE, varname.size = 0, var.axes = FALSE, main = NULL,
-  fix.aspect = FALSE, tweak = FALSE, ...)
+diff_expr_PCA_ggbiplot(
+  PCA,
+  groups,
+  grp.nam = NULL,
+  ellipse = TRUE,
+  circle = TRUE,
+  varname.size = 0,
+  var.axes = FALSE,
+  main = NULL,
+  fix.aspect = FALSE,
+  tweak = FALSE,
+  ...
+)
 }
 \description{
 Function to generate a PCA biplot using `medseqr::ggbiplot`

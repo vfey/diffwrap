@@ -3,7 +3,6 @@
 \docType{package}
 \name{diffr}
 \alias{diffr}
-\alias{diffr-package}
 \title{Differential expression analysis of RNA-Seq data}
 \description{
 This package provides functionality for differential expression analysis of read counts from mRNA sequencing data or miRNA expression values
@@ -25,7 +24,7 @@ It comes with a wrapper function, "diffExpr", performing all steps of the analys
 These functions may be applicable to different kinds of data/input, rely, however, on the conventions set for this package.
 }
 \author{
-Vidal Fey <vidal.fey@geneviatechnologies.com>
-Maintainer: Vidal Fey <vidal.fey@geneviatechnologies.com>
+Vidal Fey <vidal.fey@tuni.fi>, Meeri Pekkarinen <meeri.pekkarinen@tuni.fi>, Reija Hieta <reija.hieta@geneviatechnologies.com>, Bogdan Iancu <bogdan.iancu@abo.fi>, Adrien Janssens <adrien.janssens@geneviatechnologies.com>
+Maintainer: Vidal Fey <vidal.fey@tuni.fi>
 }
 \keyword{package}

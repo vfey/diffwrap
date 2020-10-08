@@ -5,28 +5,66 @@
 \title{Main wrapper for executing the entire pipeline from reading in expression data such as count
 files to producing text files and graphs}
 \usage{
-diffExpr(expr.file = "mature_miRNA_expression.xls", samp.info, control,
-  design = NULL, samples = NULL, sample.plot.names = NULL,
-  groups = NULL, pairs = NULL, block = FALSE, contrasts = NULL,
-  out.dir = NULL, analysis.name = NULL, biomart = FALSE,
-  biom.data.set = "hsapiens_gene_ensembl", biom.mart = c("ensembl",
-  "snp", "funcgen", "vega", "pride", "plants"), host = "www.ensembl.org",
+diffExpr(
+  expr.file = "mature_miRNA_expression.xls",
+  samp.info,
+  control,
+  design = NULL,
+  samples = NULL,
+  sample.plot.names = NULL,
+  groups = NULL,
+  pairs = NULL,
+  block = FALSE,
+  contrasts = NULL,
+  out.dir = NULL,
+  project.dir = ".",
+  analysis.name = NULL,
+  biomart = FALSE,
+  biom.data.set = "hsapiens_gene_ensembl",
+  biom.mart = c("ensembl", "snp", "funcgen", "vega", "pride", "plants"),
+  host = "www.ensembl.org",
   biom.filter = "ensembl_gene_id",
   biom.attributes = c("ensembl_gene_id", "hgnc_symbol", "description"),
-  sym.col = "hgnc_symbol", rm.dups = FALSE, p.thr = 0.05,
-  fdr.thr = 0.05, logfc.thr = 1, numlab = 15, point.lab = TRUE,
-  min.samp = NULL, strict = TRUE, disp = c("gene", "trend",
-  "common"), do.voom = FALSE, voom.fun = voom, norm.method = c("tmm",
-  "quantile"), bayes.trend = FALSE, bayes.robust = FALSE, n = 500,
-  gene.selection = "common", ellipse = TRUE,
-  ellipse.mapping.groups = NULL, label.samples = TRUE,
-  geom.point.size = 2, label.font.size = 5, plot.ellipse.legend = NA,
-  circle = TRUE, varname.size = 0, var.axes = FALSE,
-  samp.lab = TRUE, PC = c(1, 2, 3), type = c("both", "uncorrected",
-  "pseudo-corrected"), font.size = 5, plots = TRUE, lists = TRUE)
+  sym.col = "hgnc_symbol",
+  rm.dups = FALSE,
+  p.thr = 0.05,
+  fdr.thr = 0.05,
+  logfc.thr = 1,
+  numlab = 15,
+  point.lab = TRUE,
+  min.samp = NULL,
+  strict = TRUE,
+  disp = c("gene", "trend", "common"),
+  do.voom = FALSE,
+  voom.fun = voom,
+  norm.method = c("tmm", "quantile"),
+  bayes.trend = FALSE,
+  bayes.robust = FALSE,
+  n = 500,
+  gene.selection = "common",
+  ellipse = TRUE,
+  ellipse.mapping.groups = NULL,
+  label.samples = TRUE,
+  geom.point.size = 2,
+  label.font.size = 5,
+  plot.ellipse.legend = NA,
+  circle = TRUE,
+  varname.size = 0,
+  var.axes = FALSE,
+  PC = c(1, 2, 3),
+  type = c("both", "uncorrected", "pseudo-corrected"),
+  font.size = 5,
+  plots = TRUE,
+  lists = TRUE,
+  filtered.lists = TRUE,
+  do.enrichment = TRUE,
+  enrichment.methods = c("clusterProfilerGO", "clusterProfilerKEGG", "DAVID",
+    "gProfileR", "topGO"),
+  dry.run = FALSE
+)
 }
 \arguments{
-\item{expr.file}{\code{character}. Vector of input file paths}
+\item{expr.file}{\code{character} or \code{list}. String or vector or list of input file paths}
 
 \item{samp.info}{\code{data.frame}. samp.info object containing information of the project's sample sheet}
 
@@ -54,7 +92,8 @@ vector of groups.}
 
 \item{ellipse}{\code{logical}. Should an ellipse be plottrd around samples belonging to the same sample group?}
 
-\item{ellipse.mapping.groups}{\code{character} vector of group names for ellipse drawing.}
+\item{ellipse.mapping.groups}{\code{character} The name of the column in 'samp.info' with group names for ellipse drawing. If \code{NULL} (default)
+will use the \code{groups} column. If 'samp.info' is not supplied vector of groups.}
 
 \item{label.samples}{\code{logical}. Should points in appropriate QC plots be labelled. So far, applies only to PCA ggplot.}
 
@@ -65,6 +104,10 @@ vector of groups.}
 \item{plot.ellipse.legend}{\code{logical}. Should a legend be addded for ellipses in PCA plots? NA, the default, includes
 if any aesthetics are mapped. FALSE never includes, and TRUE always includes. It can also be a named logical vector to finely select
 the aesthetics to display.}
+
+\item{enrichment.methods}{\code{character}. One or more of the following: c("clusterProfilerGO", "clusterProfilerKEGG","DAVID", "gProfileR", "topGO"). By default, uses them all}
+
+\item{do.enrichment=TRUE}{\code{logical}. Whether or not to call enrichment wrapper}
 }
 \value{
 A list of all relevant objects generated in the course of the workflow:

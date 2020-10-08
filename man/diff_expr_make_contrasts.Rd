@@ -4,8 +4,7 @@
 \alias{diff_expr_make_contrasts}
 \title{Function to make contrast matrix}
 \usage{
-diff_expr_make_contrasts(design, pairs = NULL, block = FALSE,
-  contrasts = NULL)
+diff_expr_make_contrasts(design, pairs = NULL, block = FALSE, contrasts = NULL)
 }
 \description{
 Function to make contrast matrix

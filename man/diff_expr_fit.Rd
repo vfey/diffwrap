@@ -4,10 +4,21 @@
 \alias{diff_expr_fit}
 \title{Function to compute linear model fit and optionally apply 'voom' beforehand}
 \usage{
-diff_expr_fit(counts, d, design, do.voom = TRUE, voom.fun = voom,
-  norm.method = c("quantile", "tmm"), bayes.trend = FALSE,
-  bayes.robust = FALSE, pairs = NULL, pairs_col = NULL,
-  block = FALSE, contrasts = NULL, disp = "tagwise.dispersion")
+diff_expr_fit(
+  counts,
+  d,
+  design,
+  do.voom = TRUE,
+  voom.fun = voom,
+  norm.method = c("quantile", "tmm"),
+  bayes.trend = FALSE,
+  bayes.robust = FALSE,
+  pairs = NULL,
+  pairs_col = NULL,
+  block = FALSE,
+  contrasts = NULL,
+  disp = "tagwise.dispersion"
+)
 }
 \description{
 Function to compute linear model fit and optionally apply 'voom' beforehand

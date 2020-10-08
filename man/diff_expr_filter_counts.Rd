@@ -4,8 +4,7 @@
 \alias{diff_expr_filter_counts}
 \title{Function to filter counts}
 \usage{
-diff_expr_filter_counts(counts, samp.info, strict = TRUE,
-  min.samp = NULL)
+diff_expr_filter_counts(counts, samp.info, strict = TRUE, min.samp = NULL)
 }
 \description{
 Function to filter counts

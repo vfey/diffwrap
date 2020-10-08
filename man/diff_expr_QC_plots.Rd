@@ -4,13 +4,32 @@
 \alias{diff_expr_QC_plots}
 \title{Main wrapper function for QC plots}
 \usage{
-diff_expr_QC_plots(counts, samp.info, control, out.l, grp.nam = NULL,
-  PC = c(1, 2, 3), ellipse = TRUE, ellipse.mapping.groups = NULL,
-  label.samples = TRUE, geom.point.size = 2, label.font.size = 5,
-  plot.ellipse.legend = NA, circle = TRUE, varname.size = 0,
-  var.axes = FALSE, samp.lab = TRUE, pairs = NULL,
-  pairs.name = NULL, gene.selection = "common", n = 500,
-  type = NULL, analysis.name = NULL, out.dir = NULL)
+diff_expr_QC_plots(
+  counts,
+  samp.info,
+  control,
+  out.l,
+  grp.nam = NULL,
+  PC = c(1, 2, 3),
+  sample.plot.names = NULL,
+  ellipse = TRUE,
+  ellipse.mapping.groups = NULL,
+  ellipse.grp.nam = NULL,
+  label.samples = TRUE,
+  geom.point.size = 2,
+  label.font.size = 5,
+  plot.ellipse.legend = NA,
+  circle = TRUE,
+  varname.size = 0,
+  var.axes = FALSE,
+  pairs = NULL,
+  pairs.name = NULL,
+  gene.selection = "common",
+  n = 500,
+  type = NULL,
+  analysis.name = NULL,
+  out.dir = "."
+)
 }
 \description{
 Main wrapper function for QC plots

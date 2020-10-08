@@ -4,11 +4,16 @@
 \alias{diff_expr_biomart}
 \title{Function to retrieve additional information from biomart}
 \usage{
-diff_expr_biomart(d3, biom.data.set = "hsapiens_gene_ensembl",
+diff_expr_biomart(
+  d3,
+  biom.data.set = "hsapiens_gene_ensembl",
   biom.mart = c("ensembl", "snp", "funcgen", "vega", "pride", "plants"),
-  host = "www.ensembl.org", biom.filter = "ensembl_gene_id",
+  host = "www.ensembl.org",
+  biom.filter = "ensembl_gene_id",
   biom.attributes = c("ensembl_gene_id", "hgnc_symbol", "description"),
-  sym.col = "hgnc_symbol", rm.dups = FALSE)
+  sym.col = "hgnc_symbol",
+  rm.dups = FALSE
+)
 }
 \description{
 Function to retrieve additional information from biomart

@@ -1,30 +1,25 @@
-library(data.table)
-library(purrr)
-library(dplyr)
-library(venn)
-library(VennDiagram)
-
+#' @export
 # Function: diffr_venn
 #
 # Author: Bogdan Iancu - Genevia Technologies Oy
 #
 # Arguments:
 #         list.comp.tables  = list of DE tables, preferably a list of data.frames
-#         join_vec = vector that the join is made by in the Venn diagram intersections tables 
-#         
+#         join_vec = vector that the join is made by in the Venn diagram intersections tables
+#
 
-# Output: returns the Venn diagram of DE tables and the Venn intersections tables 
+# Output: returns the Venn diagram of DE tables and the Venn intersections tables
 #
 #
 
 diffr_venn <- function(list.comp.tables, join_vec) {
-  
+
   required_packages = c('data.table','purrr','dplyr','venn','VennDiagram','xlsx')
   for (p in required_packages) {
     if(!require(p,character.only = TRUE)) install.packages(p)
     library(p,character.only = TRUE)
   }
-  #extract DEGs list from the contrast tables list 
+  #extract DEGs list from the contrast tables list
   DEGs.list <- lapply(list.comp.tables, function(x) {
     #extract hgnc colname
     hgnc.col <- names(x)[grep("symbol|hgnc", tolower(names(x)))]
@@ -36,24 +31,24 @@ diffr_venn <- function(list.comp.tables, join_vec) {
     DEGs <- unique(DEGs)
     return(DEGs)
   })
-  
+
   fill.color = c("darkblue", "deepskyblue", "darkturquoise", "darkorchid4")
   futile.logger::flog.threshold(futile.logger::ERROR, name = "VennDiagramLogger")
-  venn.diag <- venn.diagram(DEGs.list, 
+  venn.diag <- venn.diagram(DEGs.list,
                             col = "transparent", fill = fill.color[1:length(DEGs.list)],  height = 8000, width = 8000, print.mode = c("raw", "percent"),
                             cat.cex = 1.2, cex = 2.2, imagetype = "png", filename = NULL)
   venn.sets.lists = venn(DEGs.list)
   venn.sets.intersections = attr(venn.sets.lists, "intersections")
-  
+
   venn.tt <- venn.sets.lists %>% dplyr::select(-counts)
-  
+
   #go over all data frames in list x and, for all columns that are not found in join_vec, change them to be identifiable by adding the list name to the column
-  #this is done so that after the joins in the intersection tables are 
+  #this is done so that after the joins in the intersection tables are
   create.individual.ids = function(x,y) {
     colnames(x)[which(!(colnames(x) %in% join_vec))] = paste0(colnames(x)[which(!(colnames(x) %in% join_vec))],"-",y)
     return(x)
   }
-  
+
   list.venn.tables <- list()
   list.comp.tables = map2(list.comp.tables,names(list.comp.tables),create.individual.ids)
   for(j in 1:nrow(venn.tt)) {
@@ -68,11 +63,11 @@ diffr_venn <- function(list.comp.tables, join_vec) {
       hgnc.col <- names(inters.all)[grep("symbol|hgnc", tolower(names(inters.all)))]
       inters.all <- inters.all[inters.all[hgnc.col] != "",]
       list.venn.tables[[rownames(venn.tt)[j]]] <- inters.all
-      
+
       print(paste0(rownames(venn.tt)[j],"-",nrow(inters.all[unique(inters.all[[hgnc.col]]),])))
     }
     #otherwise calculate the intersection for the ones that have index 1 and the union for those who have 0 and extract those entries which are in the intersection and not in the union
-    #this gives the intersection table for the Venn sections seen in the Venn diagram 
+    #this gives the intersection table for the Venn sections seen in the Venn diagram
     else {
       join.part <- list.comp.tables[which(venn.tt[j,] == 1)]
       inters <- join.part %>% purrr::reduce(dplyr::inner_join, by = join_vec)
@@ -84,7 +79,7 @@ diffr_venn <- function(list.comp.tables, join_vec) {
       list.venn.tables[[rownames(venn.tt)[j]]] <- res.join
       print(paste0("Venn sections summary - ",rownames(venn.tt)[j],"--",nrow(res.join[unique(res.join[[hgnc.col]]),])))
     }
-    
+
   }
   res.venn <- list("venn.diagram" = venn.diag,"venn.sections" = list.venn.tables)
   return(res.venn)

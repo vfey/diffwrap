@@ -4,8 +4,15 @@
 \alias{diff_expr_mds_plot}
 \title{Function to generate a MDS plot using `limma::plotMDS`}
 \usage{
-diff_expr_mds_plot(d, groups, n = 500, sample.plot.names = NULL,
-  analysis.name = NULL, do.pdf = FALSE, out.dir = NULL)
+diff_expr_mds_plot(
+  d,
+  groups,
+  n = 500,
+  sample.plot.names = NULL,
+  analysis.name = NULL,
+  do.pdf = FALSE,
+  out.dir = "."
+)
 }
 \description{
 Function to generate a MDS plot using `limma::plotMDS`

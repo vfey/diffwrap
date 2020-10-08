@@ -62,6 +62,7 @@ diff_expr_filter_counts <-
 	## samples, where n is the size of the smallest group of replicates (determined from the 'groups' vector)
 	### can be overridden by 'min.samp'
 	### if we want to be really strict we only keep a miRNA if there are > 5 reads per million in at least half of the samples
+	# TODO: add edgeR filter function as in McElreavey project
 	cpms <- cpm(counts)
 	if (strict) {
 		cat("  Using 'strict' filtering...\n")

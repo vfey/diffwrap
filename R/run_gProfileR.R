@@ -1,7 +1,3 @@
-# Load packages
-library(gProfileR)
-library(WriteXLS)
-
 # Function for running over-representation analysis (ORA) or gene set enrichment analysis (GSEA) using gprofiler R interface.
 
 # Input ORA:  input_genes = vector of differentially expressed genes
@@ -77,7 +73,7 @@ run_gprofiler <- function(input_genes,
     print(paste0("min_overlap: ", min_overlap))
     print(paste0("correction_method: ", correction_method))
     print(paste0("hier_filtering: ", hier_filtering))
-          
+
     results <- gprofiler(query = as.character(input_genes),
                      organism = organism,
                      sort_by_structure = sort_by_structure,
@@ -94,20 +90,20 @@ run_gprofiler <- function(input_genes,
                      src_filter = data_sources)
 
     cols.res = colnames(results)
-    cols.interest = c("term.id", "domain","term.name","term.size","query.size","overlap.size","p.value","intersection") 
-    
-    
+    cols.interest = c("term.id", "domain","term.name","term.size","query.size","overlap.size","p.value","intersection")
+
+
     ids.list = list()
     for (col.intr in cols.interest) {
       ids.list[[col.intr]] = grep(col.intr, cols.res)
     }
     ids.interest = as.vector(unlist(ids.list))
-    
+
     results <- results[,ids.interest] # Extract only interesting columns
-   
+
     colnames(results) <- c("Term ID", "Term Domain", "Term Description", "Term Size", "Query Size",
                        "No of DEGs annotated to Term", "Adjusted P-Value", "DEGs Annotated to Term")
-    
+
     #cat("         Saving result into ", paste0(file_name, ".xlsx"), "...\n")
     #WriteXLS(results, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = T)
     return(results)

@@ -4,8 +4,14 @@
 \alias{diff_expr_3d_scatterplot}
 \title{Function to generate a 3D scatterplot}
 \usage{
-diff_expr_3d_scatterplot(PCA, samp.name = NULL, groups, grp.nam = NULL,
-  PC = c(1, 2, 3), main = NULL)
+diff_expr_3d_scatterplot(
+  PCA,
+  samp.name = NULL,
+  groups,
+  grp.nam = NULL,
+  PC = c(1, 2, 3),
+  main = NULL
+)
 }
 \description{
 Function to generate a 3D scatterplot

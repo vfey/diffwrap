@@ -4,9 +4,17 @@
 \alias{diff_expr_ggplot_mds}
 \title{Function to generate a MDS plot usig `ggplot2`}
 \usage{
-diff_expr_ggplot_mds(counts, samp.name, groups, grp.nam = NULL,
-  pairs = NULL, pairs.name = NULL, gene.selection = "common",
-  dim.plot = c(1, 2), main = NULL)
+diff_expr_ggplot_mds(
+  counts,
+  samp.name,
+  groups,
+  grp.nam = NULL,
+  pairs = NULL,
+  pairs.name = NULL,
+  gene.selection = "common",
+  dim.plot = c(1, 2),
+  main = NULL
+)
 }
 \description{
 Function to generate a MDS plot usig `ggplot2`

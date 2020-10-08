@@ -14,6 +14,13 @@ diff_expr_fit <-
 		if (norm.method=="tmm") {
 			cts <- d
 			norm.method="none"
+			# TMM normalisation factors are calculated and added to the DGEList object. If voom is used then counts should usually not be renormalised,
+			# so norm.method is set to "none", but "any normalization factors found in 'cts' will still be used even if normalize.method="none".
+			# Gordon Smyth notes:
+			# I wouldn't recommend TMM before quantile normalization, but it won't make much difference. If you apply scale normalization (such as TMM)
+			# then follow it up with quantile normalization of the logCPM values, then the scale normalization will be overwritten. Scale normalization
+			# becomes essentially an additive constant on the log-scale for each library, so it will be removed by quantile normalization.
+			# We have never recommended using multiple normalization methods together as it confuses the issue somewhat.
 		} else {
 			cts <- counts
 		}

@@ -4,9 +4,17 @@
 \alias{prepare_volcano_of_given_property}
 \title{Helper function that returns volcano plot.}
 \usage{
-prepare_volcano_of_given_property(data.df, property.to.plot = c("fdr",
-  "p"), property.column, property.thr, logfc.thr, main, numlab, point.lab,
-  sym.col)
+prepare_volcano_of_given_property(
+  data.df,
+  property.to.plot = c("fdr", "p"),
+  property.column,
+  property.thr,
+  logfc.thr,
+  main,
+  numlab,
+  point.lab,
+  sym.col
+)
 }
 \description{
 Helper function that returns volcano plot.

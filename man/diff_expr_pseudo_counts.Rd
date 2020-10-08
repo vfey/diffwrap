@@ -4,8 +4,13 @@
 \alias{diff_expr_pseudo_counts}
 \title{Function to calculate pseudo counts representing batch-corrected normalised but untransformed values}
 \usage{
-diff_expr_pseudo_counts(design, d, pairs, disp = "tagwise.dispersion",
-  do.cpm = TRUE)
+diff_expr_pseudo_counts(
+  design,
+  d,
+  pairs,
+  disp = "tagwise.dispersion",
+  do.cpm = TRUE
+)
 }
 \description{
 Function to calculate pseudo counts representing batch-corrected normalised but untransformed values

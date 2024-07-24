@@ -6,6 +6,20 @@
 \usage{
 diff_expr_filter_counts(counts, samp.info, strict = TRUE, min.samp = NULL)
 }
+\arguments{
+\item{counts}{Count matrix.}
+
+\item{samp.info}{\code{data.frame}. samp.info object containing information of the project's sample sheet.}
+
+\item{strict}{Logical; only keep a miRNA if there are > 5 reads per million in at least half of the samples?}
+
+\item{min.samp}{Integer; Number of samples in which a feature needs to be covered by at least one read per million.
+Defaults to the size of the smallest group of replicates. See \emph{details}.}
+}
 \description{
 Function to filter counts
+}
+\details{
+In edgeR, it is recommended to remove features without at least 1 read per million in n of the
+  samples, where n is the size of the smallest group of replicates (determined from the 'groups' vector).
 }

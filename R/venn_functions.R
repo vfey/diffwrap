@@ -1,24 +1,31 @@
-#' @export
 # Function: diffr_venn
 #
 # Author: Bogdan Iancu - Genevia Technologies Oy
 #
 # Arguments:
 #         list.comp.tables  = list of DE tables, preferably a list of data.frames
-#         join_vec = vector that the join is made by in the Venn diagram intersections tables
+#         join_vec = vector to perform the join operation on; corresponds to column names in the DE tables
 #
 
 # Output: returns the Venn diagram of DE tables and the Venn intersections tables
 #
 #
 
-diffr_venn <- function(list.comp.tables, join_vec) {
+utils::globalVariables("counts")
 
-  required_packages = c('data.table','purrr','dplyr','venn','VennDiagram','xlsx')
-  for (p in required_packages) {
-    if(!require(p,character.only = TRUE)) install.packages(p)
-    library(p,character.only = TRUE)
-  }
+#' Function to produce a Venn diagram of differentially expressed gene tables
+#' @param list.comp.tables list of DE tables, preferably a list of data.frames
+#' @param join_vec vector to perform the join operation on; corresponds to column names in the DE tables.
+#'   Defaults to \code{c("ensembl_gene_id","gene_symbol","description","entrezgene")}.
+#' @param .log Logical; should logging be done?
+#' @details
+#' The actual plot is produced in the main plotting function by means of 'grid::grid.draw()' using the plot object as input.
+#'
+#' @author Bogdan Iancu - Genevia Technologies Oy
+#' @return A list containing the Venn diagram grid object and the intersected (or joined) input tables.
+#' @export
+diffr_venn <- function(list.comp.tables, join_vec, .log = FALSE) {
+
   #extract DEGs list from the contrast tables list
   DEGs.list <- lapply(list.comp.tables, function(x) {
     #extract hgnc colname
@@ -33,11 +40,13 @@ diffr_venn <- function(list.comp.tables, join_vec) {
   })
 
   fill.color = c("darkblue", "deepskyblue", "darkturquoise", "darkorchid4")
-  futile.logger::flog.threshold(futile.logger::ERROR, name = "VennDiagramLogger")
-  venn.diag <- venn.diagram(DEGs.list,
+  if (.log) {
+    futile.logger::flog.threshold(futile.logger::ERROR, name = "VennDiagramLogger")
+  }
+  venn.diag <- VennDiagram::venn.diagram(DEGs.list,
                             col = "transparent", fill = fill.color[1:length(DEGs.list)],  height = 8000, width = 8000, print.mode = c("raw", "percent"),
                             cat.cex = 1.2, cex = 2.2, imagetype = "png", filename = NULL)
-  venn.sets.lists = venn(DEGs.list)
+  venn.sets.lists = venn::venn(DEGs.list)
   venn.sets.intersections = attr(venn.sets.lists, "intersections")
 
   venn.tt <- venn.sets.lists %>% dplyr::select(-counts)
@@ -50,7 +59,7 @@ diffr_venn <- function(list.comp.tables, join_vec) {
   }
 
   list.venn.tables <- list()
-  list.comp.tables = map2(list.comp.tables,names(list.comp.tables),create.individual.ids)
+  list.comp.tables = purrr::map2(list.comp.tables,names(list.comp.tables),create.individual.ids)
   for(j in 1:nrow(venn.tt)) {
     #if all entries in the venn truth table are 0 thek skip
     if (sum(venn.tt[j,]) == 0) {
@@ -81,6 +90,6 @@ diffr_venn <- function(list.comp.tables, join_vec) {
     }
 
   }
-  res.venn <- list("venn.diagram" = venn.diag,"venn.sections" = list.venn.tables)
+  res.venn <- list("venn.diagram" = venn.diag, "venn.sections" = list.venn.tables)
   return(res.venn)
 }

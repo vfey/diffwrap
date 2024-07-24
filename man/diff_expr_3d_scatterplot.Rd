@@ -13,6 +13,19 @@ diff_expr_3d_scatterplot(
   main = NULL
 )
 }
+\arguments{
+\item{PCA}{List of class \code{prcomp} or just a list having a component \code{x} that contains the rotated variables from \code{prcomp}.}
+
+\item{samp.name}{Optional sample names to be used in the plot, given as character vector.}
+
+\item{groups}{Sample groups for plot annotation as character vector or factor.}
+
+\item{grp.nam}{Legend title.}
+
+\item{PC}{Integer vector of length three specifying the principal components to be plotted.}
+
+\item{main}{Plot title.}
+}
 \description{
 Function to generate a 3D scatterplot
 }

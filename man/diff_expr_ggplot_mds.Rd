@@ -16,6 +16,28 @@ diff_expr_ggplot_mds(
   main = NULL
 )
 }
+\arguments{
+\item{counts}{Counts matrix.}
+
+\item{samp.name}{Optional sample names to be used in the plot, given as character vector.}
+
+\item{groups}{Sample groups for plot annotation as character vector or factor.}
+
+\item{grp.nam}{Legend title.}
+
+\item{pairs}{Factor of identifiers specifying paired samples for paired or other block designs, or batch effects.}
+
+\item{pairs.name}{Legend title for paired or block design variables in MDS ggplot.}
+
+\item{gene.selection}{Character passed to \code{plotMDS()} specifying the mode to select genes for comparisons.}
+
+\item{dim.plot}{Integer vector of length two passed to \code{plotMDS()} specifying the principal components to be plotted.}
+
+\item{main}{Plot title.}
+}
 \description{
 Function to generate a MDS plot usig `ggplot2`
+}
+\seealso{
+[plotMDS()]
 }

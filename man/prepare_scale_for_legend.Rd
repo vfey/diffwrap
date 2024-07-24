@@ -2,7 +2,7 @@
 % Please edit documentation in R/enrichment_util.R
 \name{prepare_scale_for_legend}
 \alias{prepare_scale_for_legend}
-\title{Helper function for enrichment visualisations:}
+\title{Helper function for enrichment visualisations: prepare plot legend y coordinates and labels}
 \usage{
 prepare_scale_for_legend(
   scale.minimum,
@@ -10,6 +10,17 @@ prepare_scale_for_legend(
   int.values.for.ticks = NULL
 )
 }
+\arguments{
+\item{scale.minimum}{Numeric; minimum y coordinates for text labels}
+
+\item{scale.maximum}{Numeric; maximum y coordinates for text labels}
+
+\item{int.values.for.ticks}{Not implemented.}
+}
 \description{
-Helper function for enrichment visualisations:
+Helper function for enrichment visualisations: prepare plot legend y coordinates and labels
+}
+\details{
+The coordinates are used in a network graph and minimum and maximum scale values correspond to
+  minimum and maximum fold-changes, by default.
 }

@@ -1,15 +1,23 @@
 # Preprocessing functions preparing necessary objects such as the design matrix or the contrast matrix
-# 
+#
 # Author: vidal
 ###############################################################################
 
+utils::globalVariables("pairs.col")
 
-#' Function to standardize `samp.info` sample information data frame
+#' Function to standardize samp.info sample information data frame
+#' @param samp.info \code{data.frame}. samp.info object containing information of the project's sample sheet.
+#' @param samples \code{character}. Name of the column in 'samp.info' containing sample names. If 'samp.info' is not supplied
+#'     vector of sample names.
+#' @param groups \code{character}. Name of the column in 'samp.info' containing grouping information. If 'samp.info' is not supplied
+#'     vector of groups.
+#' @param ellipse.mapping.groups Optional additional grouping for ellipse drawing. Overrides sample groups.
+#'   Use for selective highlighting of user-defined sample groups.
 #' @export
 diff_expr_get_samp_info <-
-		function(samp.info, samples, groups, ellipse.mapping.groups=NULL)
+		function(samp.info, samples, groups, ellipse.mapping.groups = NULL)
 {
-	if (!is.null(samp.info)) {
+	if (!missing(samp.info)) {
 		cat("Using user-provided sample information...\n")
 		cat("  Renaming sample name column...\n")
 		names(samp.info)[names(samp.info) == samples] <- "SampleNames"
@@ -28,7 +36,7 @@ diff_expr_get_samp_info <-
 	if (!is.null(ellipse.mapping.groups) && is.numeric(samp.info$Ellipse)) {
 		samp.info$Ellipse <- paste0("ellipse_group_", samp.info$Ellipse)
 	}
-	cat("  Factorizing columns... \n")
+	cat("  Factorizing columns...\n")
 	samp.info$SampleNames <- edgeR::dropEmptyLevels(as.factor(samp.info$SampleNames))
 	samp.info$Groups <- edgeR::dropEmptyLevels(as.factor(samp.info$Groups))
 	if (!is.null(ellipse.mapping.groups)) {
@@ -40,6 +48,13 @@ diff_expr_get_samp_info <-
 }
 
 #' Function to create design matrix
+#' @param samp.info \code{data.frame}. samp.info object containing information of the project's sample sheet.
+#'     vector of sample names.
+#' @param groups \code{character}. Name of the column in 'samp.info' containing grouping information. If 'samp.info' is not supplied
+#'     vector of groups.
+#' @param pairs \code{character}. Name of the column in 'samp.info' containing paired sample information.
+#' @param block \code{logical}. Are the comparisons to be made within AND between subjects? See Details section.
+#' @seealso [model.matrix()]
 #' @export
 diff_expr_make_design <-
 		function(samp.info, groups, pairs=NULL, block=FALSE)
@@ -53,7 +68,7 @@ diff_expr_make_design <-
 		pairs_col <- pairs
 		pairs <- samp.info[[pairs]]
 		if (!is.numeric(pairs)) {
-			pairs <- dropEmptyLevels(as.factor(samp.info[[pairs.col]]))
+			pairs <- edgeR::dropEmptyLevels(as.factor(samp.info[[pairs.col]]))
 			cat(" ", levels(pairs), "\n")
 			design <- model.matrix(~pairs+groups)
 		} else {
@@ -64,6 +79,12 @@ diff_expr_make_design <-
 }
 
 #' Function to make contrast matrix
+#' @param design Numeric design matrix.
+#' @param pairs \code{character}. Name of the column in 'samp.info' containing paired sample information.
+#' @param block \code{logical}. Are the comparisons to be made within AND between subjects? See Details section.
+#' @param contrasts Character vector specifying group name pairs to be compared in the format expected by
+#'   \code{makeContrasts()}, i.e., "group2-group1".
+#'   @seealso [makeContrasts()]
 #' @export
 diff_expr_make_contrasts <-
 		function(design, pairs=NULL, block=FALSE, contrasts=NULL)

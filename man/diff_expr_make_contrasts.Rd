@@ -6,6 +6,17 @@
 \usage{
 diff_expr_make_contrasts(design, pairs = NULL, block = FALSE, contrasts = NULL)
 }
+\arguments{
+\item{design}{Numeric design matrix.}
+
+\item{pairs}{\code{character}. Name of the column in 'samp.info' containing paired sample information.}
+
+\item{block}{\code{logical}. Are the comparisons to be made within AND between subjects? See Details section.}
+
+\item{contrasts}{Character vector specifying group name pairs to be compared in the format expected by
+\code{makeContrasts()}, i.e., "group2-group1".
+@seealso [makeContrasts()]}
+}
 \description{
 Function to make contrast matrix
 }

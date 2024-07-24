@@ -31,6 +31,58 @@ diff_expr_QC_plots(
   out.dir = "."
 )
 }
+\arguments{
+\item{counts}{Counts matrix.}
+
+\item{samp.info}{\code{data.frame}. samp.info object containing information of the project's sample sheet.}
+
+\item{control}{\code{character}. Name of the control group}
+
+\item{out.l}{\code{list}. Object returned by \code{diffExpr()} containing all output components from the analysis.}
+
+\item{grp.nam}{Legend title.}
+
+\item{PC}{Integer vector of length two or three specifying the principal components to be plotted.}
+
+\item{sample.plot.names}{Passed to \code{plotMDS()} (\code{labels}): character vector of sample names or labels. Defaults to colnames(d).}
+
+\item{ellipse}{Logical indicating whether to draw an ellipse around the sample groups.}
+
+\item{ellipse.mapping.groups}{Optional additional grouping for ellipse drawing. Overrides sample groups.
+Use for selective highlighting of user-defined sample groups.}
+
+\item{ellipse.grp.nam}{Not implemented.}
+
+\item{label.samples}{Logical; should the points be annotated with sample name labels?}
+
+\item{geom.point.size}{Numeric passed to \code{geom_point} giving the point size.}
+
+\item{label.font.size}{Numeric passed to \code{geom_text_repel} giving the label font size.}
+
+\item{plot.ellipse.legend}{Logical; should the elipse legend be plotted. \code{NA}, the default, will plot it if any aesthetics are mapped.}
+
+\item{circle}{\code{logical}. Draw a correlation circle? (only applies when prcomp was called with scale = TRUE and when var.scale = 1)}
+
+\item{varname.size}{\code{double}. size of the text for variable names}
+
+\item{var.axes}{\code{logical}. draw arrows for the variables?}
+
+\item{pairs}{Factor of identifiers specifying paired samples for paired or other block designs, or batch effects.}
+
+\item{pairs.name}{Legend title for paired or block design variables in MDS ggplot.}
+
+\item{gene.selection}{Character passed to \code{plotMDS()} specifying the mode to select genes for comparisons.}
+
+\item{n}{Passed to \code{plotMDS()} (\code{top}): Integer; number of top genes used to calculate pairwise distances.}
+
+\item{type}{Character; one of "both", "uncorrected", "pseudo-corrected" describing which values should be plotted.
+"uncorrected" will plot the input counts matrix while "pseudo-corrected" will plot pseudo counts for
+blocked designs (e.g., paired samples or batch factors).}
+
+\item{analysis.name}{Character used in the plot title and the output file name if the plot is saved to a PDF}
+
+\item{out.dir}{Character; path where to save PDF.}
+}
 \description{
 Main wrapper function for QC plots
 }

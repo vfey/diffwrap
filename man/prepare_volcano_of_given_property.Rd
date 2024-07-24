@@ -13,8 +13,33 @@ prepare_volcano_of_given_property(
   main,
   numlab,
   point.lab,
-  sym.col
+  sym.col,
+  pretty.breaks = FALSE
 )
+}
+\arguments{
+\item{data.df}{\code{data.frame}. Data frame containing all necessary columns to generate a Volcano plot with
+gene labels (at least p-values, FDR values, log-ratios and gene symbols or other IDs)}
+
+\item{property.to.plot}{\code{character}. Statistics to be plotted. One of "fdr", "p".}
+
+\item{property.column}{\code{character}. Name of the actual column with to the statistics to be plotted.}
+
+\item{property.thr}{\code{numeric}. Plotted values with a statistics (property) value below this threshold
+will be labelled in the respective plot.}
+
+\item{logfc.thr}{\code{numeric}. Plotted (`abs`olute) values above this threshold will have bigger dots.}
+
+\item{main}{\code{character}. Main plot title. (Will be complemented with additional information, e.g., 'FDR'
+when labelling according to and FDR threshold.)}
+
+\item{numlab}{\code{numeric}. Maximum number of labels per plot. Supersedes numbers calculated based on `p.thr` and `fdr.thr`.}
+
+\item{point.lab}{\code{logical}. Should points be labelled, at all?}
+
+\item{sym.col}{\code{character}. Name of column with gene symbols, e.g., HGNC Symbols.}
+
+\item{pretty.breaks}{\code{logical}. Should the breaks on the axes be pretty? Uses `scales::breaks_extended`.}
 }
 \description{
 Helper function that returns volcano plot.

@@ -2,7 +2,7 @@
 % Please edit documentation in R/qc_plots.R
 \name{diff_expr_mds_plot}
 \alias{diff_expr_mds_plot}
-\title{Function to generate a MDS plot using `limma::plotMDS`}
+\title{Wrapepr around `limma::plotMDS` to generate a MDS plot}
 \usage{
 diff_expr_mds_plot(
   d,
@@ -14,6 +14,25 @@ diff_expr_mds_plot(
   out.dir = "."
 )
 }
+\arguments{
+\item{d}{Passed to \code{plotMDS()} (\code{x}): Any data object that can be coerced to a matrix of log-expression values,
+for example an ExpressionSet or an EList. Rows represent genes or genomic features while columns represent samples.}
+
+\item{groups}{Factor of sample groups for colouring and legend.}
+
+\item{n}{Passed to \code{plotMDS()} (\code{top}): Integer; number of top genes used to calculate pairwise distances.}
+
+\item{sample.plot.names}{Passed to \code{plotMDS()} (\code{labels}): character vector of sample names or labels. Defaults to colnames(d).}
+
+\item{analysis.name}{Character used in the plot title and the output file name if the plot is saved to a PDF}
+
+\item{do.pdf}{Logical indicating whether a PDF should be produced.}
+
+\item{out.dir}{Character; path where to save PDF.}
+}
 \description{
-Function to generate a MDS plot using `limma::plotMDS`
+Wrapepr around `limma::plotMDS` to generate a MDS plot
+}
+\seealso{
+[plotMDS()]
 }

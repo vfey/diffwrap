@@ -2,7 +2,7 @@
 % Please edit documentation in R/preprocess.R
 \name{diff_expr_get_samp_info}
 \alias{diff_expr_get_samp_info}
-\title{Function to standardize `samp.info` sample information data frame}
+\title{Function to standardize samp.info sample information data frame}
 \usage{
 diff_expr_get_samp_info(
   samp.info,
@@ -11,6 +11,18 @@ diff_expr_get_samp_info(
   ellipse.mapping.groups = NULL
 )
 }
+\arguments{
+\item{samp.info}{\code{data.frame}. samp.info object containing information of the project's sample sheet.}
+
+\item{samples}{\code{character}. Name of the column in 'samp.info' containing sample names. If 'samp.info' is not supplied
+vector of sample names.}
+
+\item{groups}{\code{character}. Name of the column in 'samp.info' containing grouping information. If 'samp.info' is not supplied
+vector of groups.}
+
+\item{ellipse.mapping.groups}{Optional additional grouping for ellipse drawing. Overrides sample groups.
+Use for selective highlighting of user-defined sample groups.}
+}
 \description{
-Function to standardize `samp.info` sample information data frame
+Function to standardize samp.info sample information data frame
 }

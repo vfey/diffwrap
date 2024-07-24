@@ -6,6 +6,13 @@
 \usage{
 diff_expr_PCA(counts, n = 500, scale. = FALSE)
 }
+\arguments{
+\item{counts}{Counts matrix.}
+
+\item{n}{Number of rows to be selected from the sorted variance matrix (by default, the top 500 rows are selected from the matrix sorted in decreasing order).}
+
+\item{scale.}{A logical value passed to \code{prcomp}; should the variables be scaled to have unit variance?}
+}
 \description{
 Function to do PCA using `stats::prcomp`
 }

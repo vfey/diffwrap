@@ -16,14 +16,13 @@ runEnrichmentAnalyses(
   logfc.thr = 1,
   enrichment.methods = c("clusterProfilerGO", "clusterProfilerKEGG", "DAVID",
     "gProfileR", "topGO"),
-  clusterProfilerGO.params = list(analysis.approach = "ORA", do.similarity.filtering =
-    F, min.gene.set.size = 10, max.gene.set.size = 1000, ontology = "BP", min.overlap =
-    2, p.adjust.method = "BH"),
+  clusterProfilerGO.params = list(analysis.approach = "ORA", do.similarity.filtering = F,
+    min.gene.set.size = 10, max.gene.set.size = 1000, ontology = "BP", min.overlap = 2,
+    p.adjust.method = "BH"),
   clusterProfilerKEGG.params = list(analysis.approach = "ORA", min.gene.set.size = 10,
     max.gene.set.size = 1000, ontology = "BP", min.overlap = 2, p.adjust.method = "BH"),
-  david.params = list(email.address = "", url = "", time.out.value = 60000,
-    annotation.category = "GOTERM_BP_FAT", max.gene.set.size = 1000),
-  gProfiler.params = list(data.sources = "GO:BP", show.only.significant = TRUE),
+  david.params = NULL,
+  gProfileR.params = list(data.sources = "GO:BP", show.only.significant = TRUE),
   topGO.params = list(ontologies.used = c("BP"), org = "org.Hs.eg.db")
 )
 }
@@ -59,11 +58,11 @@ Analysis approach can be "ORA" or "KEGG". If do.similarity.filtering is set to T
 
 \item{clusterProfilerKEGG.params}{\code{list}.}
 
-\item{david.params}{\code{list}.}
-
-\item{topGO.params}{\code{list}.}
+\item{david.params}{\code{list}. NOT IN USE!}
 
 \item{gProfileR.params}{\code{list}.}
+
+\item{topGO.params}{\code{list}.}
 }
 \value{
 A list of all relevant objects generated in the course of the enrichment analyses
@@ -75,6 +74,8 @@ Functions in various R-packages (clusterProfiler, topGO, gProfileR and RDAVIDWeb
 are integrated. Currently supports human or mouse!
 }
 \details{
-DAVID approach requires a registered email-address, correct java-version and an url configured with the settings.
+DAVID approach needs to be reimplemented as the package RDAVIDWebService is deprecated.
+Old notes:
+DAVID web service requires a registered email-address, correct java-version and an url configured with the settings.
 url="https://david.ncifcrf.gov/webservice/services/DAVIDWebService.DAVIDWebServiceHttpSoap12Endpoint/"
 }

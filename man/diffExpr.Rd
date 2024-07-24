@@ -6,7 +6,7 @@
 files to producing text files and graphs}
 \usage{
 diffExpr(
-  expr.file = "mature_miRNA_expression.xls",
+  expr.file,
   samp.info,
   control,
   design = NULL,
@@ -36,10 +36,11 @@ diffExpr(
   strict = TRUE,
   disp = c("gene", "trend", "common"),
   do.voom = FALSE,
-  voom.fun = voom,
+  voom.fun = limma::voom,
   norm.method = c("tmm", "quantile"),
   bayes.trend = FALSE,
   bayes.robust = FALSE,
+  quasi.likelihood = NA,
   n = 500,
   gene.selection = "common",
   ellipse = TRUE,
@@ -53,13 +54,13 @@ diffExpr(
   var.axes = FALSE,
   PC = c(1, 2, 3),
   type = c("both", "uncorrected", "pseudo-corrected"),
-  font.size = 5,
   plots = TRUE,
   lists = TRUE,
   filtered.lists = TRUE,
   do.enrichment = TRUE,
   enrichment.methods = c("clusterProfilerGO", "clusterProfilerKEGG", "DAVID",
     "gProfileR", "topGO"),
+  ...,
   dry.run = FALSE
 )
 }
@@ -84,30 +85,109 @@ vector of groups.}
 
 \item{block}{\code{logical}. Are the comparisons to be made within AND between subjects? See Details section.}
 
+\item{contrasts}{\code{character}. Vector of contrasts to be made. If not provided, all possible contrasts will be made.
+This specifies group name pairs to be compared in the format expected by \code{makeContrasts()}, i.e., "group2-group1".}
+
+\item{out.dir}{\code{character}. Path to the output directory. If not provided, a new directory will be created in the project directory.}
+
+\item{project.dir}{\code{character}. Path to the project directory. Defaults to the current working directory.}
+
+\item{analysis.name}{\code{character}. Name of the analysis. If not provided, a default name will be generated.}
+
+\item{biomart}{\code{logical}. Should the biomart be used for gene annotation? Defaults to \code{FALSE}.}
+
+\item{biom.data.set}{\code{character}. The biomart dataset to be used. Defaults to "hsapiens_gene_ensembl".}
+
+\item{biom.mart}{\code{character}. The biomart to be used.}
+
+\item{host}{\code{character}. The host to be used for the biomart. Defaults to "www.ensembl.org".}
+
+\item{biom.filter}{\code{character}. The biomart filter to be used. Defaults to "ensembl_gene_id".}
+
+\item{biom.attributes}{\code{character}. The biomart attributes to be used. Defaults to c("ensembl_gene_id", "hgnc_symbol", "description").}
+
 \item{sym.col}{\code{character}. Name of the column in the query result with gene symbols}
+
+\item{rm.dups}{\code{logical}. Should duplicates be removed from the output of the biomart request? Defaults to \code{FALSE}.}
+
+\item{p.thr}{\code{numeric}. Threshold for p-values. Defaults to 0.05.}
+
+\item{fdr.thr}{\code{numeric}. Threshold for FDR values. Defaults to 0.05.}
+
+\item{logfc.thr}{\code{numeric}. Threshold for fold-change values on the log2-scale. Defaults to 1.}
+
+\item{numlab}{\code{numeric}. Maximum number of point labels to be shown in the plot. This overrides/limits
+values calculated by any thresholds. Defaults to 15.}
+
+\item{point.lab}{\code{logical}. Should point labels be shown in the plot? Defaults to \code{TRUE}.}
+
+\item{min.samp}{\code{integer}. Number of samples in which a feature needs to be covered by at least one read per million.
+Defaults to the size of the smallest group of replicates. See \emph{details}.}
+
+\item{strict}{\code{logical}. For miRNA analysis: only keep a miRNA if there are > 5 reads per million in at least half of the samples?}
+
+\item{disp}{\code{character}. The dispersion method to be used. Defaults to "gene".}
+
+\item{do.voom}{\code{logical}. Should the voom function be used? Defaults to \code{FALSE}.}
+
+\item{voom.fun}{\code{function}. The voom function to be used. Defaults to \code{limma::voom}.}
+
+\item{norm.method}{\code{character}. The normalisation method to be used. Defaults to "tmm".}
 
 \item{bayes.trend}{\code{logical}. Should an intensity-trend be allowed for the prior variance? Passed to 'limma::eBayes'.}
 
 \item{bayes.robust}{\code{logical}. Should the estimation of df.prior and var.prior be robustified against outlier sample variances? Passed to 'limma::eBayes'.}
 
-\item{ellipse}{\code{logical}. Should an ellipse be plottrd around samples belonging to the same sample group?}
+\item{quasi.likelihood}{Logical; should quasi-likelihood methods be used? See \emph{Details} section.
+Defaults to NA, which will determine the method based on the number of replicate samples.
+If more than 4 replicates are present, the likelihood ratio test is used, otherwise the quasi-likelihood methods.
+If \code{TRUE}, then the quasi-likelihood methods are used, if \code{FALSE}, then the likelihood ratio test is used.}
+
+\item{n}{\code{integer}. Passed to \code{plotMDS()} (\code{top}): number of top genes used to calculate pairwise distances. Defaults to 500.}
+
+\item{gene.selection}{\code{character}. passed to \code{plotMDS()} specifying the mode to select genes for comparisons. Defaults to "common".}
+
+\item{ellipse}{\code{logical}. Should an ellipse be plotted around samples belonging to the same sample group? Defaults to \code{TRUE}.}
 
 \item{ellipse.mapping.groups}{\code{character} The name of the column in 'samp.info' with group names for ellipse drawing. If \code{NULL} (default)
 will use the \code{groups} column. If 'samp.info' is not supplied vector of groups.}
 
-\item{label.samples}{\code{logical}. Should points in appropriate QC plots be labelled. So far, applies only to PCA ggplot.}
+\item{label.samples}{\code{logical}. Should points in appropriate QC plots be labelled. So far, applies only to PCA ggplot. Defaults to \code{TRUE}.}
 
-\item{geom.point.size}{\code{numeric}. Size of points in appropriate QC plots. So far, applies only to PCA ggplot.}
+\item{geom.point.size}{\code{numeric}. Size of points in appropriate QC plots. So far, applies only to PCA ggplot. Defaults to 2.}
 
-\item{label.font.size}{\code{numeric}. Font size used for point labels in appropriate QC plots. So far, applies only to PCA ggplot.}
+\item{label.font.size}{\code{numeric}. Font size used for point labels in appropriate QC plots. So far, applies to PCA ggplot and M-A plots. Defaults to 5.}
 
 \item{plot.ellipse.legend}{\code{logical}. Should a legend be addded for ellipses in PCA plots? NA, the default, includes
 if any aesthetics are mapped. FALSE never includes, and TRUE always includes. It can also be a named logical vector to finely select
 the aesthetics to display.}
 
-\item{enrichment.methods}{\code{character}. One or more of the following: c("clusterProfilerGO", "clusterProfilerKEGG","DAVID", "gProfileR", "topGO"). By default, uses them all}
+\item{circle}{\code{logical}. Draw a correlation circle around points representing correlating samples? Only applies when prcomp was called with scale = TRUE and when var.scale = 1. Defaults to \code{TRUE}.}
 
-\item{do.enrichment=TRUE}{\code{logical}. Whether or not to call enrichment wrapper}
+\item{varname.size}{\code{numeric}. Size of the text for variable names. Defaults to 0.}
+
+\item{var.axes}{\code{logical}. Draw arrows for the variables? Defaults to \code{FALSE}.}
+
+\item{PC}{\code{numeric}. Which principal components to plot. Defaults to 1:3.}
+
+\item{type}{\code{character}. Which type of plot to produce. Needs to be one of "both", "uncorrected", "pseudo-corrected"
+describing which values should be plotted. "uncorrected" will plot the input counts matrix while
+"pseudo-corrected" will plot pseudo counts for blocked designs (e.g., paired samples or batch factors).
+Defaults to "both".}
+
+\item{plots}{\code{logical}. Should plots be produced? Defaults to \code{TRUE}.}
+
+\item{lists}{\code{logical}. Should lists of differentially expressed genes be produced? Defaults to \code{TRUE}.}
+
+\item{filtered.lists}{\code{logical}. Should lists of differentially expressed genes be produced for filtered data? Defaults to \code{TRUE}.}
+
+\item{do.enrichment}{\code{logical}. Whether or not to call enrichment wrapper. Defaults to \code{TRUE}.}
+
+\item{enrichment.methods}{\code{character}. One or more of the following: c("clusterProfilerGO", "clusterProfilerKEGG","DAVID", "gProfileR", "topGO"). By default, uses them all.}
+
+\item{...}{\code{ANY}. Additional arguments passed to functions.}
+
+\item{dry.run}{\code{logical}. If \code{TRUE}, the function will not create any output files or directories.}
 }
 \value{
 A list of all relevant objects generated in the course of the workflow:
@@ -126,8 +206,20 @@ However, the function is first and foremost called for its side effects of gener
    on the conventions set for this package.
 }
 \details{
-For experiemtal desgins involving comparisons within as well as between subjects inter-subject needs to be computed.
+For experimental designs involving comparisons within as well as between subjects inter-subject needs to be computed.
     In this case, the column specified in the 'pairs' argument must assign the subjects to the treatment/tissue/etc groups.
     For example, if we have two treatments the effects of which are to be observed in each two tissues, this design would apply.
     The 'pairs' factor is passed to the functions 'duplicateCorrelation' and 'lmFit'.
+    The 'block' argument is used to specify whether the comparisons are to be made within AND between subjects.
+    If 'block' is set to \code{TRUE}, the 'voom' function is enforced.
+    The 'voom' function is also enforced if paired samples are detected.
+    In edgeR, it is recommended to remove features without at least 1 read per million in n of the
+    samples, where n is the size of the smallest group of replicates (determined from the 'groups' vector).
+    The 'min.samp' argument is used to specify the number of samples in which a feature needs to be covered by at least one read per million.
+    Quasi-likelihood pipeline:
+    While the likelihood ratio test is a more obvious choice for inferences with GLMs, the QL
+    F-test is preferred as it reflects the uncertainty in estimating the dispersion for each gene. It
+    provides more robust and reliable error rate control when the number of replicates is small.
+    The QL dispersion estimation and hypothesis testing is done by using the functions
+    glmQLFit() and glmQLFTest().
 }

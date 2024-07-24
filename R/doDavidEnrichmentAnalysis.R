@@ -1,4 +1,4 @@
-#' @export
+
 doDavidEnrichmentAnalysis = function(background.ensembl.ids,
                                      foreground.ensembl.ids,
                                      email.address,

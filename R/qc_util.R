@@ -1,10 +1,13 @@
 # TODO: Add comment
-# 
+#
 # Author: vidal
 ###############################################################################
 
 
 #' Function to do PCA using `stats::prcomp`
+#' @param counts Counts matrix.
+#' @param n Number of rows to be selected from the sorted variance matrix (by default, the top 500 rows are selected from the matrix sorted in decreasing order).
+#' @param scale. A logical value passed to \code{prcomp}; should the variables be scaled to have unit variance?
 #' @export
 diff_expr_PCA <-
 		function(counts, n=500, scale.=FALSE)
@@ -24,14 +27,19 @@ diff_expr_PCA <-
 }
 
 #' Function to calculate pseudo counts representing batch-corrected normalised but untransformed values
+#' @param d Passed to \code{edgeR} functions: matrix of counts, or a DGEList object, or a SummarizedExperiment object.
+#' @param design numeric design matrix
+#' @param pairs Factor of identifiers specifying paired samples for paired or other block designs, or batch effects.
+#' @param disp Character; one of "tagwise.dispersion", "trended.dispersion", "bin.dispersion"
+#' @param do.cpm Logical; should the pseudo counts be transformed to CPMs?
 #' @export
 diff_expr_pseudo_counts <-
-		function(design, d, pairs, disp="tagwise.dispersion", do.cpm=TRUE)
+		function(d, design, pairs, disp="tagwise.dispersion", do.cpm=TRUE)
 {
 	cat("    Estimating dispersion...")
-	disp.mat <- estimateDisp(d, design)
+	disp.mat <- edgeR::estimateDisp(d, design)
 	cat("done\n    Fitting generalised linear model...")
-	fit0 <- glmFit(d, design, dispersion=disp.mat[[disp]])
+	fit0 <- edgeR::glmFit(d, design, dispersion=disp.mat[[disp]])
 	old.fitted <- fit0$fitted.values
 	batch.coefs <- grep(pairs, colnames(design))
 	new.coefs <- fit0$unshrunk.coefficients
@@ -40,11 +48,11 @@ diff_expr_pseudo_counts <-
 	cat("done\n    Refit coefficients...")
 	new.fitted <- exp(new.coefs %*% t(design) + as.vector(fit0$offset))
 	cat("done\n    Getting pseudo-counts...")
-	pseudo.counts <- q2qnbinom(d$counts, old.fitted, new.fitted, dispersion=disp.mat[[disp]])
+	pseudo.counts <- edgeR::q2qnbinom(d$counts, old.fitted, new.fitted, dispersion=disp.mat[[disp]])
 	cat("done\n")
 	if (do.cpm) {
 		cat("    Getting CPMs...")
-		pseudo.counts <- cpm(pseudo.counts, log=TRUE, prior.count=3)
+		pseudo.counts <- edgeR::cpm(pseudo.counts, log=TRUE, prior.count=3)
 		cat("done\n")
 	}
 	return(pseudo.counts)

@@ -4,7 +4,24 @@
 \alias{diff_expr_dendro_plot}
 \title{Function to generate dendrogram plots based on hierarchical clustering}
 \usage{
-diff_expr_dendro_plot(counts, groups, grp.nam = NULL, main = NULL)
+diff_expr_dendro_plot(
+  counts,
+  groups,
+  grp.nam = NULL,
+  main = NULL,
+  col.grps = FALSE
+)
+}
+\arguments{
+\item{counts}{Counts matrix.}
+
+\item{groups}{Sample groups for plot annotation as character vector or factor.}
+
+\item{grp.nam}{Legend title.}
+
+\item{main}{Plot title.}
+
+\item{col.grps}{Logical indicating whether to colour the dendrogram by groups.}
 }
 \description{
 Function to generate dendrogram plots based on hierarchical clustering

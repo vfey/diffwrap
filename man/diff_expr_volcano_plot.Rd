@@ -31,7 +31,7 @@ diff_expr_volcano_plot(
 
 \item{logfc.thr}{\code{numeric}. Plotted (`abs`olute) values above this threshold will have bigger dots.}
 
-\item{numlab}{\code{numeric}. Maximum number of labels per plot. Supersedes numbers calculated based on `p.thr` and `fdr.thr`.}
+\item{numlab}{\code{numeric}. Maximum number of labels per plot. Takes precedence to numbers calculated based on `p.thr` and `fdr.thr`.}
 
 \item{point.lab}{\code{logical}. Should points be labelled, at all?}
 }

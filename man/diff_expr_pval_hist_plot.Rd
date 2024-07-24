@@ -6,6 +6,10 @@
 \usage{
 diff_expr_pval_hist_plot(d3)
 }
+\arguments{
+\item{d3}{\code{data.frame}. Data frame containing a P-Value column to generate a histogram. The column name will be determined
+by pattern matching.}
+}
 \description{
 Function to generate a histogram of the P-Value distribution
 }

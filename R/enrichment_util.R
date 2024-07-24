@@ -4,7 +4,14 @@
 # Author: Meeri Pekkarinen
 #*********************************************************************************
 
-#' Helper function for enrichment visualisations:
+#' Helper function for enrichment visualisations: prepare plot legend y coordinates and labels
+#' @param scale.minimum Numeric; minimum y coordinates for text labels
+#' @param scale.maximum Numeric; maximum y coordinates for text labels
+#' @param int.values.for.ticks Not implemented.
+#' @details
+#' The coordinates are used in a network graph and minimum and maximum scale values correspond to
+#'   minimum and maximum fold-changes, by default.
+#'
 #' @export
 prepare_scale_for_legend = function(scale.minimum, scale.maximum, int.values.for.ticks=NULL){
 
@@ -32,13 +39,24 @@ prepare_scale_for_legend = function(scale.minimum, scale.maximum, int.values.for
 
 
 #' Function for making network visualisation based on enrichment result, DE gene table and thresholding.
-#' Can take the input tables either as dataframes or excel-files
+#' Can take the input tables either as data frames or Excel files
+#' @param enrichment.result data.frame; output of the enrichment tool. In general, a data frame with all
+#'   columns needed for the plot.
+#' @param DE.result data.frame; fold-change table with corresponding statistics, e.g., the output of \code{topTable()} for
+#'   a particular contrast.
+#' @param plot.filename character; name of the output image file. The file extension can be omitted and will be added internally.
+#' @param show.terms integer; Number of enrichment terms to be plotted, i.e., the first \code{Integer} rows of \code{enrichment.result}.
+#' @param logfc.thr \code{numeric}. Fold-change threshold on the log2-scale.
+#' @param fdr.thr \code{numeric}. Threshold for adjusted p-values (applied in both filtering of DE-genes and in enrichment results). Default 0.05
+#' @param pdf.width,pdf.height Numeric; width and height of the PDF graphics region in inches.
+#' @param legend.cex.main,legend.cex.text Numeric; text sizes of legend title and text, given as character expansion
+#'   (magnification) relative to the default.
 #' @export
-plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, show.terms = 5,
+plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename, show.terms = 5,
                                    logfc.thr = NULL,
                                    fdr.thr = NULL,
                                    pdf.width = 11,
-                                   pdf.heigth = 8,
+                                   pdf.height = 8,
                                    legend.cex.main = 0.8,
                                    legend.cex.text = 0.7) {
 
@@ -136,13 +154,13 @@ plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, 
     genes <- append(genes, x)
   }
   # Generate graph object
-  g <- make_undirected_graph(edges=as.vector(edges))
+  g <- igraph::make_undirected_graph(edges=as.vector(edges))
   genes = unique(genes)
 
   #print(g)
 
   # Acquire vertices names
-  vertices <- V(g)$name
+  vertices <- igraph::V(g)$name
   #print(vertices)
 
   # Assign categories to vertices
@@ -154,12 +172,12 @@ plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, 
       categories <- append(categories, "gene")
     }
   }
-  V(g)$categories <- categories
+  igraph::V(g)$categories <- categories
 
 
   # Based on foldchange, create color palette for the genes
   # Set a separate color for pathways
-  palette <- colorRampPalette(rev(brewer.pal(11,"RdBu")))
+  palette <- colorRampPalette(rev(RColorBrewer::brewer.pal(11,"RdBu")))
   #genes = unique(genes)
 
   #foldchanges <- DE.table[[logFoldChangeColumn]] #origiginal plot
@@ -186,20 +204,20 @@ plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, 
   sizes <- c()
   vert.label.sizes <- c()
   vertex.label.dists <- c()
-  for (i in 1:length(V(g)$name)) {
-    if (V(g)$categories[i] == "pathway") {
+  for (i in 1:length(igraph::V(g)$name)) {
+    if (igraph::V(g)$categories[i] == "pathway") {
       print(vertices[i])
       shapes <- append(shapes, "circle")
       colors <- append(colors, "white")
       sizes <- append(sizes, 7)
       vert.label.sizes <- append(vert.label.sizes, 0.55)
       vertex.label.dists = append(vertex.label.dists, 0)
-      V(g)$name[i] = gsub('(.{1,15})(\\s|$)', '\\1\n', V(g)$name[i])
-      #print(gsub('(.{1,15})(\\s|$)', '\\1\n', V(g)$name[i]))
-      print(V(g)$name[i])
+      igraph::V(g)$name[i] = gsub('(.{1,15})(\\s|$)', '\\1\n', igraph::V(g)$name[i])
+      #print(gsub('(.{1,15})(\\s|$)', '\\1\n', igraph::V(g)$name[i]))
+      print(igraph::V(g)$name[i])
     } else {
       shapes <- append(shapes, "circle")
-      colors <- append(colors, DE.table[DE.table[[geneSymbolColumn]] == V(g)$name[i],"color"])
+      colors <- append(colors, DE.table[DE.table[[geneSymbolColumn]] == igraph::V(g)$name[i],"color"])
       sizes <- append(sizes, 7)
       vert.label.sizes <- append(vert.label.sizes, 0.6)
       vertex.label.dists = append(vertex.label.dists, -0.2)
@@ -207,20 +225,20 @@ plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, 
     }
   }
   print(length(colors))
-  V(g)$shapes <- shapes
-  V(g)$colors <- colors
-  V(g)$sizes <- sizes
-  V(g)$vert.label.sizes <- vert.label.sizes
-  V(g)$vertex.label.dists <- vertex.label.dists
+  igraph::V(g)$shapes <- shapes
+  igraph::V(g)$colors <- colors
+  igraph::V(g)$sizes <- sizes
+  igraph::V(g)$vert.label.sizes <- vert.label.sizes
+  igraph::V(g)$vertex.label.dists <- vertex.label.dists
 
 
   # Produce the plot
   #tiff(paste0(plot.filename, ".tiff"), width = 10, height = 10, units = 'cm', res = 300)
-  pdf(paste0(plot.filename, ".pdf"), width = pdf.width, height = pdf.heigth)
+  pdf(paste0(plot.filename, ".pdf"), width = pdf.width, height = pdf.height)
   layout(matrix(1:2, ncol = 2), widths = c(0.85*pdf.width,0.15*pdf.width),heights = c(1,0.25))
-  plot(g, vertex.label.color = "black", vertex.size = V(g)$sizes, vertex.frame.color = "white",
-       vertex.color = V(g)$colors, vertex.label.cex = V(g)$vert.label.sizes, vertex.shape = V(g)$shapes,
-       vertex.label.dist = V(g)$vertex.label.dists,
+  plot(g, vertex.label.color = "black", vertex.size = igraph::V(g)$sizes, vertex.frame.color = "white",
+       vertex.color = igraph::V(g)$colors, vertex.label.cex = igraph::V(g)$vert.label.sizes, vertex.shape = igraph::V(g)$shapes,
+       vertex.label.dist = igraph::V(g)$vertex.label.dists,
        layout = layout.graphopt(g, spring.length = 1.3, spring.constant = 1.3), vertex.label.family = "sans", vertex.label.font = 2)
   # Add the legend
   legend_image <- as.raster(matrix(rev(palette(100)), ncol = 1))
@@ -239,16 +257,24 @@ plot_enrichment_network = function(enrichment.result, DE.result, plot.filename, 
 
 
 
-#Helper function for formatting the gene column of DAVID and gProfileR enrichment dataframe.
-#Can be used even when biomart is not run within the full pipeline. Requires medseqr!
-format_ensembl_ids_annotated_to_term <- function(result, organism.term, which.split = ",")
+#' Helper function for formatting the gene ID column of enrichment data frame.
+#' @param result Data.frame; a data frame with Ensembl Gene IDs in one (only one) column
+#' @param species Character of length one; name of the species the IDs refer to. Only "human" and "mouse" are supported.
+#' @param which.split Character; separator used in the ID column of \code{result}. See \emph{details}.
+#' @details
+#' Enrichment tools report all genes annotated to a certain term in one string, separated by comma or similar. The function
+#'   splits each row into individual IDs before converting and later re-collapses converted IDs.
+#'
+#' @note
+#' DAVID enrchment is not implemented in the current version of diffwrap.
+format_ensembl_ids_annotated_to_term <- function(result, species, which.split = ",")
 {
-  gene.col <- colnames(result)[grepl("ENS", result)]
+  gene.col <- colnames(result)[grepl("ENSG", result)]
 
   for (i in 1:length(result[[gene.col]])) {
     genes <- unlist(strsplit(result[[gene.col]][i], split = which.split))
     #print(head(genes))
-    syms <- convertId2(genes, organism.term)
+    syms <- convertid::convertId2(genes, species)
     syms[is.na(syms)] <- genes[is.na(syms)]
 
     new_names <- paste(syms,collapse = ",") #writing with comma-separator
@@ -283,11 +309,13 @@ format_ensembl_ids_annotated_to_term <- function(result, organism.term, which.sp
 #' analysis.approach="ORA", do.similarity.filtering=F,min.gene.set.size=10,max.gene.set.size=1000, ontology="BP", min.overlap=2,p.adjust.method="BH".
 #' Analysis approach can be "ORA" or "KEGG". If do.similarity.filtering is set to TRUE, clusterProfiler::simplify() is run.
 #' @param clusterProfilerKEGG.params \code{list}.
-#' @param david.params \code{list}.
+#' @param david.params \code{list}. NOT IN USE!
 #' @param gProfileR.params \code{list}.
 #' @param topGO.params \code{list}.
 #'
-#' @details DAVID approach requires a registered email-address, correct java-version and an url configured with the settings.
+#' @details DAVID approach needs to be reimplemented as the package RDAVIDWebService is deprecated.
+#' Old notes:
+#' DAVID web service requires a registered email-address, correct java-version and an url configured with the settings.
 #' url="https://david.ncifcrf.gov/webservice/services/DAVIDWebService.DAVIDWebServiceHttpSoap12Endpoint/"
 #' @return A list of all relevant objects generated in the course of the enrichment analyses
 ###############################################################################
@@ -314,12 +342,13 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                                                                     min.overlap = 2,
                                                                     p.adjust.method = "BH"
                                                                     ),
-                                  david.params = list(email.address = "",
-                                                      url = "",
-                                                      time.out.value = 60000,
-                                                      annotation.category = "GOTERM_BP_FAT",
-                                                      max.gene.set.size = 1000),
-                                  gProfiler.params = list(data.sources = "GO:BP", show.only.significant = TRUE),
+                                  david.params = NULL,
+                                  # david.params = list(email.address = "",
+                                  #                     url = "",
+                                  #                     time.out.value = 60000,
+                                  #                     annotation.category = "GOTERM_BP_FAT",
+                                  #                     max.gene.set.size = 1000),
+                                  gProfileR.params = list(data.sources = "GO:BP", show.only.significant = TRUE),
                                   topGO.params = list(ontologies.used = c("BP"), org = "org.Hs.eg.db")
                                   )
 {
@@ -330,13 +359,13 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                                      "clusterProfilerKEGG" = c("hsa","mmu"),
                                      "gProfileR" = c("hsapiens", "mmusculus"),
                                      "topGO" = c("org.Hs.eg.db", "org.Mm.eg,db"),
-                                     "medseqr" = c("Human", "Mouse"))
+                                     "species4conversion" = c("Human", "Mouse"))
   rownames(enrich.resource.terms) <- c("human", "mouse")
 
   enrichment_out.l <- list()
   enrichment_out.l$clusterProfiler_GO <- list()
   enrichment_out.l$clusterProfiler_KEGG <- list()
-  enrichment_out.l$DAVID <- list()
+  # enrichment_out.l$DAVID <- list()
   enrichment_out.l$gProfileR <- list()
   enrichment_out.l$topGO <- list()
 
@@ -443,7 +472,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                             clusterProfilerGO.params$ontology,".xls" )
          full.filename <- file.path(method.dir, filename)
          cat("      Saving ", method, " result table into ",  full.filename, "...\n")
-         WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
+         WriteXLS::WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
 
          #Making the graph visualisation
          graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)
@@ -542,15 +571,15 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
             result[[gene.col]][i] <- new_names
           }
           #Then, converting the ensembles into symbolic names
-          organism.term <- as.character(enrich.resource.terms[species, "medseqr"])
-          result <- format_ensembl_ids_annotated_to_term(result, organism.term)
+          spec.name <- as.character(enrich.resource.terms[species, "species4conversion"])
+          result <- format_ensembl_ids_annotated_to_term(result, spec.name)
 
           filename <- paste0(analysis.name, ".", contrast,".", method, ".",
                              clusterProfilerKEGG.params$analysis.approach, ".",
                              clusterProfilerKEGG.params$ontology,".xls" )
           full.filename <- file.path(method.dir, filename)
           cat("      Saving ", method, " result table into ",  full.filename, "...\n")
-          WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
+          WriteXLS::WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
 
           #Making the graph visualisation
           graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)
@@ -562,79 +591,79 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
         enrichment_out.l$clusterProfiler_KEGG[[contrast]] <- result
       }
 
-      if (method == "DAVID") {
-
-        default.params <- list(email.address = "", url = "",time.out.value = 60000,
-                              annotation.category = "GOTERM_BP_FAT", max.gene.set.size = 1000)
-        missing.params = default.params[names(default.params)[!(names(default.params) %in% names(david.params))]]
-        david.params = c(david.params, missing.params)
-
-        cat("   Performing DAVID... \n")
-        if (david.params$email.address != "") {
-
-          result <- doDavidEnrichmentAnalysis(background.ensembl.ids = background.genes,
-                                   foreground.ensembl.ids = input.genes,
-                                   email.address = david.params$email.address,
-                                   url.address = david.params$url,
-                                   time.out.value = david.params$time.out.value,
-                                   annotation.category = david.params$annotation.category,
-                                   pval.thr = p.thr,
-                                   max.gene.set.size = david.params$max.gene.set.size)
-
-
-
-        }
-        else{
-          cat("      No e-mail address. No connection into DAVID...\n")
-          result <- "No e-mail address. DAVID could not be performed."
-        }
-
-        # Formattig and saving the table, if relevant
-        method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE) # detecting output directory
-        if (is.data.frame(result)) {
-
-          organism.term <- as.character(enrich.resource.terms[species, "medseqr"])
-          result <- format_ensembl_ids_annotated_to_term(result, organism.term)
-
-          filename <- paste0(analysis.name, ".", contrast,".", method, ".", david.params$annotation.category,".xls" )
-          full.filename <- file.path(method.dir, filename)
-          cat("      Saving ", method, " result table into ",  full.filename, "...\n")
-          WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
-
-          #Making the graph visualisation
-          graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)
-          cat("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
-          plot_enrichment_network(enrichment.result = result, DE.result = de_table,
-                                  plot.filename = graph.name, show.terms = 5, logfc.thr = 1, fdr.thr = 0.05)
-        }
-
-        enrichment_out.l$DAVID[[contrast]] = result
-      }
+      # if (method == "DAVID") {
+      #
+      #   default.params <- list(email.address = "", url = "",time.out.value = 60000,
+      #                         annotation.category = "GOTERM_BP_FAT", max.gene.set.size = 1000)
+      #   missing.params = default.params[names(default.params)[!(names(default.params) %in% names(david.params))]]
+      #   david.params = c(david.params, missing.params)
+      #
+      #   cat("   Performing DAVID... \n")
+      #   if (david.params$email.address != "") {
+      #
+      #     result <- doDavidEnrichmentAnalysis(background.ensembl.ids = background.genes,
+      #                              foreground.ensembl.ids = input.genes,
+      #                              email.address = david.params$email.address,
+      #                              url.address = david.params$url,
+      #                              time.out.value = david.params$time.out.value,
+      #                              annotation.category = david.params$annotation.category,
+      #                              pval.thr = p.thr,
+      #                              max.gene.set.size = david.params$max.gene.set.size)
+      #
+      #
+      #
+      #   }
+      #   else{
+      #     cat("      No e-mail address. No connection into DAVID...\n")
+      #     result <- "No e-mail address. DAVID could not be performed."
+      #   }
+      #
+      #   # Formattig and saving the table, if relevant
+      #   method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE) # detecting output directory
+      #   if (is.data.frame(result)) {
+      #
+      #     spec.name <- as.character(enrich.resource.terms[species, "species4conversion"])
+      #     result <- format_ensembl_ids_annotated_to_term(result, spec.name)
+      #
+      #     filename <- paste0(analysis.name, ".", contrast,".", method, ".", david.params$annotation.category,".xls" )
+      #     full.filename <- file.path(method.dir, filename)
+      #     cat("      Saving ", method, " result table into ",  full.filename, "...\n")
+      #     WriteXLS::WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
+      #
+      #     #Making the graph visualisation
+      #     graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)
+      #     cat("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
+      #     plot_enrichment_network(enrichment.result = result, DE.result = de_table,
+      #                             plot.filename = graph.name, show.terms = 5, logfc.thr = 1, fdr.thr = 0.05)
+      #   }
+      #
+      #   enrichment_out.l$DAVID[[contrast]] = result
+      # }
 
       if (method == "gProfileR") {
 
         cat("   Performing GO BP enrichment with gProfileR... \n")
         org <- as.character(enrich.resource.terms[species, method])
         print(paste0("Organism: ",org))
-        print(paste0("Data sources: ",gProfiler.params$data.sources))
+        print(paste0("Data sources: ",gProfileR.params$data.sources))
 
         result <- run_gprofiler(input.genes, background.genes,
                                 organism = org,
-                                data_sources = gProfiler.params$data.sources,
-                                show_only_significant = gProfiler.params$show.only.significant
+                                data_sources = gProfileR.params$data.sources,
+                                show_only_significant = gProfileR.params$show.only.significant
                                 )
 
         # Formattig and saving the table, if relevant
         method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE) # detecting output directory
         if (is.data.frame(result) & dim(result)[1] > 0) {
 
-          organism.term <- as.character(enrich.resource.terms[species, "medseqr"])
-          result <- format_ensembl_ids_annotated_to_term(result, organism.term)
+          spec.name <- as.character(enrich.resource.terms[species, "species4conversion"])
+          result <- format_ensembl_ids_annotated_to_term(result, spec.name)
 
-          filename <- paste0(analysis.name, ".", contrast,".", method, ".", gProfiler.params$data.sources,".xls" )
+          filename <- paste0(analysis.name, ".", contrast,".", method, ".", gProfileR.params$data.sources,".xls" )
           full.filename <- file.path(method.dir, filename)
           cat("      Saving ", method, " result table into ",  full.filename, "...\n")
-          WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
+          WriteXLS::WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
 
           #Making the graph visualisation
           graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)
@@ -664,13 +693,13 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
         #Formatting and saving the table, if relevant
         if (is.data.frame(result) & dim(result)[1] > 0) {
 
-          organism.term <- as.character(enrich.resource.terms[species, "medseqr"])
-          result <- format_ensembl_ids_annotated_to_term(result, organism.term)
+          spec.name <- as.character(enrich.resource.terms[species, "species4conversion"])
+          result <- format_ensembl_ids_annotated_to_term(result, spec.name)
 
           filename <- paste0(analysis.name, ".", contrast,".", method, ".", topGO.params$ontologies.used,".xls" )
           full.filename <- file.path(method.dir, filename)
           cat("      Saving ", method, " result table into ",  full.filename, "...\n")
-          WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
+          WriteXLS::WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
 
           #Making the graph visualisation
           graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)

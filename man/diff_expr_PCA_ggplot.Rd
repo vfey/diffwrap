@@ -20,6 +20,37 @@ diff_expr_PCA_ggplot(
   plot.ellipse.legend = NA
 )
 }
+\arguments{
+\item{PCA}{List of class \code{prcomp} or just a list having a component \code{x} that contains the rotated variables from \code{prcomp}.}
+
+\item{samp.name}{Optional sample names to be used in the plot, given as character vector.}
+
+\item{groups}{Sample groups for plot annotation as character vector or factor.}
+
+\item{grp.nam}{Legend title.}
+
+\item{PC}{Integer vector of length two specifying the principal components to be plotted.}
+
+\item{main}{Plot title.}
+
+\item{ellipse}{Logical indicating whether to draw an ellipse around the sample groups.}
+
+\item{ellipse.mapping.groups}{Optional additional grouping for ellipse drawing. Overrides sample groups.
+Use for selective highlighting of user-defined sample groups.}
+
+\item{ellipse.grp.nam}{Not implemented.}
+
+\item{label.samples}{Logical; should the points be annotated with sample name labels?}
+
+\item{geom.point.size}{Numeric passed to \code{geom_point} giving the point size.}
+
+\item{label.font.size}{Numeric passed to \code{geom_text_repel} giving the label font size.}
+
+\item{plot.ellipse.legend}{Logical; should the ellipse legend be plotted. \code{NA}, the default, will plot it if any aesthetics are mapped.}
+}
 \description{
 Function to generate an ordinary two-dimensional PCA plot using `ggplot2`
+}
+\seealso{
+[stat_ellipse()]
 }

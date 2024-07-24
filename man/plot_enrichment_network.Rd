@@ -3,7 +3,7 @@
 \name{plot_enrichment_network}
 \alias{plot_enrichment_network}
 \title{Function for making network visualisation based on enrichment result, DE gene table and thresholding.
-Can take the input tables either as dataframes or excel-files}
+Can take the input tables either as data frames or Excel files}
 \usage{
 plot_enrichment_network(
   enrichment.result,
@@ -13,12 +13,32 @@ plot_enrichment_network(
   logfc.thr = NULL,
   fdr.thr = NULL,
   pdf.width = 11,
-  pdf.heigth = 8,
+  pdf.height = 8,
   legend.cex.main = 0.8,
   legend.cex.text = 0.7
 )
 }
+\arguments{
+\item{enrichment.result}{data.frame; output of the enrichment tool. In general, a data frame with all
+columns needed for the plot.}
+
+\item{DE.result}{data.frame; fold-change table with corresponding statistics, e.g., the output of \code{topTable()} for
+a particular contrast.}
+
+\item{plot.filename}{character; name of the output image file. The file extension can be omitted and will be added internally.}
+
+\item{show.terms}{integer; Number of enrichment terms to be plotted, i.e., the first \code{Integer} rows of \code{enrichment.result}.}
+
+\item{logfc.thr}{\code{numeric}. Fold-change threshold on the log2-scale.}
+
+\item{fdr.thr}{\code{numeric}. Threshold for adjusted p-values (applied in both filtering of DE-genes and in enrichment results). Default 0.05}
+
+\item{pdf.width, pdf.height}{Numeric; width and height of the PDF graphics region in inches.}
+
+\item{legend.cex.main, legend.cex.text}{Numeric; text sizes of legend title and text, given as character expansion
+(magnification) relative to the default.}
+}
 \description{
 Function for making network visualisation based on enrichment result, DE gene table and thresholding.
-Can take the input tables either as dataframes or excel-files
+Can take the input tables either as data frames or Excel files
 }

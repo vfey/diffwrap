@@ -6,6 +6,11 @@
 \usage{
 diff_expr_read_counts(expr.file, samp.info)
 }
+\arguments{
+\item{expr.file}{\code{character} or \code{list}. String or vector or list of input file paths}
+
+\item{samp.info}{\code{data.frame}. samp.info object containing information of the project's sample sheet.}
+}
 \description{
 Function to read counts as produced by htseq-count
 }

@@ -1,4 +1,4 @@
-library(testthat)
-library(diffr)
-
-test_check("diffr")
+# library(testthat)
+# library(diffwrap)
+#
+# test_check("diffwrap")

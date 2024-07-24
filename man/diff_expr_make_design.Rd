@@ -6,6 +6,20 @@
 \usage{
 diff_expr_make_design(samp.info, groups, pairs = NULL, block = FALSE)
 }
+\arguments{
+\item{samp.info}{\code{data.frame}. samp.info object containing information of the project's sample sheet.
+vector of sample names.}
+
+\item{groups}{\code{character}. Name of the column in 'samp.info' containing grouping information. If 'samp.info' is not supplied
+vector of groups.}
+
+\item{pairs}{\code{character}. Name of the column in 'samp.info' containing paired sample information.}
+
+\item{block}{\code{logical}. Are the comparisons to be made within AND between subjects? See Details section.}
+}
 \description{
 Function to create design matrix
+}
+\seealso{
+[model.matrix()]
 }

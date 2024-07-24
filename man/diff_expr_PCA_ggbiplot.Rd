@@ -2,7 +2,7 @@
 % Please edit documentation in R/qc_plots.R
 \name{diff_expr_PCA_ggbiplot}
 \alias{diff_expr_PCA_ggbiplot}
-\title{Function to generate a PCA biplot using `medseqr::ggbiplot`}
+\title{Function to generate a PCA biplot using `ggbiplot.n`, a version of `ggbiplot` from https://github.com/vqv/ggbiplot.}
 \usage{
 diff_expr_PCA_ggbiplot(
   PCA,
@@ -18,6 +18,32 @@ diff_expr_PCA_ggbiplot(
   ...
 )
 }
+\arguments{
+\item{PCA}{List of class \code{prcomp} or just a list having a component \code{x} that contains the rotated variables from \code{prcomp}.}
+
+\item{groups}{Sample groups for plot annotation as character vector or factor.}
+
+\item{grp.nam}{Legend title.}
+
+\item{ellipse}{Logical indicating whether to draw an ellipse around the sample groups.}
+
+\item{circle}{\code{logical}. Draw a correlation circle? (only applies when prcomp was called with scale = TRUE and when var.scale = 1)}
+
+\item{varname.size}{\code{double}. size of the text for variable names}
+
+\item{var.axes}{\code{logical}. draw arrows for the variables?}
+
+\item{main}{Plot title.}
+
+\item{fix.aspect}{\code{logical}. Should the aspect ratio of the x- and y-axes be kept constant for different plot sizes?}
+
+\item{tweak}{\code{logical}. Should the plot theme be tweaked? Will apply values set in axes.title.size, legend.text.size and legend.title.size. Defaults to TRUE.}
+
+\item{...}{Arguments passed to \code{ggbiplot.n()}.}
+}
 \description{
-Function to generate a PCA biplot using `medseqr::ggbiplot`
+Function to generate a PCA biplot using `ggbiplot.n`, a version of `ggbiplot` from https://github.com/vqv/ggbiplot.
+}
+\seealso{
+[ggbiplot.n()]
 }

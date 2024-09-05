@@ -1,0 +1,31 @@
+---
+title: "Differential expression analysis with diffwrap"
+output: html
+editor: visual
+author: Vidal Fey (vidal.fey@tuni.fi)
+date: 'Last updated: `r format(Sys.Date(), "%B %d, %Y")`'
+format:
+  html:
+    code-fold: true
+    toc: true
+    html-math-method: katex
+    toc-title: Contents
+    number-sections: true
+    number-depth: 3
+    code-copy: true
+vignette: >
+  %\VignetteIndexEntry{Differential expression analysis with diffwrap}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+#library(diffwrap)
+```

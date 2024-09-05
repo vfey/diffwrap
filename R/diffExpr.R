@@ -216,7 +216,7 @@ diffExpr <-
         cat("  Output directory exists and is not empty! Found:\n")
         found <- dir(out.dir, include.dirs = TRUE)
         print(found)
-        out.dir <- paste(out.dir, "new",
+        out.dir <- paste(normalizePath(out.dir), "new",
                          gsub("-", "", unlist(strsplit(as.character(Sys.time()), " "))[1]),
                          gsub(":", "", unlist(strsplit(as.character(Sys.time()), " "))[2]),
                          sep = "_")

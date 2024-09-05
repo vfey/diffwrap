@@ -13,9 +13,16 @@ Maintainer: Vidal Fey <vidal.fey@tuni.fi>
 Depends: R (>= 3.5), plyr, ggplot2, edgeR, limma, RColorBrewer
 Imports: scatterplot3d, pheatmap, convertid, ggrepel, data.table, magrittr, methods, Hmisc, ltm, openxlsx, readxl, WriteXLS, genefilter, clusterProfiler, gProfileR, igraph, purrr, dplyr, venn, VennDiagram, topGO, grid
 Suggests:
-    testthat, futile.logger, rappdirs, scales, knitr, dendextend
+    testthat,
+    futile.logger,
+    rappdirs,
+    scales,
+    knitr,
+    quarto,
+    dendextend,
+    rmarkdown
 License: file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.2
-VignetteBuilder: knitr
+VignetteBuilder: quarto

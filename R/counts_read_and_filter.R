@@ -6,18 +6,26 @@
 utils::globalVariables("expression.raw")
 
 #' Function to read counts as produced by htseq-count
-#' @param expr.file \code{character} or \code{list}. String or vector or list of input file paths
+#' @param expr.file \code{character} or \code{list}. String or vector or list of input file paths.
+#' Allowed are individual text files with counts for one sample each, with gene IDs in the first and counts in the second column or
+#' a single counts matrix file containing read counts for all samples with rows corresponding to genes (genomic features) and columns to samples.
+#' Negative values or NAs are not allowed and gene IDs are expected in the first column.
+#' If \code{miRSEQ=TRUE} this expects the output from CAP-miRSEQ summary script which is also a counts matrix.
 #' @param samp.info \code{data.frame}. samp.info object containing information of the project's sample sheet.
+#' @param miRSEQ \code{logical}. Is the input data the output from CAP-miRSEQ summary script?
 #' @export
 diff_expr_read_counts <-
-  function(expr.file, samp.info)
+  function(expr.file, samp.info, miRSEQ = FALSE)
   {
-    expr.file <- as.character(expr.file)
+    # expr.file <- as.character(expr.file)
     if (length(unlist(expr.file)) > 1) {
       ## check sample names
       cat("Checking expression file names...\n")
       if (is.null(names(expr.file))) {
         names(expr.file) <- sub("\\.[a-z]{1,5}$", "", basename(expr.file))
+      }
+      if (length(grep("\\.txt$|\\.count$", names(expr.file)))) {
+        names(expr.file) <- sub("\\.[a-z]{1,5}$", "", names(expr.file))
       }
       expr.file <- expr.file[order(names(expr.file))]
       if (any(names(expr.file) %in% samp.info$SampleNames)) {
@@ -37,13 +45,19 @@ diff_expr_read_counts <-
       cat("Reading count files for samples:\n")
       print(samp.info$SampleNames)
       counts <- edgeR::readDGE(expr.file)$counts
-    } else {
+    } else if (miRSEQ) {
       # reading output from CAP-miRSEQ summary script
       cat("Reading output from CAP-miRSEQ summary script...\n")
       counts <- read.table(expr.file, sep="\t", header=T, stringsAsFactors=F)
       # assign unique mature_precursor id to each row
       row.names(counts) <- expression.raw$Mature.miRNA
       # extract samples used in this comparison
+      samples <- make.names(samp.info$SampleNames)
+      counts <- counts[, samples]
+    } else {
+      # reading counts matrix with rows corresponding to genes and columns to samples
+      cat("Reading counts matrix...\n")
+      counts <- read.delim(expr.file, row.names = 1)
       samples <- make.names(samp.info$SampleNames)
       counts <- counts[, samples]
     }

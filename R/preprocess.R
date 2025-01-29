@@ -65,7 +65,7 @@ diff_expr_make_design <-
 		colnames(design) <- gsub("groups", "", colnames(design))
 	} else if (!is.null(pairs)) {
 		cat("Creating design matrix for paired samples. Using column", sQuote(pairs), "as 'pairs' variable...\n")
-		pairs_col <- pairs
+		pairs.col <- pairs
 		pairs <- samp.info[[pairs]]
 		if (!is.numeric(pairs)) {
 			pairs <- edgeR::dropEmptyLevels(as.factor(samp.info[[pairs.col]]))

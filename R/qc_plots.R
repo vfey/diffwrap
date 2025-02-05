@@ -295,7 +295,7 @@ diff_expr_3d_scatterplot <-
 	cat("    Preparing data...")
 	if (is.null(samp.name)) {
 		samp.n <- rownames(PCA$x)
-	} else if (is.na(samp.name)) {
+	} else if (length(samp.name)==1 && is.na(samp.name)) {
 		samp.n <- ""
 	} else if (identical(rownames(PCA$x), names(samp.name))) {
 		samp.n <- samp.name

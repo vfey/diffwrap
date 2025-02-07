@@ -209,7 +209,7 @@ diffr_expr_generate_cleaned_de_table_output <-
 diff_expr_extract_contrasts <-
 		function(contrasts=NULL, fit, fit2=NULL, normcnt, out.l, do.voom=TRUE, quasi.likelihood=TRUE, out.dir=".",
 				analysis.name=NULL, biomart=FALSE, biom.data.set="hsapiens_gene_ensembl", biom.mart=c("ensembl", "snp", "funcgen", "vega", "pride", "plants"),
-				host="www.ensembl.org", biom.filter="ensembl_gene_id", biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"),
+				host="https://www.ensembl.org", biom.filter="ensembl_gene_id", biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"),
 				biom.cache = NULL, use.cache = FALSE, sym.col="hgnc_symbol",
 				rm.dups=FALSE, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE, font.size=5, plots=TRUE, lists=TRUE, filtered.lists = TRUE,
 				samp.info = samp.info, samples = samples, groups = groups, sample.plot.names = sample.plot.names)
@@ -339,7 +339,7 @@ diff_expr_extract_contrasts <-
 	}
 	cat("=============================================================================\n")
 	cat("Venn sections list\n")
-	join_vec = c("ensembl_gene_id","gene_symbol","description","entrezgene")
+	join_vec = c("ensembl_gene_id","gene_symbol","description","entrezgene_id")
 	cols.interest.de.table = c("ensembl","symbol|hgnc","description","entrez","^average$|^ave[a-r]{0,4}expr[e-s]{0,6}$","^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$","^p\\.{0,1}val[e-u]{0,2}$")
 	pv.col = names(out.l$contrasts[[1]])[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(out.l$contrasts[[1]])))]
 	fdr.col = names(out.l$contrasts[[1]])[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(out.l$contrasts[[1]])))]
@@ -394,7 +394,7 @@ diff_expr_extract_contrasts <-
 #' @export
 diff_expr_biomart <-
 		function(d3, biom.data.set="hsapiens_gene_ensembl", biom.mart=c("ensembl", "snp", "funcgen", "vega", "pride", "plants"),
-				host="www.ensembl.org", biom.filter="ensembl_gene_id", biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"),
+				host="https://www.ensembl.org", biom.filter="ensembl_gene_id", biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"),
 				biom.cache = NULL, use.cache = FALSE, sym.col="hgnc_symbol", rm.dups=FALSE)
 {
 		  if (use.cache && biom.cache == NULL) {

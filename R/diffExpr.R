@@ -117,7 +117,7 @@ diffExpr <-
            biomart = FALSE,
            biom.data.set = "hsapiens_gene_ensembl",
            biom.mart = c("ensembl", "snp", "funcgen", "vega", "pride", "plants"),
-           host = "www.ensembl.org",
+           host = "https://www.ensembl.org",
            biom.filter = "ensembl_gene_id",
            biom.attributes = c("ensembl_gene_id", "hgnc_symbol", "description"),
            sym.col = "hgnc_symbol",
@@ -199,8 +199,8 @@ diffExpr <-
     }
     if (kegg.enrichment.will.be.performed) {
       #entrez ids has to be retrieved (if not already included in biom.attributes)
-      if (!length(grep("entrezgene", biom.attributes))) {
-        biom.attributes <- c(biom.attributes, "entrezgene")
+      if (!length(grep("entrezgene_id", biom.attributes))) {
+        biom.attributes <- c(biom.attributes, "entrezgene_id")
       }
     }
 

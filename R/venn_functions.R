@@ -16,7 +16,7 @@ utils::globalVariables("counts")
 #' Function to produce a Venn diagram of differentially expressed gene tables
 #' @param list.comp.tables list of DE tables, preferably a list of data.frames
 #' @param join_vec vector to perform the join operation on; corresponds to column names in the DE tables.
-#'   Defaults to \code{c("ensembl_gene_id","gene_symbol","description","entrezgene")}.
+#'   Defaults to \code{c("ensembl_gene_id","gene_symbol","description","entrezgene_id")}.
 #' @param .log Logical; should logging be done?
 #' @details
 #' The actual plot is produced in the main plotting function by means of 'grid::grid.draw()' using the plot object as input.

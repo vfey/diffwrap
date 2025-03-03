@@ -394,12 +394,30 @@ diffExpr <-
         } else {
           type.plot <- "uncorrected, normalised DGEList"
         }
-        out.l <- diff_expr_QC_plots(counts=normcnt, samp.info=samp.info, control=control, out.l=out.l, grp.nam=grp.nam, PC=PC,
+        out.l <- diff_expr_QC_plots(counts=normcnt,
+                                    samp.info=samp.info,
+                                    control=control,
+                                    out.l=out.l,
+                                    grp.nam=grp.nam,
+                                    PC=PC,
                                     sample.plot.names=sample.plot.names,
-                                    ellipse=ellipse, ellipse.mapping.groups=ellipse.mapping.groups, ellipse.grp.nam=ellipse.grp.nam, label.samples=label.samples,
-                                    geom.point.size=geom.point.size, label.font.size = label.font.size, plot.ellipse.legend=plot.ellipse.legend, circle=circle,
-                                    varname.size=varname.size, var.axes=var.axes, pairs=pairs, pairs.name=pairs_col, gene.selection=gene.selection, n=n,
-                                    type=type.plot, analysis.name=analysis.name, out.dir=out.dir)
+                                    ellipse=ellipse,
+                                    ellipse.mapping.groups=ellipse.mapping.groups,
+                                    ellipse.grp.nam=ellipse.grp.nam,
+                                    label.samples=label.samples,
+                                    geom.point.size=geom.point.size,
+                                    label.font.size = label.font.size,
+                                    plot.ellipse.legend=plot.ellipse.legend,
+                                    circle=circle,
+                                    varname.size=varname.size,
+                                    var.axes=var.axes,
+                                    pairs=pairs,
+                                    pairs.name=pairs_col,
+                                    gene.selection=gene.selection,
+                                    n=n,
+                                    type=type.plot,
+                                    analysis.name=analysis.name,
+                                    out.dir=out.dir)
       }
 
       if (!block && !is.null(pairs) && (type %in% c("both", "pseudo-corrected"))) {
@@ -409,12 +427,30 @@ diffExpr <-
         cat("   Calculating pseudo-counts...\n")
         pseudo.counts <- diff_expr_pseudo_counts(design=design, d=d, pairs=pairs, disp=disp, do.cpm=TRUE)
         cat("   done\n")
-        out.l <- diff_expr_QC_plots(counts=pseudo.counts, samp.info=samp.info, control=control, out.l=out.l, grp.nam=grp.nam, PC=PC,
-                                    sample.plot.names=sample.plot.names, ellipse=ellipse, ellipse.mapping.groups=ellipse.mapping.groups,
-                                    ellipse.grp.nam=ellipse.grp.nam, label.samples=label.samples, geom.point.size=geom.point.size,
-                                    label.font.size = label.font.size, plot.ellipse.legend=plot.ellipse.legend, circle=circle, varname.size=varname.size,
-                                    var.axes=var.axes, pairs=pairs, pairs.name=pairs_col, gene.selection=gene.selection, n=n,
-                                    type="pseudo-corrected, normalised DGEList", analysis.name=analysis.name, out.dir=out.dir)
+        out.l <- diff_expr_QC_plots(counts=pseudo.counts,
+                                    samp.info=samp.info,
+                                    control=control,
+                                    out.l=out.l,
+                                    grp.nam=grp.nam,
+                                    PC=PC,
+                                    sample.plot.names=sample.plot.names,
+                                    ellipse=ellipse,
+                                    ellipse.mapping.groups=ellipse.mapping.groups,
+                                    ellipse.grp.nam=ellipse.grp.nam,
+                                    label.samples=label.samples,
+                                    geom.point.size=geom.point.size,
+                                    label.font.size = label.font.size,
+                                    plot.ellipse.legend=plot.ellipse.legend,
+                                    circle=circle,
+                                    varname.size=varname.size,
+                                    var.axes=var.axes,
+                                    pairs=pairs,
+                                    pairs.name=pairs_col,
+                                    gene.selection=gene.selection,
+                                    n=n,
+                                    type="pseudo-corrected, normalised DGEList",
+                                    analysis.name=analysis.name,
+                                    out.dir=out.dir)
       }
     }
 
@@ -425,41 +461,159 @@ diffExpr <-
         cat("  ...for paired samples comparisons (voom)...\n")
         cont <- grep("^groups.+", colnames(fit3$coefficients), value=TRUE)
         cat("  ", cont, "\n")
-        out.l <- diff_expr_extract_contrasts(cont, fit.l$fit, fit3, normcnt, out.l, do.voom=TRUE, quasi.likelihood, out.dir, analysis.name, biomart, biom.data.set, biom.mart,
-                                             host, biom.filter, biom.attributes, sym.col, rm.dups, p.thr, fdr.thr, logfc.thr, numlab, point.lab, label.font.size, plots, lists, filtered.lists,
-                                             samp.info = samp.info, samples = samples, groups = groups, sample.plot.names = sample.plot.names)
+        out.l <- diff_expr_extract_contrasts(contrasts = cont,
+                                             fit = fit.l$fit,
+                                             fit2 = fit3,
+                                             normcnt = normcnt,
+                                             out.l = out.l,
+                                             do.voom=TRUE,
+                                             quasi.likelihood = quasi.likelihood,
+                                             out.dir = out.dir,
+                                             analysis.name = analysis.name,
+                                             biomart = biomart,
+                                             biom.data.set = biom.data.set,
+                                             biom.mart = biom.mart,
+                                             host = host,
+                                             biom.filter = biom.filter,
+                                             biom.attributes = biom.attributes,
+                                             biom.cache = biom.cache,
+                                             use.cache = use.cache,
+                                             sym.col = sym.col,
+                                             rm.dups = rm.dups,
+                                             p.thr = p.thr,
+                                             fdr.trh = fdr.thr,
+                                             logfc.thr = logfc.thr,
+                                             numlab = numlab,
+                                             point.lab = point.lab,
+                                             label.font.size = label.font.size,
+                                             plots = plots,
+                                             lists = lists,
+                                             filtered.lists = filtered.lists,
+                                             samp.info = samp.info,
+                                             samples = samples,
+                                             groups = groups,
+                                             sample.plot.names = sample.plot.names)
       }
 
       if (!is.null(contrasts)) {
         cat("  ...for all (remaining) comparisons (voom)...\n")
-        out.l <- diff_expr_extract_contrasts(contrasts, fit.l$fit, fit.l$fit2, normcnt, out.l, do.voom=TRUE, quasi.likelihood, out.dir, analysis.name, biomart, biom.data.set, biom.mart,
-                                             host, biom.filter, biom.attributes, sym.col, rm.dups, p.thr, fdr.thr, logfc.thr, numlab, point.lab, label.font.size, plots, lists, filtered.lists,
-                                             samp.info = samp.info, samples = samples, groups = groups, sample.plot.names = sample.plot.names)
+        out.l <- diff_expr_extract_contrasts(contrasts = contrasts,
+                                             fit = fit.l$fit,
+                                             fit2 = fit.l$fit2,
+                                             normcnt = normcnt,
+                                             out.l = out.l,
+                                             do.voom=TRUE,
+                                             quasi.likelihood = quasi.likelihood,
+                                             out.dir = out.dir,
+                                             analysis.name = analysis.name,
+                                             biomart = biomart,
+                                             biom.data.set = biom.data.set,
+                                             biom.mart = biom.mart,
+                                             host = host,
+                                             biom.filter = biom.filter,
+                                             biom.attributes = biom.attributes,
+                                             biom.cache = biom.cache,
+                                             use.cache = use.cache,
+                                             sym.col = sym.col,
+                                             rm.dups = rm.dups,
+                                             p.thr = p.thr,
+                                             fdr.thr = fdr.thr,
+                                             logfc.thr = logfc.thr,
+                                             numlab = numlab,
+                                             point.lab = point.lab,
+                                             label.font.size = label.font.size,
+                                             plots = plots,
+                                             lists = lists,
+                                             filtered.lists,
+                                             samp.info = samp.info,
+                                             samples = samples,
+                                             groups = groups,
+                                             sample.plot.names = sample.plot.names)
       }
     } else {
       if (!is.null(pairs)) {
       cat("  ...for paired samples comparisons (GLM)...\n")
         cont <- grep("^groups.+", colnames(fit.l$fit$coefficients), value=TRUE)
         cat("  ", cont, "\n")
-        out.l <- diff_expr_extract_contrasts(cont, fit.l$fit, NULL, normcnt, out.l, do.voom=FALSE, quasi.likelihood, out.dir, analysis.name, biomart, biom.data.set, biom.mart,
-                                             host, biom.filter, biom.attributes, sym.col, rm.dups, p.thr, fdr.thr, logfc.thr, numlab, point.lab, label.font.size, plots, lists, filtered.lists,
-                                             samp.info = samp.info, samples = samples, groups = groups, sample.plot.names = sample.plot.names)
+        out.l <- diff_expr_extract_contrasts(contrasts = cont,
+                                             fit = fit.l$fit,
+                                             fit2 = NULL,
+                                             normcnt = normcnt,
+                                             out.l = out.l,
+                                             do.voom=FALSE,
+                                             quasi.likelihood = quasi.likelihood,
+                                             out.dir = out.dir,
+                                             analysis.name = analysis.name,
+                                             biomart = biomart,
+                                             biom.data.set = biom.data.set,
+                                             biom.mart = biom.mart,
+                                             host = host,
+                                             biom.filter = biom.filter,
+                                             biom.attributes = biom.attributes,
+                                             biom.cache = biom.cache,
+                                             use.cache = use.cache,
+                                             sym.col = sym.col,
+                                             rm.dups = rm.dups,
+                                             p.thr = p.thr,
+                                             fdr.thr = fdr.thr,
+                                             logfc.thr = logfc.thr,
+                                             numlab = numlab,
+                                             point.lab = point.lab,
+                                             font.size = label.font.size,
+                                             plots = plots,
+                                             lists = lists,
+                                             filtered.lists = filtered.lists,
+                                             samp.info = samp.info,
+                                             samples = samples,
+                                             groups = groups,
+                                             sample.plot.names = sample.plot.names)
       }
 
       if (!is.null(contrasts)) {
         cat("  ...for all (remaining) comparisons (GLM)...\n")
-        out.l <- diff_expr_extract_contrasts(contrasts, fit.l$fit, NULL, normcnt, out.l, do.voom=FALSE, quasi.likelihood, out.dir, analysis.name, biomart, biom.data.set, biom.mart,
-                                             host, biom.filter, biom.attributes, sym.col, rm.dups, p.thr, fdr.thr, logfc.thr, numlab, point.lab, label.font.size, plots, lists, filtered.lists,
-                                             samp.info = samp.info, samples = samples, groups = groups, sample.plot.names = sample.plot.names)
+        out.l <- diff_expr_extract_contrasts(contrasts = contrasts,
+                                             fit = fit.l$fit,
+                                             fit2 = NULL,
+                                             normcnt = normcnt,
+                                             out.l = out.l,
+                                             do.voom=FALSE,
+                                             quasi.likelihood = quasi.likelihood,
+                                             out.dir = out.dir,
+                                             analysis.name = analysis.name,
+                                             biomart = biomart,
+                                             biom.data.set = biom.data.set,
+                                             biom.mart = biom.mart,
+                                             host = host,
+                                             biom.filter = biom.filter,
+                                             biom.attributes = biom.attributes,
+                                             biom.cache = biom.cache,
+                                             use.cache = use.cache,
+                                             sym.col = sym.col,
+                                             rm.dups = rm.dups,
+                                             p.thr = p.thr,
+                                             fdr.thr = fdr.thr,
+                                             logfc.thr = logfc.thr,
+                                             numlab = numlab,
+                                             point.lab = point.lab,
+                                             font.size = label.font.size,
+                                             plots = plots,
+                                             lists = lists,
+                                             filtered.lists = filtered.lists,
+                                             samp.info = samp.info,
+                                             samples = samples,
+                                             groups = groups,
+                                             sample.plot.names = sample.plot.names)
       }
     }
 
     if (do.enrichment) {
-      out.l$enrichment <- runEnrichmentAnalyses(diffr.wrapper.output = out.l, analysis.name = analysis.name,
-                                                use.background.from.diffr.output = TRUE, out.dir = out.dir,
+      out.l$enrichment <- runEnrichmentAnalyses(diffr.wrapper.output = out.l,
+                                                analysis.name = analysis.name,
+                                                use.background.from.diffr.output = TRUE,
+                                                out.dir = out.dir,
                                                 use.pval.in.DE.filtering.if.no.sign.fdrs = FALSE,
                                                 species = biom.data.set,
-                                                enrichment.methods = enrichment.methods,
+                                                enrichment.methods = enrichment.methods
                                                 # david.params = list(email.address = "meeri.pekkarinen@tuni.fi", url = "https://david.ncifcrf.gov/webservice/services/DAVIDWebService.DAVIDWebServiceHttpSoap12Endpoint/")
                                                 )
     }

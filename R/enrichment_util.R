@@ -320,7 +320,7 @@ format_ensembl_ids_annotated_to_term <- function(result, species, which.split = 
 #' @return A list of all relevant objects generated in the course of the enrichment analyses
 ###############################################################################
 
-
+#' @export
 runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichment",
                                   use.background.from.diffr.output=TRUE, use.pval.in.DE.filtering.if.no.sign.fdrs=FALSE,
                                   out.dir=NULL,

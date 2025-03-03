@@ -63,7 +63,6 @@
 #' @importFrom utils head read.table write.table
 #' @importFrom methods new
 #' @importFrom Hmisc rcorr
-#' @importFrom magrittr %>%
 #' @importFrom data.table as.data.table
 #' @importFrom convertid convertId2 convert.bm
 #' @import plyr

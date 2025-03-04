@@ -60,7 +60,7 @@
 #' @importFrom grDevices as.raster colorRampPalette dev.list dev.off pdf rainbow
 #' @importFrom graphics hist layout legend par rasterImage text
 #' @importFrom stats IQR as.dendrogram as.dist dist hclust model.matrix p.adjust prcomp predict qchisq quantile relevel var
-#' @importFrom utils head read.table write.table
+#' @importFrom utils head read.table read.delim write.table
 #' @importFrom methods new
 #' @importFrom Hmisc rcorr
 #' @importFrom data.table as.data.table

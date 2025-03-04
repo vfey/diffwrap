@@ -17,7 +17,7 @@ diff_expr_extract_contrasts(
   biomart = FALSE,
   biom.data.set = "hsapiens_gene_ensembl",
   biom.mart = c("ensembl", "snp", "funcgen", "vega", "pride", "plants"),
-  host = "www.ensembl.org",
+  host = "https://www.ensembl.org",
   biom.filter = "ensembl_gene_id",
   biom.attributes = c("ensembl_gene_id", "hgnc_symbol", "description"),
   biom.cache = NULL,

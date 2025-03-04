@@ -4,12 +4,18 @@
 \alias{diff_expr_read_counts}
 \title{Function to read counts as produced by htseq-count}
 \usage{
-diff_expr_read_counts(expr.file, samp.info)
+diff_expr_read_counts(expr.file, samp.info, miRSEQ = FALSE)
 }
 \arguments{
-\item{expr.file}{\code{character} or \code{list}. String or vector or list of input file paths}
+\item{expr.file}{\code{character} or \code{list}. String or vector or list of input file paths.
+Allowed are individual text files with counts for one sample each, with gene IDs in the first and counts in the second column or
+a single counts matrix file containing read counts for all samples with rows corresponding to genes (genomic features) and columns to samples.
+Negative values or NAs are not allowed and gene IDs are expected in the first column.
+If \code{miRSEQ=TRUE} this expects the output from CAP-miRSEQ summary script which is also a counts matrix.}
 
 \item{samp.info}{\code{data.frame}. samp.info object containing information of the project's sample sheet.}
+
+\item{miRSEQ}{\code{logical}. Is the input data the output from CAP-miRSEQ summary script?}
 }
 \description{
 Function to read counts as produced by htseq-count

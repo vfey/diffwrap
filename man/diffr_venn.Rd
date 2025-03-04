@@ -10,7 +10,7 @@ diffr_venn(list.comp.tables, join_vec, .log = FALSE)
 \item{list.comp.tables}{list of DE tables, preferably a list of data.frames}
 
 \item{join_vec}{vector to perform the join operation on; corresponds to column names in the DE tables.
-Defaults to \code{c("ensembl_gene_id","gene_symbol","description","entrezgene")}.}
+Defaults to \code{c("ensembl_gene_id","gene_symbol","description","entrezgene_id")}.}
 
 \item{.log}{Logical; should logging be done?}
 }

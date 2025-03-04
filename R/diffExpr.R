@@ -46,6 +46,8 @@
 #' @param host \code{character}. The host to be used for the biomart. Defaults to "www.ensembl.org".
 #' @param biom.filter \code{character}. The biomart filter to be used. Defaults to "ensembl_gene_id".
 #' @param biom.attributes \code{character}. The biomart attributes to be used. Defaults to c("ensembl_gene_id", "hgnc_symbol", "description").
+#' @param biom.cache \code{character}. Path name giving the location of the cache \command{getBM()} uses if \code{use.cache=TRUE}. Defaults to the value in the \emph{BIOMART_CACHE} environment variable.
+#' @param use.cache (\code{logical}). Should \command{getBM()} use the cache? Defaults to \code{TRUE} as in the \command{getBM()} function and is passed on to that.
 #' @param rm.dups \code{logical}. Should duplicates be removed from the output of the biomart request? Defaults to \code{FALSE}.
 #' @param p.thr \code{numeric}. Threshold for p-values. Defaults to 0.05.
 #' @param fdr.thr \code{numeric}. Threshold for FDR values. Defaults to 0.05.
@@ -120,6 +122,8 @@ diffExpr <-
            host = "https://www.ensembl.org",
            biom.filter = "ensembl_gene_id",
            biom.attributes = c("ensembl_gene_id", "hgnc_symbol", "description"),
+           biom.cache = rappdirs::user_cache_dir("biomaRt"),
+           use.cache = TRUE,
            sym.col = "hgnc_symbol",
            rm.dups = FALSE,
            p.thr = 0.05,
@@ -481,11 +485,11 @@ diffExpr <-
                                              sym.col = sym.col,
                                              rm.dups = rm.dups,
                                              p.thr = p.thr,
-                                             fdr.trh = fdr.thr,
+                                             fdr.thr = fdr.thr,
                                              logfc.thr = logfc.thr,
                                              numlab = numlab,
                                              point.lab = point.lab,
-                                             label.font.size = label.font.size,
+                                             font.size = label.font.size,
                                              plots = plots,
                                              lists = lists,
                                              filtered.lists = filtered.lists,
@@ -521,7 +525,7 @@ diffExpr <-
                                              logfc.thr = logfc.thr,
                                              numlab = numlab,
                                              point.lab = point.lab,
-                                             label.font.size = label.font.size,
+                                             font.size = label.font.size,
                                              plots = plots,
                                              lists = lists,
                                              filtered.lists,

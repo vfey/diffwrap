@@ -355,10 +355,10 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
 
   ## TODO: invent a smarter way to do this...
   enrich.resource.terms <- data.frame("Organism" = c("human", "mouse"),
-                                     "clusterProfilerGO" = c("org.Hs.eg.db", "org.Mm.eg,db"),
+                                     "clusterProfilerGO" = c("org.Hs.eg.db", "org.Mm.eg.db"),
                                      "clusterProfilerKEGG" = c("hsa","mmu"),
                                      "gProfileR" = c("hsapiens", "mmusculus"),
-                                     "topGO" = c("org.Hs.eg.db", "org.Mm.eg,db"),
+                                     "topGO" = c("org.Hs.eg.db", "org.Mm.eg.db"),
                                      "species4conversion" = c("Human", "Mouse"))
   rownames(enrich.resource.terms) <- c("human", "mouse")
 
@@ -684,8 +684,8 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
         method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE)
 
         cat("Performing topGO.... \n")
-        print(paste0("Ontologies used: ",topGO.params$ontologies.used))
-        print(paste0("Organism: ",topGO.params$org))
+        print(paste0("Ontologies used: ", topGO.params$ontologies.used))
+        print(paste0("Organism: ", topGO.params$org))
 
         org.db <- as.character(enrich.resource.terms[species, method])
         result <- run.topGO(background = background.genes, foreground = input.genes,ontologies =  topGO.params$ontologies.used, organism = org.db)

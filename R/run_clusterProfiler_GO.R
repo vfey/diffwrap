@@ -50,6 +50,13 @@ run_clusterProfiler_GO <- function(input_genes,
                                    pAdjustMethod = "BH",
                                    similarity_filtering = FALSE) {
 
+  # test if data packages are installed
+  if (!requireNamespace(OrgDb, quietly = TRUE)) {
+    stop(
+      paste("Package", sQuote(OrgDb), "must be installed to use this function."),
+      call. = FALSE
+    )
+  }
 
   if (ordered_query) {
     print("Running gene set enrichment analysis...")

@@ -140,6 +140,14 @@ diff_expr_ma_plot <-
 prepare_volcano_of_given_property = function(data.df, property.to.plot = c("fdr", "p"), property.column,
 		property.thr, logfc.thr, main, numlab, point.lab, sym.col, pretty.breaks=FALSE){
 
+  # test if needed packages are installed
+  if (use.cache && !requireNamespace("scales", quietly = TRUE)) {
+    stop(
+      paste("Package", sQuote("scales"), "must be installed to use this function."),
+      call. = FALSE
+    )
+  }
+
 	data.df[[property.to.plot]] <- data.df[[property.column]]
 
 	# Formatted names to use in plot texts:

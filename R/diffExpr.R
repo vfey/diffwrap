@@ -122,8 +122,8 @@ diffExpr <-
            host = "https://www.ensembl.org",
            biom.filter = "ensembl_gene_id",
            biom.attributes = c("ensembl_gene_id", "hgnc_symbol", "description"),
-           biom.cache = rappdirs::user_cache_dir("biomaRt"),
-           use.cache = TRUE,
+           biom.cache = NULL,
+           use.cache = FALSE,
            sym.col = "hgnc_symbol",
            rm.dups = FALSE,
            p.thr = 0.05,
@@ -162,6 +162,16 @@ diffExpr <-
            dry.run=FALSE)
   {
     ## initial checks
+    # test if needed packages are installed
+    if (use.cache && !requireNamespace("rappdirs", quietly = TRUE)) {
+      stop(
+        paste("Package", sQuote("rappdirs"), "must be installed to use this function."),
+        call. = FALSE
+      )
+    }
+    if (use.cache && is.null(biom.cache)) {
+      biom.cache <- rappdirs::user_cache_dir("biomaRt")
+    }
     if (missing(expr.file) || !is.character(unlist(expr.file))) {
       stop("Need input file with raw expression values (read counts)!")
     }

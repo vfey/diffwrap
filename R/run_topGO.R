@@ -44,6 +44,14 @@ utils::globalVariables("genesInTerm")
 #' @export
 run.topGO <- function(background, foreground, ontologies = c("BP"), organism, ID_type = "ENSEMBL", pAdjustMethod = "BH") {
 
+  # test if data packages are installed
+  if (!requireNamespace(organism, quietly = TRUE)) {
+    stop(
+      paste("Package", sQuote(organism), "must be installed to use this function."),
+      call. = FALSE
+    )
+  }
+
   # genes.full = data.frame(readxl::read_excel(background, skip = 1))
   # gene.full.names = genes.full$Ensembl.ID
   #

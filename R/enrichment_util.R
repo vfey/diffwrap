@@ -353,6 +353,21 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                                   )
 {
 
+  # test if data packages are installed
+  if (species == "human" && !requireNamespace("org.Hs.eg.db", quietly = TRUE)) {
+    stop(
+      "Package \"org.Hs.eg.db\" must be installed to use this function.",
+      call. = FALSE
+    )
+  }
+
+  if (species == "mouse" && !requireNamespace("org.Mm.eg.db", quietly = TRUE)) {
+    stop(
+      "Package \"org.Mm.eg.db\" must be installed to use this function.",
+      call. = FALSE
+    )
+  }
+
   ## TODO: invent a smarter way to do this...
   enrich.resource.terms <- data.frame("Organism" = c("human", "mouse"),
                                      "clusterProfilerGO" = c("org.Hs.eg.db", "org.Mm.eg.db"),

@@ -26,6 +26,14 @@ utils::globalVariables("counts")
 #' @export
 diffr_venn <- function(list.comp.tables, join_vec, .log = FALSE) {
 
+  # test if logging packages are installed
+  if (.log && !requireNamespace("futile.logger", quietly = TRUE)) {
+    stop(
+      paste("Package", sQuote("futile.logger"), "must be installed to use this function."),
+      call. = FALSE
+    )
+  }
+
   #extract DEGs list from the contrast tables list
   DEGs.list <- lapply(list.comp.tables, function(x) {
     #extract hgnc colname

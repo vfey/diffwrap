@@ -87,6 +87,8 @@
 #' @importFrom venn venn
 #' @importFrom VennDiagram venn.diagram
 #' @importFrom topGO runTest annFUN.org
+#' @import org.Hs.eg.db
+#' @import org.Mm.eg.db
 ## usethis namespace: end
 NULL
 #'

@@ -20,7 +20,9 @@ Suggests:
     knitr,
     quarto,
     dendextend,
-    rmarkdown
+    rmarkdown,
+    org.Hs.eg.db,
+    org.Mm.eg.db
 License: file LICENSE
 Encoding: UTF-8
 LazyData: true

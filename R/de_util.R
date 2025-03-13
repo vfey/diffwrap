@@ -400,7 +400,7 @@ diff_expr_biomart <-
     # test if needed packages are installed
     if (use.cache && !requireNamespace("rappdirs", quietly = TRUE)) {
       stop(
-        paste("Package", sQuote("rappdirs"), "must be installed to use this function."),
+        paste("Package", sQuote("rappdirs"), "must be installed to use the biomart cache."),
         call. = FALSE
       )
     }

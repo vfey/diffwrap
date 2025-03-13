@@ -162,16 +162,34 @@ diffExpr <-
            dry.run=FALSE)
   {
     ## initial checks
+    cat("@ -- STARTUP CHECKS --\n\n")
     # test if needed packages are installed
-    if (use.cache && !requireNamespace("rappdirs", quietly = TRUE)) {
+    cat("  Checking if needed packages are installed...")
+    if (do.enrichment && biom.data.set == "hsapiens_gene_ensembl" && !requireNamespace("org.Hs.eg.db", quietly = TRUE)) {
       stop(
-        paste("Package", sQuote("rappdirs"), "must be installed to use this function."),
+        paste("Package", sQuote("org.Hs.eg.db"), "must be installed to perform enrichment analysis.
+              Please set 'do.enrichment' to FALSE to disable it but still run the rest of the pipeline."),
         call. = FALSE
       )
     }
+    if (do.enrichment && biom.data.set == "mmusculus_gene_ensembl" && !requireNamespace("org.Mm.eg.db", quietly = TRUE)) {
+      stop(
+        paste("Package", sQuote("org.Mm.eg.db"), "must be installed to perform enrichment analysis.
+              Please set 'do.enrichment' to FALSE to disable it but still run the rest of the pipeline."),
+        call. = FALSE
+      )
+    }
+    if (use.cache && !requireNamespace("rappdirs", quietly = TRUE)) {
+      stop(
+        paste("Package", sQuote("rappdirs"), "must be installed to use the biomart cache."),
+        call. = FALSE
+      )
+    }
+    cat("done\n")
     if (use.cache && is.null(biom.cache)) {
       biom.cache <- rappdirs::user_cache_dir("biomaRt")
     }
+    cat("  Checking for necessary user input...")
     if (missing(expr.file) || !is.character(unlist(expr.file))) {
       stop("Need input file with raw expression values (read counts)!")
     }
@@ -217,8 +235,9 @@ diffExpr <-
         biom.attributes <- c(biom.attributes, "entrezgene_id")
       }
     }
+    cat("done\n\n")
 
-
+    cat("@ -- PREPARING RUN ENVIRONMENT --\n\n")
     # setting standard output folder
     if (is.null(out.dir)) {
       cat("No output folder set. Using default\n")
@@ -301,11 +320,12 @@ diffExpr <-
       warning("A unique and descriptive name for the analysis should always be provided!")
     }
 
+    cat("\n@ -- PREPROCESSING --\n\n")
     ## read counts
     counts <- diff_expr_read_counts(expr.file, samp.info)
 
-    ## Filter weakly expressed and noninformative (e.g., non-aligned) features
-    cat("Filtering...\n")
+    ## Filter weakly expressed and non-informative (e.g., non-aligned) features
+    cat(" Filtering counts...\n")
     counts <- diff_expr_filter_counts(counts, samp.info, strict, min.samp)
 
     ## Create a DGEList object (edgeR’s container for RNA-seq count data)
@@ -314,6 +334,7 @@ diffExpr <-
     d <- edgeR::calcNormFactors(d)
     ## Inspect the relationships between samples using a multidimensional scaling (MDS) plot
     if (plots) {
+      cat(" MDS plot...\n")
       if (!is.null(sample.plot.names)) {
         spn <- samp.info[, c("SampleNames", sample.plot.names)]
         spn <- spn[match(colnames(d), spn$SampleNames), ]
@@ -367,6 +388,7 @@ diffExpr <-
       pairs <- samp.info[[pairs]]
     }
 
+    cat("@ -- LINEAR MODELLING --\n\n")
     ## voom
     if (do.voom) {
       cat("Running 'voom'...\n")
@@ -469,7 +491,7 @@ diffExpr <-
     }
 
 
-    cat("Extracting contrasts...\n")
+    cat("@ -- EXTRACTING CONTRASTS --\n\n")
     if (do.voom) {
       if (!block && !is.null(pairs)) {
         cat("  ...for paired samples comparisons (voom)...\n")
@@ -621,12 +643,16 @@ diffExpr <-
     }
 
     if (do.enrichment) {
+      cat("@ -- ENRICHMENT ANALYSIS --\n\n")
+      enrich_spec <- switch(biom.data.set,
+                            hsapiens_gene_ensembl = "human",
+                            mmusculus_gene_ensembl = "mouse")
       out.l$enrichment <- runEnrichmentAnalyses(diffr.wrapper.output = out.l,
                                                 analysis.name = analysis.name,
                                                 use.background.from.diffr.output = TRUE,
                                                 out.dir = out.dir,
                                                 use.pval.in.DE.filtering.if.no.sign.fdrs = FALSE,
-                                                species = biom.data.set,
+                                                species = enrich_spec,
                                                 enrichment.methods = enrichment.methods
                                                 # david.params = list(email.address = "meeri.pekkarinen@tuni.fi", url = "https://david.ncifcrf.gov/webservice/services/DAVIDWebService.DAVIDWebServiceHttpSoap12Endpoint/")
                                                 )

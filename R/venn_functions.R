@@ -29,7 +29,7 @@ diffr_venn <- function(list.comp.tables, join_vec, .log = FALSE) {
   # test if logging packages are installed
   if (.log && !requireNamespace("futile.logger", quietly = TRUE)) {
     stop(
-      paste("Package", sQuote("futile.logger"), "must be installed to use this function."),
+      paste("Package", sQuote("futile.logger"), "must be installed to use the logging functionality."),
       call. = FALSE
     )
   }

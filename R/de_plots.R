@@ -141,9 +141,9 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot = c("fdr"
 		property.thr, logfc.thr, main, numlab, point.lab, sym.col, pretty.breaks=FALSE){
 
   # test if needed packages are installed
-  if (use.cache && !requireNamespace("scales", quietly = TRUE)) {
+  if (pretty.breaks && !requireNamespace("scales", quietly = TRUE)) {
     stop(
-      paste("Package", sQuote("scales"), "must be installed to use this function."),
+      paste("Package", sQuote("scales"), "must be installed to use the 'pretty.breaks' option."),
       call. = FALSE
     )
   }

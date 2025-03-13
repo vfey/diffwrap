@@ -349,9 +349,9 @@ diff_expr_dendro_plot <-
   {
 
     # test if neededs packages are installed
-    if (use.cache && !requireNamespace("dendextend", quietly = TRUE)) {
+    if (col.grps && !requireNamespace("dendextend", quietly = TRUE)) {
       stop(
-        paste("Package", sQuote("dendextend"), "must be installed to use this function."),
+        paste("Package", sQuote("dendextend"), "must be installed to colour the dendrogram by groups."),
         call. = FALSE
       )
     }

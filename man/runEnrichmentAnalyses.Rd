@@ -22,8 +22,10 @@ runEnrichmentAnalyses(
   clusterProfilerKEGG.params = list(analysis.approach = "ORA", min.gene.set.size = 10,
     max.gene.set.size = 1000, ontology = "BP", min.overlap = 2, p.adjust.method = "BH"),
   david.params = NULL,
-  gProfileR.params = list(data.sources = "GO:BP", show.only.significant = TRUE),
-  topGO.params = list(ontologies.used = c("BP"), org = "org.Hs.eg.db")
+  gProfileR.params = list(data.sources = "GO:BP", show.only.significant = TRUE,
+    measure_underrepresentation = FALSE, evidence_codes = TRUE, domain_scope =
+    "annotated", highlight = TRUE),
+  topGO.params = list(ontologies.used = c("BP"), org = "hsapiens")
 )
 }
 \arguments{

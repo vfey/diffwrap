@@ -77,7 +77,7 @@
 #' @import scatterplot3d
 #' @importFrom genefilter rowVars
 #' @importFrom clusterProfiler gseGO enrichGO simplify
-#' @importFrom gProfileR gprofiler
+#' @importFrom gprofiler2 gost
 #' @importFrom WriteXLS WriteXLS
 #' @importFrom igraph make_undirected_graph V layout.graphopt
 #' @import readxl

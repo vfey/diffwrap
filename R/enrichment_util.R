@@ -348,8 +348,12 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                                   #                     time.out.value = 60000,
                                   #                     annotation.category = "GOTERM_BP_FAT",
                                   #                     max.gene.set.size = 1000),
-                                  gProfileR.params = list(data.sources = "GO:BP", show.only.significant = TRUE),
-                                  topGO.params = list(ontologies.used = c("BP"), org = "org.Hs.eg.db")
+                                  gProfileR.params = list(data.sources = "GO:BP", show.only.significant = TRUE,
+                                                          measure_underrepresentation = FALSE,
+                                                          evidence_codes = TRUE,
+                                                          domain_scope = "annotated",
+                                                          highlight = TRUE),
+                                  topGO.params = list(ontologies.used = c("BP"), org = "hsapiens")
                                   )
 {
 
@@ -665,8 +669,11 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
         result <- run_gprofiler(input.genes, background.genes,
                                 organism = org,
                                 data_sources = gProfileR.params$data.sources,
-                                show_only_significant = gProfileR.params$show.only.significant
-                                )
+                                show_only_significant = gProfileR.params$show.only.significant,
+                                measure_underrepresentation = gProfileR.params$measure_underrepresentation,
+                                evidence_codes = gProfileR.params$evidence_codes,
+                                domain_scope = gProfileR.params$domain_scope,
+                                highlight = gProfileR.params$highlight)
 
         # Formattig and saving the table, if relevant
         method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE) # detecting output directory

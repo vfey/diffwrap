@@ -6,34 +6,57 @@
 \usage{
 run_gprofiler(
   input_genes,
+  organism = "hsapiens",
   background_genes = "",
   file_name = NULL,
   ordered_query = FALSE,
-  show_only_significant = F,
-  data_sources = NULL,
-  organism = "hsapiens",
+  multi_query = FALSE,
+  show_only_significant = FALSE,
+  evidence_codes = FALSE,
   exclude_iea = FALSE,
+  measure_underrepresentation = FALSE,
   max_p_value = 0.5,
-  sort_by_structure = FALSE,
-  min_set_size = 10,
-  max_set_size = 1000,
-  min_overlap = 2,
   correction_method = "fdr",
-  hier_filtering = "none"
+  domain_scope = "annotated",
+  data_sources = NULL,
+  highlight = FALSE
 )
 }
 \arguments{
 \item{input_genes}{A character vector of gene IDs, e.g. Ensembl or HGNC. Can be any ID type that has been linked
 to genes in the Ensembl database, and also a mixed vector of IDs.}
 
+\item{organism}{By default uses "hsapiens".}
+
 \item{background_genes}{A character vector of background gene IDs. If not specified, by default uses all human genes
 annotated to term domain.}
 
-\item{file_name}{A character string used as a file name.}
+\item{file_name}{A character string used as a file name without file extension. If not NULL output will be saved
+to an Excel file. Currently not in use.}
 
 \item{ordered_query}{If set to TRUE, computes GSEA-style p-values for an input ranked gene list.}
 
+\item{multi_query}{In case of multiple gene lists, returns comparison table of these lists.
+If enabled, the result data frame has columns named 'p_values', 'gconvert_sizes', 'intersection_sizes' with
+vectors showing values in the order of input queries.}
+
 \item{show_only_significant}{Shows only significant results based on the set padjCutoff, default TRUE.}
+
+\item{evidence_codes}{If set to TRUE, includes evidence codes to the results.
+Note that this can decrease performance and make the query slower. In addition, a column
+'intersection' is created that contains the gene id-s that intersect between the query and term.
+This parameter does not work if 'multi_query' is set to TRUE.}
+
+\item{exclude_iea}{If TRUE, excludes electronic GO annotations (with evidence code IEA).}
+
+\item{measure_underrepresentation}{If TRUE, measures under-representation.}
+
+\item{max_p_value}{Adjusted p-value cut-off. Shows only terms with p-value under this cut-off if showOnlySignificant = TRUE.}
+
+\item{correction_method}{The algorithm used for multiple testing correction,
+one of "gSCS", "fdr", "bonferroni". By default uses "fdr".}
+
+\item{domain_scope}{How to define statistical domain, one of "annotated", "known", "custom" or "custom_annotated".}
 
 \item{data_sources}{A vector of data sources to use. One or more of the following:
 GO:BP = GO Biological Process
@@ -49,26 +72,7 @@ HP = Human Phenotype Ontology, human disease gene annotations
 OMIM = Online Mendelian Inheritance in Man, an online catalog of human genes and genetic disorders
 By default, uses all data sources.}
 
-\item{organism}{By default uses "hsapiens".}
-
-\item{exclude_iea}{If TRUE, excludes electronic GO annotations (with evidence code IEA).}
-
-\item{max_p_value}{Adjusted p-value cut-off. Shows only terms with p-value under this cut-off if showOnlySignificant = TRUE.}
-
-\item{sort_by_structure}{If TRUE, hiearchical sorting of the results is enabled.}
-
-\item{min_set_size}{Minimun size of the functional category, uses 10 by default.}
-
-\item{max_set_size}{Maximum size of the functional categowy, uses 1000 by default.}
-
-\item{min_overlap}{Minimum size of the overlap (intersection) between query and functional category,
-smaller intersections are excluded.}
-
-\item{correction_method}{The algorithm used for multiple testing correction,
-one of "gSCS", "fdr", "bonferroni". By default uses "fdr".}
-
-\item{hier_filtering}{Hierarchical filtering strength, one of "none", "moderate", "strong", by default "none".
-The hierarchical filtering option is only available if the option of hierarchical sorting is activated.}
+\item{highlight}{If set to TRUE, returns a TRUE-FALSE column called 'highlighted' to indicate driver terms in GO.}
 }
 \value{
 A table listing statistically significant enrichment results according to threshold set in padjCutoff.

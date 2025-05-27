@@ -6,7 +6,7 @@
 utils::globalVariables("expression.raw")
 
 #' Function to read counts as produced by htseq-count
-#' @param expr.file \code{character} or \code{list}. String or vector or list of input file paths.
+#' @param expr.dat \code{character} or \code{list}. String or vector or list of input file paths, or matrix of count values.
 #' Allowed are individual text files with counts for one sample each, with gene IDs in the first and counts in the second column or
 #' a single counts matrix file containing read counts for all samples with rows corresponding to genes (genomic features) and columns to samples.
 #' Negative values or NAs are not allowed and gene IDs are expected in the first column.
@@ -15,51 +15,74 @@ utils::globalVariables("expression.raw")
 #' @param miRSEQ \code{logical}. Is the input data the output from CAP-miRSEQ summary script?
 #' @export
 diff_expr_read_counts <-
-  function(expr.file, samp.info, miRSEQ = FALSE)
+  function(expr.dat, samp.info, miRSEQ = FALSE)
   {
-    # expr.file <- as.character(expr.file)
-    if (length(unlist(expr.file)) > 1) {
-      ## check sample names
-      cat("Checking expression file names...\n")
-      if (is.null(names(expr.file))) {
-        names(expr.file) <- sub("\\.[a-z]{1,5}$", "", basename(expr.file))
-      }
-      if (length(grep("\\.txt$|\\.count$", names(expr.file)))) {
-        names(expr.file) <- sub("\\.[a-z]{1,5}$", "", names(expr.file))
-      }
-      expr.file <- expr.file[order(names(expr.file))]
-      if (any(names(expr.file) %in% samp.info$SampleNames)) {
-        snam <- which(names(expr.file) %in% samp.info$SampleNames)
-        if (!identical(names(expr.file)[snam], as.character(samp.info$SampleNames))) {
-          stop("Input vector of count file names must be identical to all or a subset of sample names provided in 'samp.info', i.e., it must be the same names in the same order!")
+    # order samp.info data frame by SampleNames column
+    samp.info <- samp.info[order(samp.info$SampleNames), ]
+
+    if (is.character(expr.dat)) {
+      if (length(unlist(expr.dat)) > 1) {
+        ## check sample names
+        cat("Checking expression file names...\n")
+        if (is.null(names(expr.dat))) {
+          names(expr.dat) <- sub("\\.[a-z]{1,5}$", "", basename(expr.dat))
+        }
+        if (length(grep("\\.txt$|\\.count$", names(expr.dat)))) {
+          names(expr.dat) <- sub("\\.[a-z]{1,5}$", "", names(expr.dat))
+        }
+        # order input file names by vector names
+        expr.dat <- expr.dat[order(names(expr.dat))]
+        if (any(names(expr.dat) %in% samp.info$SampleNames)) {
+          snam <- which(names(expr.dat) %in% samp.info$SampleNames)
+          if (!identical(names(expr.dat)[snam], as.character(samp.info$SampleNames))) {
+            stop("Input vector of count file names must be identical to all or a subset of sample names provided in 'samp.info', i.e., it must be the same names in the same order!")
+          } else {
+            if (nrow(samp.info) < length(expr.dat)) {
+              cat("  Importing subset of samples...\n")
+            }
+            expr.dat <- expr.dat[as.character(samp.info$SampleNames)]
+          }
         } else {
-          if (nrow(samp.info) < length(expr.file)) {
+          stop("Sample names not found in input files")
+        }
+        # import individual count files
+        cat("Reading count files for samples:\n")
+        print(samp.info$SampleNames)
+        counts <- edgeR::readDGE(expr.dat)$counts
+      } else if (miRSEQ) {
+        # reading output from CAP-miRSEQ summary script
+        cat("Reading output from CAP-miRSEQ summary script...\n")
+        counts <- read.table(expr.dat, sep="\t", header=T, stringsAsFactors=F)
+        # assign unique mature_precursor id to each row
+        row.names(counts) <- expression.raw$Mature.miRNA
+        # extract samples used in this comparison
+        samples <- make.names(samp.info$SampleNames)
+        counts <- counts[, samples]
+      } else {
+        # reading counts matrix with rows corresponding to genes and columns to samples
+        cat("Reading counts matrix...\n")
+        counts <- read.delim(expr.dat, row.names = 1, check.names = F)
+        # here potentially get columns that are not sample names (future functionality)
+        samples <- samp.info$SampleNames
+        counts <- counts[, samples]
+      }
+    } else if (is.matrix(expr.dat) || is.data.frame(expr.dat)) {
+      # count matrix must have feature IDs (e.g., gene symbols) in a specified column or as row names
+      if (any(colnames(expr.dat) %in% samp.info$SampleNames)) {
+        snam <- which(colnames(expr.dat) %in% samp.info$SampleNames)
+        if (!identical(colnames(expr.dat)[snam], as.character(samp.info$SampleNames))) {
+          stop("Column names of input matrix must be identical to all or a subset of sample names provided in 'samp.info', i.e., it must be the same names in the same order!")
+        } else {
+          if (nrow(samp.info) < ncol(expr.dat)) {
             cat("  Importing subset of samples...\n")
           }
-          expr.file <- expr.file[as.character(samp.info$SampleNames)]
+          expr.dat <- expr.dat[, as.character(samp.info$SampleNames)]
         }
       } else {
-        stop("Sample names not found in input files")
+        stop("Sample names not found in input column names")
       }
-      # import individual count files
-      cat("Reading count files for samples:\n")
-      print(samp.info$SampleNames)
-      counts <- edgeR::readDGE(expr.file)$counts
-    } else if (miRSEQ) {
-      # reading output from CAP-miRSEQ summary script
-      cat("Reading output from CAP-miRSEQ summary script...\n")
-      counts <- read.table(expr.file, sep="\t", header=T, stringsAsFactors=F)
-      # assign unique mature_precursor id to each row
-      row.names(counts) <- expression.raw$Mature.miRNA
-      # extract samples used in this comparison
-      samples <- make.names(samp.info$SampleNames)
-      counts <- counts[, samples]
-    } else {
-      # reading counts matrix with rows corresponding to genes and columns to samples
-      cat("Reading counts matrix...\n")
-      counts <- read.delim(expr.file, row.names = 1)
-      samples <- make.names(samp.info$SampleNames)
-      counts <- counts[, samples]
+      cat("Geting counts from count matrix...\n")
+      counts <- edgeR::getCounts(edgeR::DGEList(expr.dat))
     }
     # in case of untypical gene identifiers change those
     ## for "gene:" in front of the Ensembl Gene ID

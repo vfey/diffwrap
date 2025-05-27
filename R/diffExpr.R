@@ -4,7 +4,7 @@
 #'    Most sub-functions are exported and can be called by the user, as well, if desired.
 #'    These functions may be applicable to different kinds of data/input, rely, however,
 #'    on the conventions set for this package.
-#' @param expr.file \code{character} or \code{list}. String or vector or list of input file paths
+#' @param expr.dat \code{character} or \code{list}. String or vector or list of input file paths, or matrix of count values
 #' @param samp.info \code{data.frame}. samp.info object containing information of the project's sample sheet
 #' @param control \code{character}. Name of the control group
 #' @param design \code{matrix}. design matrix
@@ -103,7 +103,7 @@
 #'
 #' @export
 diffExpr <-
-  function(expr.file,
+  function(expr.dat,
            samp.info,
            control,
            design = NULL,
@@ -190,7 +190,7 @@ diffExpr <-
       biom.cache <- rappdirs::user_cache_dir("biomaRt")
     }
     cat("  Checking for necessary user input...")
-    if (missing(expr.file) || !is.character(unlist(expr.file))) {
+    if (missing(expr.dat) || !is.character(unlist(expr.dat))) {
       stop("Need input file with raw expression values (read counts)!")
     }
     if (missing(samp.info)) {
@@ -322,7 +322,7 @@ diffExpr <-
 
     cat("\n@ -- PREPROCESSING --\n\n")
     ## read counts
-    counts <- diff_expr_read_counts(expr.file, samp.info)
+    counts <- diff_expr_read_counts(expr.dat, samp.info)
 
     ## Filter weakly expressed and non-informative (e.g., non-aligned) features
     cat(" Filtering counts...\n")
@@ -354,7 +354,7 @@ diffExpr <-
         cat("  Using pretty labels for MDS plot:", spr)
       } else {
         cat("  NOTE: Sanity check for pretty names failed. Falling back to column names...\n")
-        sample.plot.names <- as.character(spn$SampleNames)
+        sample.plot.names <- as.character(colnames(d)) ## check!
       }
       names(sample.plot.names) <- colnames(d)
 

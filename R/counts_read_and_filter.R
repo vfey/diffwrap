@@ -63,8 +63,22 @@ diff_expr_read_counts <-
         cat("Reading counts matrix...\n")
         counts <- read.delim(expr.dat, row.names = 1, check.names = F)
         # here potentially get columns that are not sample names (future functionality)
-        samples <- samp.info$SampleNames
-        counts <- counts[, samples]
+        if (any(names(counts) %in% samp.info$SampleNames)) {
+          snam <- which(names(counts) %in% samp.info$SampleNames)
+          if (!identical(names(counts)[snam], as.character(samp.info$SampleNames))) {
+            stop("Input vector of count file names must be identical to all or a subset of sample names provided in 'samp.info', i.e., it must be the same names in the same order!")
+          } else {
+            if (nrow(samp.info) < ncol(counts)) {
+              cat("  Importing subset of samples...\n")
+            }
+            cat("Reading count files for samples:\n")
+            print(samp.info$SampleNames)
+            counts <- counts[, as.character(samp.info$SampleNames)]
+          }
+        } else {
+          stop("Sample names not found in input files")
+        }
+        # import individual count files
       }
     } else if (is.matrix(expr.dat) || is.data.frame(expr.dat)) {
       # count matrix must have feature IDs (e.g., gene symbols) in a specified column or as row names

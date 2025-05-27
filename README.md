@@ -8,7 +8,7 @@ These functions may be applicable to different kinds of data/input, rely, howeve
 
 ### Installation
 ```
-devtools::install_git('git@gitlab.com:genevia/diffr.git')
+devtools::install_git('git@github.com:vfey/diffwrap.git')
 ```
 
 ### Prerequisites

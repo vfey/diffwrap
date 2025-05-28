@@ -89,7 +89,6 @@ diffr_venn <- function(list.comp.tables, join_vec, .log = FALSE) {
       join.part <- list.comp.tables[which(venn.tt[j,] == 1)]
       inters <- join.part %>% purrr::reduce(dplyr::inner_join, by = join_vec)
       anti.part <- list.comp.tables[which(venn.tt[j,] == 0)]
-      browser()
       outsect <- anti.part %>% purrr::reduce(dplyr::full_join, by = join_vec)
       res.join <- inters %>% dplyr::anti_join(outsect, by = join_vec)
       hgnc.col <- names(res.join)[grep("symbol|hgnc", tolower(names(res.join)))]

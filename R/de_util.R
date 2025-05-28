@@ -345,6 +345,7 @@ diff_expr_extract_contrasts <-
     fdr.col = names(out.l$contrasts[[1]])[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(out.l$contrasts[[1]])))]
 
     sel.col.de.table <- names(out.l$contrasts[[1]])[grep(paste(cols.interest.de.table,collapse="|"), tolower(names(out.l$contrasts[[1]])))]
+    browser()
     sign.de.tables <- lapply(out.l$contrasts, function(x) {
       sel.col.de.table <- names(x)[grep(paste(cols.interest.de.table,collapse="|"), tolower(names(x)))]
       new.de.table <- x %>% dplyr::select(sel.col.de.table)

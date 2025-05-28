@@ -22,7 +22,7 @@
 #'                'ncbi-geneid’, ‘ncbi-proteinid’ or ‘uniprot’.
 #' @param pvalueCutoff Adjusted p-value cut-off.
 #' @param min_set_size Minimun size of the functional category, uses 10 by default.
-#' @param max_set_size Maximum size of the functional categowy, uses 1000 by default.
+#' @param max_set_size Maximum size of the functional category, uses 1000 by default.
 #' @param min_overlap Minimum size of the overlap (intersection) between query and functional category,
 #'                    smaller intersections are excluded. By default uses 2.
 #' @param pAdjustMethod The algorithm used for multiple testing correction, one of

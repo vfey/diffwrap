@@ -69,14 +69,14 @@ diffr_venn <- function(list.comp.tables, join_vec, .log = FALSE) {
   list.venn.tables <- list()
   list.comp.tables = purrr::map2(list.comp.tables,names(list.comp.tables),create.individual.ids)
   for(j in 1:nrow(venn.tt)) {
-    #if all entries in the venn truth table are 0 thek skip
+    #if all entries in the venn truth table are 0 then skip
     if (sum(venn.tt[j,]) == 0) {
       next
     }
     #if all entries are 1 then join them all based on the join_vec
     else if (all(venn.tt[j,] == 1)) {
       print(rownames(venn.tt)[j])
-      inters.all <- list.comp.tables %>% purrr::reduce(inner_join, by = join_vec)
+      inters.all <- list.comp.tables %>% purrr::reduce(dplyr::inner_join, by = join_vec)
       hgnc.col <- names(inters.all)[grep("symbol|hgnc", tolower(names(inters.all)))]
       inters.all <- inters.all[inters.all[hgnc.col] != "",]
       list.venn.tables[[rownames(venn.tt)[j]]] <- inters.all
@@ -89,6 +89,7 @@ diffr_venn <- function(list.comp.tables, join_vec, .log = FALSE) {
       join.part <- list.comp.tables[which(venn.tt[j,] == 1)]
       inters <- join.part %>% purrr::reduce(dplyr::inner_join, by = join_vec)
       anti.part <- list.comp.tables[which(venn.tt[j,] == 0)]
+      browser()
       outsect <- anti.part %>% purrr::reduce(dplyr::full_join, by = join_vec)
       res.join <- inters %>% dplyr::anti_join(outsect, by = join_vec)
       hgnc.col <- names(res.join)[grep("symbol|hgnc", tolower(names(res.join)))]

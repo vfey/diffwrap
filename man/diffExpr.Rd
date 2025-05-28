@@ -6,7 +6,7 @@
 files to producing text files and graphs}
 \usage{
 diffExpr(
-  expr.file,
+  expr.dat,
   samp.info,
   control,
   design = NULL,
@@ -60,6 +60,7 @@ diffExpr(
   lists = TRUE,
   filtered.lists = TRUE,
   do.enrichment = TRUE,
+  enrichment.plot = FALSE,
   enrichment.methods = c("clusterProfilerGO", "clusterProfilerKEGG", "DAVID",
     "gProfileR", "topGO"),
   ...,
@@ -67,7 +68,7 @@ diffExpr(
 )
 }
 \arguments{
-\item{expr.file}{\code{character} or \code{list}. String or vector or list of input file paths}
+\item{expr.dat}{\code{character} or \code{list}. String or vector or list of input file paths, or matrix of count values}
 
 \item{samp.info}{\code{data.frame}. samp.info object containing information of the project's sample sheet}
 
@@ -188,6 +189,8 @@ Defaults to "both".}
 \item{filtered.lists}{\code{logical}. Should lists of differentially expressed genes be produced for filtered data? Defaults to \code{TRUE}.}
 
 \item{do.enrichment}{\code{logical}. Whether or not to call enrichment wrapper. Defaults to \code{TRUE}.}
+
+\item{enrichment.plot}{code{logical}. Whether or not to draw a network plot for the enrichment results. Defaults to \code{FALSE}.}
 
 \item{enrichment.methods}{\code{character}. One or more of the following: c("clusterProfilerGO", "clusterProfilerKEGG","DAVID", "gProfileR", "topGO"). By default, uses them all.}
 

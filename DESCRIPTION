@@ -1,8 +1,8 @@
 Package: diffwrap
 Type: Package
 Title: Differential Expression Analysis of RNA-Seq Data
-Version: 0.2-0
-Date: 2024-07-10
+Version: 0.2-1
+Date: 2025-05-28
 Authors@R: person(list("Vidal", "Meeri", "Reija", "Bogdan", "Adrien"), list("Fey", "Pekkarinen", "Hieta", "Iancu", "Janssens"), email = list("vidal.fey@tuni.fi", "meeri.pekkarinen@tuni.fi", "reija.hieta@geneviatechnologies.com", "bogdan.iancu@abo.fi", "adrien.janssens@geneviatechnologies.com"), role = list(c("aut", "cre"), "aut", "aut", "aut", "aut"))
 Author: Vidal Fey <vidal.fey@tuni.fi>
 Description: This package provides functionality for differential expression analysis of read counts from mRNA sequencing data or miRNA expression values
@@ -10,8 +10,8 @@ Description: This package provides functionality for differential expression ana
   for different approaches, such as "pure" 'edgeR', 'voom' or paired samples. The functions in the package generate text files with differential expression lists,
   optionally annotated with information from 'biomart', expression summary plots as well as several QC plots.
 Maintainer: Vidal Fey <vidal.fey@tuni.fi>
-Depends: R (>= 3.5), plyr, ggplot2, edgeR, limma, RColorBrewer
-Imports: scatterplot3d, pheatmap, convertid, ggrepel, data.table, magrittr, methods, Hmisc, ltm, openxlsx, readxl, WriteXLS, genefilter, clusterProfiler, gprofiler2, igraph, purrr, dplyr, venn, VennDiagram, topGO, grid
+Depends: R (>= 3.5), plyr, ggplot2, edgeR, limma, RColorBrewer, convertid
+Imports: scatterplot3d, pheatmap, ggrepel, data.table, magrittr, methods, Hmisc, ltm, openxlsx, readxl, WriteXLS, genefilter, clusterProfiler, gprofiler2, igraph, purrr, dplyr, venn, VennDiagram, topGO, grid
 Suggests:
     testthat,
     futile.logger,

@@ -303,6 +303,7 @@ format_ensembl_ids_annotated_to_term <- function(result, species, which.split = 
 #'  when relevant (i.e. no significant fdr-entries are found)). Default 0.05
 #' @param fdr.thr \code{numeric}. Threshold for adjusted p-values (applied in both filtering of DE-genes and in enrichment results). Default 0.05
 #' @param logfc.thr \code{numeric}.
+#' @param do.plot code{logical}. Whether or not to draw a network plot for the enrichment results. Defaults to \code{FALSE}.
 #' @param enrichment.methods \code{character}. Enrichment methods to be run. One or more of the following: c("clusterProfilerGO", "clusterProfilerKEGG","DAVID", "gProfileR", "topGO")
 #' @param clusterProfilerGO.params \code{list}. Method-specific parameters for clusterProfilerGO. One or more of the following (default values shown
 #' and used for all such elements not given in the call):
@@ -326,6 +327,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                                   out.dir=NULL,
                                   species="human",
                                   p.thr=0.05, fdr.thr=0.05, logfc.thr=1,
+                                  do.plot=FALSE,
                                   enrichment.methods=c("clusterProfilerGO", "clusterProfilerKEGG","DAVID", "gProfileR", "topGO"),
                                   clusterProfilerGO.params=list(analysis.approach = "ORA",
                                                                   do.similarity.filtering = F,
@@ -494,11 +496,13 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
          WriteXLS::WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
 
          #Making the graph visualisation
-         graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)
-         cat("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
-         plot_enrichment_network(enrichment.result = result, DE.result = de_table,
-                                 plot.filename = graph.name, show.terms = 5, logfc.thr = 1, fdr.thr = 0.05)
-        }
+         if (do.plot) {
+           graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)
+           cat("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
+           plot_enrichment_network(enrichment.result = result, DE.result = de_table,
+                                   plot.filename = graph.name, show.terms = 5, logfc.thr = 1, fdr.thr = 0.05)
+         }
+       }
 
        enrichment_out.l$clusterProfiler_GO[[contrast]] <- result
 
@@ -601,10 +605,12 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
           WriteXLS::WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
 
           #Making the graph visualisation
-          graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)
-          cat("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
-          plot_enrichment_network(enrichment.result = result, DE.result = de_table,
-                                  plot.filename = graph.name, show.terms = 5, logfc.thr = 1, fdr.thr = 0.05)
+          if (do.plot) {
+            graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)
+            cat("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
+            plot_enrichment_network(enrichment.result = result, DE.result = de_table,
+                                    plot.filename = graph.name, show.terms = 5, logfc.thr = 1, fdr.thr = 0.05)
+          }
         }
 
         enrichment_out.l$clusterProfiler_KEGG[[contrast]] <- result
@@ -650,10 +656,12 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
       #     WriteXLS::WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
       #
       #     #Making the graph visualisation
-      #     graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)
-      #     cat("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
-      #     plot_enrichment_network(enrichment.result = result, DE.result = de_table,
-      #                             plot.filename = graph.name, show.terms = 5, logfc.thr = 1, fdr.thr = 0.05)
+      #     if (do.plot) {
+      #       graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)
+      #       cat("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
+      #       plot_enrichment_network(enrichment.result = result, DE.result = de_table,
+      #                               plot.filename = graph.name, show.terms = 5, logfc.thr = 1, fdr.thr = 0.05)
+      #     }
       #   }
       #
       #   enrichment_out.l$DAVID[[contrast]] = result
@@ -724,10 +732,12 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
           WriteXLS::WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
 
           #Making the graph visualisation
-          graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)
-          cat("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
-          plot_enrichment_network(enrichment.result = result, DE.result = de_table,
-                                  plot.filename = graph.name, show.terms = 5, logfc.thr = 1, fdr.thr = 0.05)
+          if (do.plot) {
+            graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)
+            cat("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
+            plot_enrichment_network(enrichment.result = result, DE.result = de_table,
+                                    plot.filename = graph.name, show.terms = 5, logfc.thr = 1, fdr.thr = 0.05)
+          }
         }
         else {
           result <- "No significant enrichment found"

@@ -14,6 +14,7 @@ runEnrichmentAnalyses(
   p.thr = 0.05,
   fdr.thr = 0.05,
   logfc.thr = 1,
+  do.plot = FALSE,
   enrichment.methods = c("clusterProfilerGO", "clusterProfilerKEGG", "DAVID",
     "gProfileR", "topGO"),
   clusterProfilerGO.params = list(analysis.approach = "ORA", do.similarity.filtering = F,
@@ -50,6 +51,8 @@ when relevant (i.e. no significant fdr-entries are found)). Default 0.05}
 \item{fdr.thr}{\code{numeric}. Threshold for adjusted p-values (applied in both filtering of DE-genes and in enrichment results). Default 0.05}
 
 \item{logfc.thr}{\code{numeric}.}
+
+\item{do.plot}{code{logical}. Whether or not to draw a network plot for the enrichment results. Defaults to \code{FALSE}.}
 
 \item{enrichment.methods}{\code{character}. Enrichment methods to be run. One or more of the following: c("clusterProfilerGO", "clusterProfilerKEGG","DAVID", "gProfileR", "topGO")}
 

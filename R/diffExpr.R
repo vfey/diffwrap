@@ -34,6 +34,7 @@
 #'     if any aesthetics are mapped. FALSE never includes, and TRUE always includes. It can also be a named logical vector to finely select
 #'     the aesthetics to display.
 #' @param do.enrichment \code{logical}. Whether or not to call enrichment wrapper. Defaults to \code{TRUE}.
+#' @param enrichment.plot code{logical}. Whether or not to draw a network plot for the enrichment results. Defaults to \code{FALSE}.
 #' @param enrichment.methods \code{character}. One or more of the following: c("clusterProfilerGO", "clusterProfilerKEGG","DAVID", "gProfileR", "topGO"). By default, uses them all.
 #' @param dry.run \code{logical}. If \code{TRUE}, the function will not create any output files or directories.
 #' @param ... \code{ANY}. Additional arguments passed to functions.
@@ -157,6 +158,7 @@ diffExpr <-
            lists = TRUE,
            filtered.lists = TRUE,
            do.enrichment = TRUE,
+           enrichment.plot = FALSE,
            enrichment.methods = c("clusterProfilerGO", "clusterProfilerKEGG","DAVID", "gProfileR", "topGO"),
            ...,
            dry.run=FALSE)
@@ -653,7 +655,8 @@ diffExpr <-
                                                 out.dir = out.dir,
                                                 use.pval.in.DE.filtering.if.no.sign.fdrs = FALSE,
                                                 species = enrich_spec,
-                                                enrichment.methods = enrichment.methods
+                                                enrichment.methods = enrichment.methods,
+                                                do.plot = enrichment.plot
                                                 # david.params = list(email.address = "meeri.pekkarinen@tuni.fi", url = "https://david.ncifcrf.gov/webservice/services/DAVIDWebService.DAVIDWebServiceHttpSoap12Endpoint/")
                                                 )
     }

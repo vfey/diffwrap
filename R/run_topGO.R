@@ -74,11 +74,14 @@ run.topGO <- function(background, foreground, ontologies = c("BP"), organism, ID
   result.topGO.classic <- NULL
   result.topGO.weight01 <- NULL
   for (i in 1:length(table.go)) {
-
+    cat(" @", sQuote(table.go[[i]]), "\n")
     ## prepare data
-    GOdata <- methods::new( "topGOdata", ontology = ontologies[i], allGenes = gene.list, nodeSize = 10,
-                   annot = topGO::annFUN.org , mapping = organism, ID = ID_type )
-
+    cat("   Generating new object of class", sQuote(topGOdata), "...\n")
+    cat("   > Splitting GOTERM envrionment...\n")
+    topGO::groupGOTerms()
+    GOdata <- methods::new("topGOdata", ontology = ontologies[i], allGenes = gene.list, nodeSize = 10,
+                   annot = topGO::annFUN.org, mapping = organism, ID = ID_type )
+    cat("done\n")
 
     ## run tests
     cat("    topGO.elim...\n")

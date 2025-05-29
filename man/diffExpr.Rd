@@ -24,7 +24,7 @@ diffExpr(
   biom.mart = c("ensembl", "snp", "funcgen", "vega", "pride", "plants"),
   host = "https://www.ensembl.org",
   biom.filter = "ensembl_gene_id",
-  biom.attributes = c("ensembl_gene_id", "hgnc_symbol", "description"),
+  biom.attributes = c("ensembl_gene_id", "hgnc_symbol", "description", "entrezgene_id"),
   biom.cache = NULL,
   use.cache = FALSE,
   sym.col = "hgnc_symbol",
@@ -107,7 +107,7 @@ This specifies group name pairs to be compared in the format expected by \code{m
 
 \item{biom.filter}{\code{character}. The biomart filter to be used. Defaults to "ensembl_gene_id".}
 
-\item{biom.attributes}{\code{character}. The biomart attributes to be used. Defaults to c("ensembl_gene_id", "hgnc_symbol", "description").}
+\item{biom.attributes}{\code{character}. The biomart attributes to be used. Defaults to c("ensembl_gene_id", "hgnc_symbol", "description", "entrezgene_id").}
 
 \item{biom.cache}{\code{character}. Path name giving the location of the cache \command{getBM()} uses if \code{use.cache=TRUE}. Defaults to the value in the \emph{BIOMART_CACHE} environment variable.}
 

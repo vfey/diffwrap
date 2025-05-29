@@ -38,7 +38,7 @@ annotated to term domain.}
 
 \item{min_set_size}{Minimun size of the functional category, uses 10 by default.}
 
-\item{max_set_size}{Maximum size of the functional categowy, uses 1000 by default.}
+\item{max_set_size}{Maximum size of the functional category, uses 1000 by default.}
 
 \item{min_overlap}{Minimum size of the overlap (intersection) between query and functional category,
 smaller intersections are excluded. By default uses 2.}

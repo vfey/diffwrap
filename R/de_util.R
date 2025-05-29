@@ -339,18 +339,18 @@ diff_expr_extract_contrasts <-
     }
     cat("=============================================================================\n")
     cat("Venn sections list\n")
-    join_vec = c("ensembl_gene_id","gene_symbol","description","entrezgene_id")
     cols.interest.de.table = c("ensembl","symbol|hgnc","description","entrez","^average$|^ave[a-r]{0,4}expr[e-s]{0,6}$","^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$","^p\\.{0,1}val[e-u]{0,2}$")
     pv.col = names(out.l$contrasts[[1]])[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(out.l$contrasts[[1]])))]
     fdr.col = names(out.l$contrasts[[1]])[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(out.l$contrasts[[1]])))]
 
-    sel.col.de.table <- names(out.l$contrasts[[1]])[grep(paste(cols.interest.de.table,collapse="|"), tolower(names(out.l$contrasts[[1]])))]
-    browser()
     sign.de.tables <- lapply(out.l$contrasts, function(x) {
       sel.col.de.table <- names(x)[grep(paste(cols.interest.de.table,collapse="|"), tolower(names(x)))]
       new.de.table <- x %>% dplyr::select(sel.col.de.table)
       return(new.de.table)
     })
+
+    join.interest <- paste(c("ensembl", "symbol|hgnc", "description", "entrez"), collapse = "|")
+    join.vec <- grep(join.interest, tolower(names(out.l$contrasts[[1]])), value = T)
 
     if (all(lapply(sign.de.tables, function(x) nrow(x[x[[fdr.col]] < 0.05,])) > 0)) {
       sign.de.tables = lapply(sign.de.tables, function(x) x[x[[fdr.col]] < 0.05,])

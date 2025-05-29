@@ -698,10 +698,12 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
           WriteXLS::WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
 
           #Making the graph visualisation
-          graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)
-          cat("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
-          plot_enrichment_network(enrichment.result = result, DE.result = de_table,
-                                  plot.filename = graph.name, show.terms = 5, logfc.thr = 1, fdr.thr = 0.05)
+          if (do.plot) {
+            graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)
+            cat("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
+            plot_enrichment_network(enrichment.result = result, DE.result = de_table,
+                                    plot.filename = graph.name, show.terms = 5, logfc.thr = 1, fdr.thr = 0.05)
+          }
         }
         else {
           result <- "No significant enrichment found"

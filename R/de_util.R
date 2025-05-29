@@ -359,7 +359,7 @@ diff_expr_extract_contrasts <-
     }
 
     # v = list with the venn.diagram plot and all venn sections tables
-    v <- diffr_venn(list.comp.tables = sign.de.tables,join_vec = join_vec)
+    v <- diffr_venn(list.comp.tables = sign.de.tables,join.vec = join.vec)
     #print(class(v))
 
     if (plots) {

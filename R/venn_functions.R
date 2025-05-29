@@ -4,7 +4,7 @@
 #
 # Arguments:
 #         list.comp.tables  = list of DE tables, preferably a list of data.frames
-#         join_vec = vector to perform the join operation on; corresponds to column names in the DE tables
+#         join.vec = vector to perform the join operation on; corresponds to column names in the DE tables
 #
 
 # Output: returns the Venn diagram of DE tables and the Venn intersections tables
@@ -15,7 +15,7 @@ utils::globalVariables("counts")
 
 #' Function to produce a Venn diagram of differentially expressed gene tables
 #' @param list.comp.tables list of DE tables, preferably a list of data.frames
-#' @param join_vec vector to perform the join operation on; corresponds to column names in the DE tables.
+#' @param join.vec vector to perform the join operation on; corresponds to column names in the DE tables.
 #'   Defaults to \code{c("ensembl_gene_id","gene_symbol","description","entrezgene_id")}.
 #' @param .log Logical; should logging be done?
 #' @details
@@ -24,7 +24,7 @@ utils::globalVariables("counts")
 #' @author Bogdan Iancu - Genevia Technologies Oy
 #' @return A list containing the Venn diagram grid object and the intersected (or joined) input tables.
 #' @export
-diffr_venn <- function(list.comp.tables, join_vec, .log = FALSE) {
+diffr_venn <- function(list.comp.tables, join.vec, .log = FALSE) {
 
   # test if logging packages are installed
   if (.log && !requireNamespace("futile.logger", quietly = TRUE)) {
@@ -59,10 +59,10 @@ diffr_venn <- function(list.comp.tables, join_vec, .log = FALSE) {
 
   venn.tt <- venn.sets.lists %>% dplyr::select(-counts)
 
-  #go over all data frames in list x and, for all columns that are not found in join_vec, change them to be identifiable by adding the list name to the column
+  #go over all data frames in list x and, for all columns that are not found in join.vec, change them to be identifiable by adding the list name to the column
   #this is done so that after the joins in the intersection tables are
   create.individual.ids = function(x,y) {
-    colnames(x)[which(!(colnames(x) %in% join_vec))] = paste0(colnames(x)[which(!(colnames(x) %in% join_vec))],"-",y)
+    colnames(x)[which(!(colnames(x) %in% join.vec))] = paste0(colnames(x)[which(!(colnames(x) %in% join.vec))],"-",y)
     return(x)
   }
 
@@ -73,10 +73,10 @@ diffr_venn <- function(list.comp.tables, join_vec, .log = FALSE) {
     if (sum(venn.tt[j,]) == 0) {
       next
     }
-    #if all entries are 1 then join them all based on the join_vec
+    #if all entries are 1 then join them all based on the join.vec
     else if (all(venn.tt[j,] == 1)) {
       print(rownames(venn.tt)[j])
-      inters.all <- list.comp.tables %>% purrr::reduce(dplyr::inner_join, by = join_vec)
+      inters.all <- list.comp.tables %>% purrr::reduce(dplyr::inner_join, by = join.vec)
       hgnc.col <- names(inters.all)[grep("symbol|hgnc", tolower(names(inters.all)))]
       inters.all <- inters.all[inters.all[hgnc.col] != "",]
       list.venn.tables[[rownames(venn.tt)[j]]] <- inters.all
@@ -87,10 +87,10 @@ diffr_venn <- function(list.comp.tables, join_vec, .log = FALSE) {
     #this gives the intersection table for the Venn sections seen in the Venn diagram
     else {
       join.part <- list.comp.tables[which(venn.tt[j,] == 1)]
-      inters <- join.part %>% purrr::reduce(dplyr::inner_join, by = join_vec)
+      inters <- join.part %>% purrr::reduce(dplyr::inner_join, by = join.vec)
       anti.part <- list.comp.tables[which(venn.tt[j,] == 0)]
-      outsect <- anti.part %>% purrr::reduce(dplyr::full_join, by = join_vec)
-      res.join <- inters %>% dplyr::anti_join(outsect, by = join_vec)
+      outsect <- anti.part %>% purrr::reduce(dplyr::full_join, by = join.vec)
+      res.join <- inters %>% dplyr::anti_join(outsect, by = join.vec)
       hgnc.col <- names(res.join)[grep("symbol|hgnc", tolower(names(res.join)))]
       res.join <- res.join[res.join[[hgnc.col]] != "",]
       list.venn.tables[[rownames(venn.tt)[j]]] <- res.join

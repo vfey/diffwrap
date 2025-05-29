@@ -98,7 +98,7 @@ run_gprofiler <- function(input_genes,
 
   if (!is.null(file_name)) {
     cat("         Saving result into ", paste0(file_name, ".xlsx"), "...\n")
-    WriteXLS::WriteXLS(results, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = T)
+    WriteXLS::WriteXLS(results$result, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = T)
   }
   return(results)
 }

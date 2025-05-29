@@ -579,7 +579,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
 
         #Saving the table, if relevant
         method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE)
-        if (is.data.frame(result) & dim(result)[1] > 0) {
+        if (is.data.frame(result) & nrow(result) > 0) {
 
 
           gene.col <- colnames(result)[grepl("^DEGs", colnames(result))] #TODO: invent more robust approach to this?
@@ -674,7 +674,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
         print(paste0("Organism: ",org))
         print(paste0("Data sources: ",gProfileR.params$data.sources))
 
-        result <- run_gprofiler(input.genes, background.genes,
+        results <- run_gprofiler(input.genes, background.genes,
                                 organism = org,
                                 data_sources = gProfileR.params$data.sources,
                                 show_only_significant = gProfileR.params$show.only.significant,
@@ -685,7 +685,9 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
 
         # Formattig and saving the table, if relevant
         method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE) # detecting output directory
-        if (is.data.frame(result) & dim(result)[1] > 0) {
+        # getting 'result' data frame from gProfiler results list
+        result <- results$result
+        if (is.data.frame(result) & nrow(result) > 0) {
 
           spec.name <- as.character(enrich.resource.terms[species, "species4conversion"])
           result <- format_ensembl_ids_annotated_to_term(result, spec.name)
@@ -721,7 +723,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
         result <- run.topGO(background = background.genes, foreground = input.genes,ontologies =  topGO.params$ontologies.used, organism = org.db)
 
         #Formatting and saving the table, if relevant
-        if (is.data.frame(result) & dim(result)[1] > 0) {
+        if (is.data.frame(result) & nrow(result) > 0) {
 
           spec.name <- as.character(enrich.resource.terms[species, "species4conversion"])
           result <- format_ensembl_ids_annotated_to_term(result, spec.name)

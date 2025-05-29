@@ -657,8 +657,7 @@ diffExpr <-
                                                 species = enrich_spec,
                                                 enrichment.methods = enrichment.methods,
                                                 do.plot = enrichment.plot
-                                                # david.params = list(email.address = "meeri.pekkarinen@tuni.fi", url = "https://david.ncifcrf.gov/webservice/services/DAVIDWebService.DAVIDWebServiceHttpSoap12Endpoint/")
-                                                )
+      )
     }
     on.exit()
     return(out.l)

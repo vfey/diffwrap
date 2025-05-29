@@ -484,7 +484,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                                         min_overlap = clusterProfilerGO.params$min.overlap,
                                         pAdjustMethod = clusterProfilerGO.params$p.adjust.method,
                                         similarity_filtering = clusterProfilerGO.params$do.similarity.filtering)
-       cat("done")
+       cat("done\n")
 
        #Saving the table, if relevant
        method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE)
@@ -579,7 +579,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                                               max_set_size = clusterProfilerKEGG.params$max.gene.set.size,
                                               min_overlap = clusterProfilerKEGG.params$min.overlap,
                                               pAdjustMethod = clusterProfilerKEGG.params$p.adjust.method)
-        cat("done")
+        cat("done\n")
 
         #Saving the table, if relevant
         method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE)
@@ -639,7 +639,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
       #                              annotation.category = david.params$annotation.category,
       #                              pval.thr = p.thr,
       #                              max.gene.set.size = david.params$max.gene.set.size)
-      #     cat("done")
+      #     cat("done\n")
       #
       #
       #   }
@@ -688,7 +688,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                                 evidence_codes = gProfileR.params$evidence_codes,
                                 domain_scope = gProfileR.params$domain_scope,
                                 highlight = gProfileR.params$highlight)
-        cat("done")
+        cat("done\n")
 
         # Formattig and saving the table, if relevant
         method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE) # detecting output directory
@@ -729,9 +729,9 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
         print(paste0("Organism: ", topGO.params$org))
 
         org.db <- as.character(enrich.resource.terms[species, method])
-        cat("  Running tests...")
+        cat("  Running tests...\n")
         result <- run.topGO(background = background.genes, foreground = input.genes,ontologies =  topGO.params$ontologies.used, organism = org.db)
-        cat("done")
+        cat("...done\n")
 
         #Formatting and saving the table, if relevant
         if (is.data.frame(result) & nrow(result) > 0) {

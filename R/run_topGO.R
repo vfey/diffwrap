@@ -81,15 +81,20 @@ run.topGO <- function(background, foreground, ontologies = c("BP"), organism, ID
 
 
     ## run tests
+    cat("    topGO.elim...\n")
     result.topGO.elim <- topGO::runTest(GOdata, algorithm = "elim", statistic = "Fisher", cutOff = 0.05)
+    cat("    topGO.classic...\n")
     result.topGO.classic <- topGO::runTest(GOdata, algorithm = "classic", statistic = "Fisher", cutOff = 0.05)
+    cat("    topGO.weight01...\n")
     result.topGO.weight01 <- topGO::runTest(GOdata, algorithm = "weight01", statistic = "Fisher", cutOff = 0.05)
     #resultTopGO.elim
 
     ## look at results
+    cat("    weight01 summary...\n")
     weight01.summary <- summary(attributes(result.topGO.weight01)$score <= 0.05)
     numsignif <- as.integer(weight01.summary[[3]])
 
+    cat("    topGO GenTable...\n")
     table.go[[i]] <- topGO::GenTable( GOdata, Fisher.elim = result.topGO.elim,
                                Fisher.classic = result.topGO.classic, Fisher.weight01 = result.topGO.weight01,
                                orderBy = "Fisher.weight01", topNodes = numsignif)
@@ -100,7 +105,7 @@ run.topGO <- function(background, foreground, ontologies = c("BP"), organism, ID
   topGO.results <- as.data.frame(rbind.fill(table.go))
 
 
-  # list containg genes annotated to significant GO terms
+  # list containing genes annotated to significant GO terms
   annotated.genes <- lapply(topGO.results$GO.ID, function(x) as.character(unlist(genesInTerm(object = GOdata, whichGO = x))))
 
 

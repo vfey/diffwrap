@@ -488,7 +488,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
 
        #Saving the table, if relevant
        method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE)
-       if (length(result) > 0 && is.data.frame(result) && nrow(results) > 0) {
+       if (length(result) > 0 && is.data.frame(result) && nrow(result) > 0) {
 
          filename <- paste0(analysis.name, ".", contrast,".", method, ".",
                             clusterProfilerGO.params$analysis.approach, ".",
@@ -650,7 +650,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
       #
       #   # Formattig and saving the table, if relevant
       #   method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE) # detecting output directory
-      #   if (length(result) > 0 && is.data.frame(result) && nrow(results) > 0) {
+      #   if (length(result) > 0 && is.data.frame(result) && nrow(result) > 0) {
       #
       #     spec.name <- as.character(enrich.resource.terms[species, "species4conversion"])
       #     result <- format_ensembl_ids_annotated_to_term(result, spec.name)

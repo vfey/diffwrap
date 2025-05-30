@@ -362,7 +362,7 @@ diff_expr_extract_contrasts <-
     v <- diffr_venn(list.comp.tables = sign.de.tables,join.vec = join.vec)
     #print(class(v))
 
-    if (plots) {
+    if (plots && !is(v[["venn.diagram"]], "try-error")) {
       cat(">>> Plotting Venn diagram...")
       pdf(file.path(out.dir,"Venn_Diagram.pdf"), width = 15, height= 15)
       grid::grid.draw(v[["venn.diagram"]])

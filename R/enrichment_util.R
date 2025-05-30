@@ -488,7 +488,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
 
        #Saving the table, if relevant
        method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE)
-       if (is.data.frame(result) ) {
+       if (length(result) > 0 && is.data.frame(result) && nrow(results) > 0) {
 
          filename <- paste0(analysis.name, ".", contrast,".", method, ".",
                             clusterProfilerGO.params$analysis.approach, ".",
@@ -583,7 +583,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
 
         #Saving the table, if relevant
         method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE)
-        if (is.data.frame(result) & nrow(result) > 0) {
+        if (length(result) > 0 && is.data.frame(result) && nrow(result) > 0) {
 
 
           gene.col <- colnames(result)[grepl("^DEGs", colnames(result))] #TODO: invent more robust approach to this?
@@ -650,7 +650,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
       #
       #   # Formattig and saving the table, if relevant
       #   method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE) # detecting output directory
-      #   if (is.data.frame(result)) {
+      #   if (length(result) > 0 && is.data.frame(result) && nrow(results) > 0) {
       #
       #     spec.name <- as.character(enrich.resource.terms[species, "species4conversion"])
       #     result <- format_ensembl_ids_annotated_to_term(result, spec.name)
@@ -690,11 +690,11 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                                 highlight = gProfileR.params$highlight)
         cat("done\n")
 
-        # Formattig and saving the table, if relevant
+        # Formatting and saving the table, if relevant
         method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE) # detecting output directory
         # getting 'result' data frame from gProfiler results list
         result <- results$result
-        if (is.data.frame(result) & nrow(result) > 0) {
+        if (length(result) > 0 && is.data.frame(result) && nrow(result) > 0) {
 
           spec.name <- as.character(enrich.resource.terms[species, "species4conversion"])
           result <- format_ensembl_ids_annotated_to_term(result, spec.name)
@@ -734,7 +734,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
         cat("...done\n")
 
         #Formatting and saving the table, if relevant
-        if (is.data.frame(result) & nrow(result) > 0) {
+        if (length(result) > 0 && is.data.frame(result) && nrow(result) > 0) {
 
           spec.name <- as.character(enrich.resource.terms[species, "species4conversion"])
           result <- format_ensembl_ids_annotated_to_term(result, spec.name)

@@ -109,15 +109,17 @@ run.topGO <- function(background, foreground, ontologies = c("BP"), organism, ID
 
 
   # list containing genes annotated to significant GO terms
-  cat("    topGO GenTable...\n")
+  cat("    Extracting gene IDs annotated to GO terms...\n")
   annotated.genes <- lapply(topGO.results$GO.ID, function(x) as.character(unlist(topGO::genesInTerm(object = GOdata, whichGO = x))))
 
 
   ## Selecting only the genes that are among foreground set:
+  cat("    Selecting genes in foreground set...\n")
   significant.genes <- lapply(annotated.genes, function(x) intersect(x, gene.of.interest.names))
 
 
   #performing BH correction on the weight01 p-values
+  cat("    Performing BH correction...\n")
   p.adj.weight01 <- round(p.adjust(topGO.results$Fisher.weight01, method = pAdjustMethod), digits = 5)
 
   #bind new p.adj.wieght01 col

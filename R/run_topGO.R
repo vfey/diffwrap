@@ -80,7 +80,7 @@ run.topGO <- function(background, foreground, ontologies = c("BP"), organism, ID
     cat("   > Splitting GOTERM envrionment...\n")
     topGO::groupGOTerms()
     GOdata <- methods::new("topGOdata", ontology = ontologies[i], allGenes = gene.list, nodeSize = 10,
-                   annot = topGO::annFUN.org, mapping = organism, ID = ID_type )
+                   annot = topGO::annFUN.org, mapping = organism, ID = ID_type)
     cat("done\n")
 
     ## run tests
@@ -109,7 +109,8 @@ run.topGO <- function(background, foreground, ontologies = c("BP"), organism, ID
 
 
   # list containing genes annotated to significant GO terms
-  annotated.genes <- lapply(topGO.results$GO.ID, function(x) as.character(unlist(genesInTerm(object = GOdata, whichGO = x))))
+  cat("    topGO GenTable...\n")
+  annotated.genes <- lapply(topGO.results$GO.ID, function(x) as.character(unlist(topGO::genesInTerm(object = GOdata, whichGO = x))))
 
 
   ## Selecting only the genes that are among foreground set:

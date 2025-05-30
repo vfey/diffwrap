@@ -51,9 +51,10 @@ diffr_venn <- function(list.comp.tables, join.vec, .log = FALSE) {
   if (.log) {
     futile.logger::flog.threshold(futile.logger::ERROR, name = "VennDiagramLogger")
   }
-  venn.diag <- VennDiagram::venn.diagram(DEGs.list,
+  venn.diag <- try(VennDiagram::venn.diagram(DEGs.list,
                             col = "transparent", fill = fill.color[1:length(DEGs.list)],  height = 8000, width = 8000, print.mode = c("raw", "percent"),
-                            cat.cex = 1.2, cex = 2.2, imagetype = "png", filename = NULL)
+                            cat.cex = 1.2, cex = 2.2, imagetype = "png", filename = NULL), silent = T)
+  if (is(venn.diag, "try-error")) warning("Plotting Venn diagram failed!")
   venn.sets.lists = venn::venn(DEGs.list)
   venn.sets.intersections = attr(venn.sets.lists, "intersections")
 

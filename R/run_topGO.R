@@ -76,7 +76,7 @@ run.topGO <- function(background, foreground, ontologies = c("BP"), organism, ID
   for (i in 1:length(table.go)) {
     cat(" @", sQuote(table.go[[i]]), "\n")
     ## prepare data
-    cat("   Generating new object of class", sQuote(topGOdata), "...\n")
+    cat("   Generating new object of class", sQuote("topGOdata"), "...\n")
     cat("   > Splitting GOTERM envrionment...\n")
     topGO::groupGOTerms()
     GOdata <- methods::new("topGOdata", ontology = ontologies[i], allGenes = gene.list, nodeSize = 10,

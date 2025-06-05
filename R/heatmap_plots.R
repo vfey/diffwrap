@@ -59,7 +59,7 @@ pheatmap_plots <-
       dat.sign.fdr = d3[d3[[fdr.col]] < fdr.thr,]
 
       if (split.expr) {
-        cat("Splitting expression values into 50% up- and 50% down-regulated...\n")
+        cat("  Splitting expression values into 50% up- and 50% down-regulated...")
         dat.sign.pv.up <- d3[d3[[pv.col]] < p.thr & d3[[fc.col]] >= logfc.thr, ]
         dat.sign.pv.up <- dat.sign.pv.up[order(dat.sign.pv.up[[pv.col]], rev(dat.sign.pv.up[[fc.col]])), ]
         dat.sign.pv.up <- dat.sign.pv.up[1:min(nrow(dat.sign.pv.up), topn %/% 2), ]
@@ -75,6 +75,7 @@ pheatmap_plots <-
         dat.sign.fdr.down <- dat.sign.fdr.down[1:min(nrow(dat.sign.fdr.down), topn-(topn %/% 2)), ]
         dat.sign.fdr <- rbind(dat.sign.fdr.up, dat.sign.fdr.down)
       }
+      cat("done\n")
 
       #print(dat.sign.pv)
       samp.info = as.data.frame(samp.info)
@@ -101,6 +102,7 @@ pheatmap_plots <-
       fdr_hm_list = list()
 
       if (nrow(dat.sign.fdr) > 0) {
+        cat("Creating pheatmap objects for FDR-filtered genes...")
         if (nrow(dat.sign.fdr) > topn) {
           dat.sign.fdr = as.data.frame(dat.sign.fdr[1:topn,])
         }
@@ -110,11 +112,12 @@ pheatmap_plots <-
         fdr_hm_list[["none"]] = diffr_pheatmap(dat.sign.fdr, clinical.mat = samp.anno, scale.fl = "none", sign.val = "FDR")
         fdr_hm_list[["rowsmall"]] = diffr_pheatmap(dat.sign.fdr.small, clinical.mat = samp.anno, sign.val = "FDR")
         fdr_hm_list[["nonesmall"]] = diffr_pheatmap(dat.sign.fdr.small, clinical.mat = samp.anno, sign.val = "FDR")
-
+      cat("done\n")
       } else {
         print("There are 0 entries with significant adjusted P-values in the differential expression data frame")
         print("Checking P-value entries...")
 
+        cat("Creating pheatmap objects for P-value-filtered genes...")
         if (nrow(dat.sign.pv) > 0) {
           if (nrow(dat.sign.pv) > topn) {
             dat.sign.pv = as.data.frame(dat.sign.pv[1:topn,])
@@ -124,12 +127,14 @@ pheatmap_plots <-
           pv_hm_list[["none"]] = diffr_pheatmap(dat.sign.pv, clinical.mat = samp.anno, scale.fl = "none", sign.val = "P-value")
           pv_hm_list[["rowsmall"]] = diffr_pheatmap(dat.sign.pv.small, clinical.mat = samp.anno, scale.fl = "row", sign.val = "P-value")
           pv_hm_list[["nonesmall"]] = diffr_pheatmap(dat.sign.pv.small, clinical.mat = samp.anno, scale.fl = "none", sign.val = "P-value")
+          cat("done\n")
         } else {
           print("There are 0 entries with significant P-values in the differential expression data frame")
         }
 
         #if there are no entries with significant adjusted p-values, but there are with significant p-values, then save in the g.l list the row-scaled regular and non-scaled correlograms
         if (length(pv_hm_list) != 0) {
+          cat("  Plotting P-value-filtered genes...")
           gl.pv = list()
           gl.pv$regular = pv_hm_list$row$regular
           gl.pv$gene.correlogram = pv_hm_list$none$correlogram
@@ -144,11 +149,13 @@ pheatmap_plots <-
           grid::grid.newpage()
           print(gl.pv$samp.correlogram)
           g.l[["pval"]] = gl.pv
+          cat("done\n")
         }
 
       }
       #if there are any entries with significant adjusted p-values in the heatmap plots, then save in the g.l list the row-scaled regular and non-scaled correlograms
       if (length(fdr_hm_list) != 0) {
+        cat("  Plotting FDR-filtered genes...")
         gl.fdr = list()
         gl.fdr$regular = fdr_hm_list$row$regular
         gl.fdr$gene.correlogram = fdr_hm_list$none$correlogram
@@ -163,6 +170,7 @@ pheatmap_plots <-
         grid::grid.newpage()
         print(gl.fdr$samp.correlogram)
         g.l[["fdr"]] = gl.fdr
+        cat("done\n")
       }
 
       return(g.l)

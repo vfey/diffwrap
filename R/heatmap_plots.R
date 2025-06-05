@@ -111,7 +111,6 @@ pheatmap_plots <-
         cat("    Creating 2nd, smaller data frame labelling only 50 genes...")
         dat.sign.fdr.small = as.data.frame(dat.sign.fdr[1:min(nrow(dat.sign.fdr), 50),])
         cat("done\n")
-        browser()
         fdr_hm_list[["row"]] = diffr_pheatmap(dat.sign.fdr, clinical.mat = samp.anno, scale.fl = "row", sign.val = "FDR")
         fdr_hm_list[["none"]] = diffr_pheatmap(dat.sign.fdr, clinical.mat = samp.anno, scale.fl = "none", sign.val = "FDR")
         fdr_hm_list[["rowsmall"]] = diffr_pheatmap(dat.sign.fdr.small, clinical.mat = samp.anno, sign.val = "FDR")

@@ -181,6 +181,7 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot = c("fdr"
 		ix <- sort(filtdat[,property.to.plot], index=T)$ix
 		filtdat1 <- filtdat[ix[1:numlab], ][order(ix[1:numlab]), ]
 	}
+	browser()
 	if (length(which(filtdat1$logFC < 0)) < (numlab %/% 2)) {
 	  filtdat1 <- rbind(filtdat1, data.df[data.df[[property.to.plot]] < property.thr & data.df$logFC > logfc.thr, ])
 	}
@@ -217,7 +218,7 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot = c("fdr"
 			theme(plot.title = element_text(hjust = 0.5)) +
 			theme(plot.subtitle = element_text(hjust = 0.5)) #hjust 0.5 for centering
 
-	volcano.plot <- volcano.plot + geom_text(inherit.aes= FALSE, data=data.df, aes(x=floor(min(data.df$logFC)), y=-log10(property.thr)), label = line_label_text, nudge_x=0.5, nudge_y=max(-log10(data.df[,property.to.plot]))/60, size=3.5, color="red")
+	volcano.plot <- volcano.plot + geom_text(inherit.aes= FALSE, data=data.df, aes(x=floor(min(data.df$logFC)), y=-log10(property.thr)), label = line_label_text, nudge_x=0.5, nudge_y=max(-log10(data.df[,property.to.plot]))/nrow(data.df), size=3.5, color="red")
 	#volcano.plot <- volcano.plot + geom_text(x=0, y=0, label="two-fold FC", size=3, color="red") # TO DO: FIND GOOD POSITION, USE VARIABLE (fold change can sometimes be other than 2-fold?)
 
 	if (point.lab && nrow(filtdat)>0) {

@@ -56,6 +56,9 @@
 #' @param numlab \code{numeric}. Maximum number of point labels to be shown in the plot. This overrides/limits
 #'   values calculated by any thresholds. Defaults to 15.
 #' @param point.lab \code{logical}. Should point labels be shown in the plot? Defaults to \code{TRUE}.
+#' @param heatmap.topn \code{numeric}. Number of top values to be plotted. Defaults to 100.
+#' @param heatmap.split.expr \code{logical}. Should the top up- and top down-regulated genes be displayed at equal numbers (50/50),
+#' if they meet the significance threshold (regardless of the actual significance)? Defaults to \code{FALSE}.
 #' @param min.samp \code{integer}. Number of samples in which a feature needs to be covered by at least one read per million.
 #'   Defaults to the size of the smallest group of replicates. See \emph{details}.
 #' @param strict \code{logical}. For miRNA analysis: only keep a miRNA if there are > 5 reads per million in at least half of the samples?
@@ -132,6 +135,8 @@ diffExpr <-
            logfc.thr = 1,
            numlab = 20,
            point.lab = TRUE,
+           heatmap.topn = 100,
+           heatmap.split.expr = FALSE,
            min.samp = NULL,
            strict = TRUE,
            disp = c("gene", "trend", "common"),
@@ -523,6 +528,8 @@ diffExpr <-
                                              logfc.thr = logfc.thr,
                                              numlab = numlab,
                                              point.lab = point.lab,
+                                             heatmap.topn = heatmap.topn,
+                                             heatmap.split.expr = heatmap.split.expr,
                                              font.size = label.font.size,
                                              plots = plots,
                                              lists = lists,
@@ -559,6 +566,8 @@ diffExpr <-
                                              logfc.thr = logfc.thr,
                                              numlab = numlab,
                                              point.lab = point.lab,
+                                             heatmap.topn = heatmap.topn,
+                                             heatmap.split.expr = heatmap.split.expr,
                                              font.size = label.font.size,
                                              plots = plots,
                                              lists = lists,
@@ -597,6 +606,8 @@ diffExpr <-
                                              logfc.thr = logfc.thr,
                                              numlab = numlab,
                                              point.lab = point.lab,
+                                             heatmap.topn = heatmap.topn,
+                                             heatmap.split.expr = heatmap.split.expr,
                                              font.size = label.font.size,
                                              plots = plots,
                                              lists = lists,
@@ -633,6 +644,8 @@ diffExpr <-
                                              logfc.thr = logfc.thr,
                                              numlab = numlab,
                                              point.lab = point.lab,
+                                             heatmap.topn = heatmap.topn,
+                                             heatmap.split.expr = heatmap.split.expr,
                                              font.size = label.font.size,
                                              plots = plots,
                                              lists = lists,

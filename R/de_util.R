@@ -195,6 +195,9 @@ diffr_expr_generate_cleaned_de_table_output <-
 #' @param logfc.thr Numeric; FC threshold on the log2-scale used in plots and for generating cleaned output tables.
 #' @param numlab \code{numeric}. Maximum number of labels per plot. Overrides numbers calculated based on `p.thr` and `fdr.thr`.
 #' @param point.lab \code{logical}. Should points be labelled, at all?
+#' @param heatmap.topn \code{numeric}. Number of top values to be plotted. Defaults to 100.
+#' @param heatmap.split.expr \code{logical}. Should the top up- and top down-regulated genes be displayed at equal numbers (50/50),
+#' if they meet the significance threshold (regardless of the actual significance)? Defaults to \code{FALSE}.
 #' @param font.size Size of point labels in M-A plots.
 #' @param plots Logical; should plots be generated?
 #' @param lists Logical; should output tables be written to files?
@@ -211,7 +214,8 @@ diff_expr_extract_contrasts <-
            analysis.name=NULL, biomart=FALSE, biom.data.set="hsapiens_gene_ensembl", biom.mart=c("ensembl", "snp", "funcgen", "vega", "pride", "plants"),
            host="https://www.ensembl.org", biom.filter="ensembl_gene_id", biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"),
            biom.cache = NULL, use.cache = FALSE, sym.col="hgnc_symbol",
-           rm.dups=FALSE, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE, font.size=5, plots=TRUE, lists=TRUE, filtered.lists = TRUE,
+           rm.dups=FALSE, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE, heatmap.topn = 100,
+           heatmap.split.expr = FALSE, font.size=5, plots=TRUE, lists=TRUE, filtered.lists = TRUE,
            samp.info = NULL, samples = NULL, groups = NULL, sample.plot.names = NULL)
   {
     # initial checks
@@ -343,7 +347,8 @@ diff_expr_extract_contrasts <-
         diff_expr_pval_hist_plot(d3)
 
         cat("Heatmap plots...\n")
-        out.l$heatmapPlots[[contr]] <- pheatmap_plots(d3, id, sym.col="gene_symbol", samp.info = samp.info, samples, groups, sample.plot.names = sample.plot.names, main=NULL, p.thr=0.05, fdr.thr=0.05, logfc.thr = 1)
+        out.l$heatmapPlots[[contr]] <- pheatmap_plots(d3, id, sym.col="gene_symbol", samp.info = samp.info, samples, groups, sample.plot.names = sample.plot.names, main=NULL,
+                                                      p.thr=0.05, fdr.thr=0.05, logfc.thr = 1, topn = heatmap.topn, split.expr = heatmap.split.expr)
         #print(class(out.l$heatmapPlots[[contr]]))
         dev.off()
       }

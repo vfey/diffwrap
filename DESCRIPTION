@@ -1,7 +1,7 @@
 Package: diffwrap
 Type: Package
 Title: Differential Expression Analysis of RNA-Seq Data
-Version: 0.2-16
+Version: 0.2-17
 Date: 2025-06-05
 Authors@R: person(list("Vidal", "Meeri", "Reija", "Bogdan", "Adrien"), list("Fey", "Pekkarinen", "Hieta", "Iancu", "Janssens"), email = list("vidal.fey@tuni.fi", "meeri.pekkarinen@tuni.fi", "reija.hieta@geneviatechnologies.com", "bogdan.iancu@abo.fi", "adrien.janssens@geneviatechnologies.com"), role = list(c("aut", "cre"), "aut", "aut", "aut", "aut"))
 Author: Vidal Fey <vidal.fey@tuni.fi>

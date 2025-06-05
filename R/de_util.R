@@ -346,11 +346,20 @@ diff_expr_extract_contrasts <-
         cat(" Dendrogram plot...\n")
         diff_expr_pval_hist_plot(d3)
 
-        cat("Heatmap plots...\n")
-        out.l$heatmapPlots[[contr]] <- pheatmap_plots(d3, id, sym.col="gene_symbol", samp.info = samp.info, samples, groups, sample.plot.names = sample.plot.names, main=NULL,
-                                                      p.thr=0.05, fdr.thr=0.05, logfc.thr = 1, topn = heatmap.topn, split.expr = heatmap.split.expr)
-        #print(class(out.l$heatmapPlots[[contr]]))
-        dev.off()
+        if (heatmap.topn > 100) {
+          dev.off()
+          pdf(file.path(contr.out.dir, paste(analysis.name, contr, "_heatmaps.pdf", sep="_")), width = 15, height = 25)
+          cat("Heatmap plots...\n")
+          out.l$heatmapPlots[[contr]] <- pheatmap_plots(d3, id, sym.col="gene_symbol", samp.info = samp.info, samples, groups, sample.plot.names = sample.plot.names, main=NULL,
+                                                        p.thr=0.05, fdr.thr=0.05, logfc.thr = 1, topn = heatmap.topn, split.expr = heatmap.split.expr)
+          #print(class(out.l$heatmapPlots[[contr]]))
+          dev.off()
+        } else {
+          cat("Heatmap plots...\n")
+          out.l$heatmapPlots[[contr]] <- pheatmap_plots(d3, id, sym.col="gene_symbol", samp.info = samp.info, samples, groups, sample.plot.names = sample.plot.names, main=NULL,
+                                                        p.thr=0.05, fdr.thr=0.05, logfc.thr = 1, topn = heatmap.topn, split.expr = heatmap.split.expr)
+          dev.off()
+        }
       }
     }
     cat("=============================================================================\n")

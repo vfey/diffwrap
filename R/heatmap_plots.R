@@ -46,6 +46,12 @@ pheatmap_plots <-
       d3 = as.data.frame(unique(d3, by = sym.col))
       rownames(d3) = as.character(d3[,sym.col])
 
+      #print(dat.sign.pv)
+      samp.info = as.data.frame(samp.info)
+      #select only the columns representing the samples
+      samp.names = as.character(samp.info[, samples])
+      #print(samp.names)
+
       # find columns with P-Values or FDR values
       pv.col = names(d3)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
       fdr.col = names(d3)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
@@ -57,31 +63,6 @@ pheatmap_plots <-
       #make two data frames for significant p-values and significant adj.p.values
       dat.sign.pv = d3[d3[[pv.col]] < p.thr,]
       dat.sign.fdr = d3[d3[[fdr.col]] < fdr.thr,]
-
-      if (split.expr) {
-        cat("  Splitting expression values into 50% up- and 50% down-regulated...")
-        dat.sign.pv.up <- d3[d3[[pv.col]] < p.thr & d3[[fc.col]] >= logfc.thr, ]
-        dat.sign.pv.up <- dat.sign.pv.up[order(dat.sign.pv.up[[pv.col]], rev(dat.sign.pv.up[[fc.col]])), ]
-        dat.sign.pv.up <- dat.sign.pv.up[1:min(nrow(dat.sign.pv.up), topn %/% 2), ]
-        dat.sign.pv.down <- d3[d3[[pv.col]] < p.thr & d3[[fc.col]] <= -1*logfc.thr, ]
-        dat.sign.pv.down <- dat.sign.pv.down[order(dat.sign.pv.down[[pv.col]], rev(dat.sign.pv.down[[fc.col]])), ]
-        dat.sign.pv.down <- dat.sign.pv.down[1:min(nrow(dat.sign.pv.down), topn-(topn %/% 2)), ]
-        dat.sign.pv <- rbind(dat.sign.pv.up, dat.sign.pv.down)
-        dat.sign.fdr.up <- d3[d3[[fdr.col]] < p.thr & d3[[fc.col]] >= logfc.thr, ]
-        dat.sign.fdr.up <- dat.sign.fdr.up[order(dat.sign.fdr.up[[fdr.col]], rev(dat.sign.fdr.up[[fc.col]])), ]
-        dat.sign.fdr.up <- dat.sign.fdr.up[1:min(nrow(dat.sign.fdr.up), topn %/% 2), ]
-        dat.sign.fdr.down <- d3[d3[[fdr.col]] < p.thr & d3[[fc.col]] <= -1*logfc.thr, ]
-        dat.sign.fdr.down <- dat.sign.fdr.down[order(dat.sign.fdr.down[[fdr.col]], rev(dat.sign.fdr.down[[fc.col]])), ]
-        dat.sign.fdr.down <- dat.sign.fdr.down[1:min(nrow(dat.sign.fdr.down), topn-(topn %/% 2)), ]
-        dat.sign.fdr <- rbind(dat.sign.fdr.up, dat.sign.fdr.down)
-      }
-      cat("done\n")
-
-      #print(dat.sign.pv)
-      samp.info = as.data.frame(samp.info)
-      #select only the columns representing the samples
-      samp.names = as.character(samp.info[, samples])
-      #print(samp.names)
 
       dat.sign.pv = dat.sign.pv[samp.names]
       dat.sign.fdr = dat.sign.fdr[samp.names]
@@ -97,40 +78,78 @@ pheatmap_plots <-
         colnames(dat.sign.fdr) = sample.plot.names
         rownames(samp.anno) = sample.plot.names
       }
+
+      if (split.expr) {
+        cat("  Splitting expression values into 50% up- and 50% down-regulated...")
+        dat.sign.pv.up <- d3[d3[[pv.col]] < p.thr & d3[[fc.col]] >= logfc.thr, ]
+        dat.sign.pv.up <- dat.sign.pv.up[order(dat.sign.pv.up[[pv.col]], rev(dat.sign.pv.up[[fc.col]])), ]
+        dat.sign.pv.up <- dat.sign.pv.up[1:min(nrow(dat.sign.pv.up), topn %/% 2), ]
+        dat.sign.pv.down <- d3[d3[[pv.col]] < p.thr & d3[[fc.col]] <= -1*logfc.thr, ]
+        dat.sign.pv.down <- dat.sign.pv.down[order(dat.sign.pv.down[[pv.col]], rev(dat.sign.pv.down[[fc.col]])), ]
+        dat.sign.pv.down <- dat.sign.pv.down[1:min(nrow(dat.sign.pv.down), topn-(topn %/% 2)), ]
+        dat.sign.pv.split <- rbind(dat.sign.pv.up, dat.sign.pv.down)
+        dat.sign.fdr.up <- d3[d3[[fdr.col]] < p.thr & d3[[fc.col]] >= logfc.thr, ]
+        dat.sign.fdr.up <- dat.sign.fdr.up[order(dat.sign.fdr.up[[fdr.col]], rev(dat.sign.fdr.up[[fc.col]])), ]
+        dat.sign.fdr.up <- dat.sign.fdr.up[1:min(nrow(dat.sign.fdr.up), topn %/% 2), ]
+        dat.sign.fdr.down <- d3[d3[[fdr.col]] < p.thr & d3[[fc.col]] <= -1*logfc.thr, ]
+        dat.sign.fdr.down <- dat.sign.fdr.down[order(dat.sign.fdr.down[[fdr.col]], rev(dat.sign.fdr.down[[fc.col]])), ]
+        dat.sign.fdr.down <- dat.sign.fdr.down[1:min(nrow(dat.sign.fdr.down), topn-(topn %/% 2)), ]
+        dat.sign.fdr.split <- rbind(dat.sign.fdr.up, dat.sign.fdr.down)
+        dat.sign.pv.split = dat.sign.pv.split[samp.names]
+        dat.sign.fdr.split = dat.sign.fdr.split[samp.names]
+        if (!is.null(sample.plot.names)) {
+          colnames(dat.sign.pv.split) = sample.plot.names
+          colnames(dat.sign.fdr.split) = sample.plot.names
+        }
+        cat("done\n")
+      }
+
       #create lists of pheatmaps for significant p-values and adjusted p-values respectively
       pv_hm_list = list()
       fdr_hm_list = list()
 
+      cat("  Creating pheatmap objects for FDR-filtered genes...\n")
       if (nrow(dat.sign.fdr) > 0) {
-        cat("  Creating pheatmap objects for FDR-filtered genes...\n")
-        if (nrow(dat.sign.fdr) > topn) {
-          cat("    Labelling", topn, "genes...\n")
-          dat.sign.fdr = as.data.frame(dat.sign.fdr[1:topn,])
-        }
+        cat("    Plotting", min(nrow(dat.sign.fdr), topn), "genes...\n")
+        dat.sign.fdr = as.data.frame(dat.sign.fdr[1:min(nrow(dat.sign.fdr), topn),])
+
         #make 2nd option smaller pheatmap for genes
         cat("    Creating 2nd, smaller data frame labelling only 50 genes...")
         dat.sign.fdr.small = as.data.frame(dat.sign.fdr[1:min(nrow(dat.sign.fdr), 50),])
+        dat.sign.fdr.small.split = as.data.frame(dat.sign.fdr.split[1:min(nrow(dat.sign.fdr.split), 50),])
         cat("done\n")
-        fdr_hm_list[["row"]] = diffr_pheatmap(dat.sign.fdr, clinical.mat = samp.anno, scale.fl = "row", sign.val = "FDR")
-        fdr_hm_list[["none"]] = diffr_pheatmap(dat.sign.fdr, clinical.mat = samp.anno, scale.fl = "none", sign.val = "FDR")
-        fdr_hm_list[["rowsmall"]] = diffr_pheatmap(dat.sign.fdr.small, clinical.mat = samp.anno, sign.val = "FDR")
-        fdr_hm_list[["nonesmall"]] = diffr_pheatmap(dat.sign.fdr.small, clinical.mat = samp.anno, sign.val = "FDR")
-      cat(" Pheatmap objects for FDR done\n")
+
+        fdr_hm_list[["row"]] = diffr_pheatmap(dat.sign.fdr, clinical.mat = samp.anno, scale.fl = "row", add.main = "FDR-filtered")
+        if (split.expr) fdr_hm_list[["rowsplit"]] = diffr_pheatmap(dat.sign.fdr.split, clinical.mat = samp.anno, scale.fl = "row", add.main = paste("FDR-filtered, abs(logFC) >= 1,", topn %/% 2, "up- ,", topn-(topn %/% 2), "down-regulated genes"))
+        fdr_hm_list[["none"]] = diffr_pheatmap(dat.sign.fdr, clinical.mat = samp.anno, scale.fl = "none", add.main = "FDR-filtered")
+        if (split.expr) fdr_hm_list[["nonesplit"]] = diffr_pheatmap(dat.sign.fdr.split, clinical.mat = samp.anno, scale.fl = "none", add.main = paste("FDR-filtered, abs(logFC) >= 1,", topn %/% 2, "up- ,", topn-(topn %/% 2), "down-regulated genes"))
+        fdr_hm_list[["rowsmall"]] = diffr_pheatmap(dat.sign.fdr.small, clinical.mat = samp.anno, add.main = "FDR-filtered")
+        if (split.expr) fdr_hm_list[["rowsmallsplit"]] = diffr_pheatmap(dat.sign.fdr.small.split, clinical.mat = samp.anno, add.main = paste("FDR-filtered, abs(logFC) >= 1,", topn %/% 2, "up- ,", topn-(topn %/% 2), "down-regulated genes"))
+        fdr_hm_list[["nonesmall"]] = diffr_pheatmap(dat.sign.fdr.small, clinical.mat = samp.anno, add.main = "FDR-filtered")
+        if (split.expr) fdr_hm_list[["nonesmallsplit"]] = diffr_pheatmap(dat.sign.fdr.small.split, clinical.mat = samp.anno, add.main = paste("FDR-filtered, abs(logFC) >= 1,", topn %/% 2, "up- ,", topn-(topn %/% 2), "down-regulated genes"))
+        cat(" Pheatmap objects for FDR done\n")
       } else {
         print("There are 0 entries with significant adjusted P-values in the differential expression data frame")
         print("Checking P-value entries...")
 
         cat("Creating pheatmap objects for P-value-filtered genes...")
         if (nrow(dat.sign.pv) > 0) {
-          if (nrow(dat.sign.pv) > topn) {
-            cat("    Labelling", topn, "genes...\n")
-            dat.sign.pv = as.data.frame(dat.sign.pv[1:topn,])
-          }
+          cat("    Plotting", min(nrow(dat.sign.pv), topn), "genes...\n")
+          dat.sign.pv = as.data.frame(dat.sign.pv[1:min(nrow(dat.sign.pv), topn),])
+
+          cat("    Creating 2nd, smaller data frame labelling only 50 genes...")
           dat.sign.pv.small = as.data.frame(dat.sign.pv[1:min(nrow(dat.sign.pv), 50),])
-          pv_hm_list[["row"]] = diffr_pheatmap(dat.sign.pv, clinical.mat = samp.anno, scale.fl = "row", sign.val = "P-value")
-          pv_hm_list[["none"]] = diffr_pheatmap(dat.sign.pv, clinical.mat = samp.anno, scale.fl = "none", sign.val = "P-value")
-          pv_hm_list[["rowsmall"]] = diffr_pheatmap(dat.sign.pv.small, clinical.mat = samp.anno, scale.fl = "row", sign.val = "P-value")
-          pv_hm_list[["nonesmall"]] = diffr_pheatmap(dat.sign.pv.small, clinical.mat = samp.anno, scale.fl = "none", sign.val = "P-value")
+          dat.sign.pv.small.split = as.data.frame(dat.sign.pv.split[1:min(nrow(dat.sign.pv.split), 50),])
+          cat("done\n")
+
+          pv_hm_list[["row"]] = diffr_pheatmap(dat.sign.pv, clinical.mat = samp.anno, scale.fl = "row", add.main = "P-value-filtered")
+          if (split.expr) pv_hm_list[["rowsplit"]] = diffr_pheatmap(dat.sign.pv.split, clinical.mat = samp.anno, scale.fl = "row", add.main = paste("P-value-filtered, abs(logFC) >= 1,", topn %/% 2, "up- ,", topn-(topn %/% 2), "down-regulated genes"))
+          pv_hm_list[["none"]] = diffr_pheatmap(dat.sign.pv, clinical.mat = samp.anno, scale.fl = "none", add.main = "P-value-filtered")
+          if (split.expr) pv_hm_list[["nonesplit"]] = diffr_pheatmap(dat.sign.pv.split, clinical.mat = samp.anno, scale.fl = "none", add.main = paste("P-value-filtered, abs(logFC) >= 1,", topn %/% 2, "up- ,", topn-(topn %/% 2), "down-regulated genes"))
+          pv_hm_list[["rowsmall"]] = diffr_pheatmap(dat.sign.pv.small, clinical.mat = samp.anno, scale.fl = "row", add.main = "P-value-filtered")
+          if (split.expr) pv_hm_list[["rowsmallsplit"]] = diffr_pheatmap(dat.sign.pv.small.split, clinical.mat = samp.anno, scale.fl = "row", add.main = paste("P-value-filtered, abs(logFC) >= 1,", topn %/% 2, "up- ,", topn-(topn %/% 2), "down-regulated genes"))
+          pv_hm_list[["nonesmall"]] = diffr_pheatmap(dat.sign.pv.small, clinical.mat = samp.anno, scale.fl = "none", add.main = "P-value-filtered")
+          if (split.expr) pv_hm_list[["nonesmallsplit"]] = diffr_pheatmap(dat.sign.pv.small.split, clinical.mat = samp.anno, scale.fl = "none", add.main = paste("P-value-filtered, abs(logFC) >= 1,", topn %/% 2, "up- ,", topn-(topn %/% 2), "down-regulated genes"))
           cat("done\n")
         } else {
           print("There are 0 entries with significant P-values in the differential expression data frame")
@@ -141,17 +160,29 @@ pheatmap_plots <-
           cat("  Plotting P-value-filtered genes...")
           gl.pv = list()
           gl.pv$regular = pv_hm_list$row$regular
+          gl.pv$regular.split = pv_hm_list$rowsplit$regular
           gl.pv$gene.correlogram = pv_hm_list$none$correlogram
+          gl.pv$gene.correlogram.split = pv_hm_list$nonesplit$correlogram
           gl.pv$gene.correlogram.small = pv_hm_list$nonesmall$correlogram.small
+          gl.pv$gene.correlogram.small.split = pv_hm_list$nonesmallsplit$correlogram.small
           gl.pv$samp.correlogram = pv_hm_list$none$correlogram.sample
+          gl.pv$samp.correlogram.split = pv_hm_list$nonesplit$correlogram.sample
           grid::grid.newpage()
           print(gl.pv$regular )
           grid::grid.newpage()
+          print(gl.pv$regular.split )
+          grid::grid.newpage()
           print(gl.pv$gene.correlogram)
+          grid::grid.newpage()
+          print(gl.pv$gene.correlogram.split)
           grid::grid.newpage()
           print(gl.pv$gene.correlogram.small)
           grid::grid.newpage()
+          print(gl.pv$gene.correlogram.small.split)
+          grid::grid.newpage()
           print(gl.pv$samp.correlogram)
+          grid::grid.newpage()
+          print(gl.pv$samp.correlogram.split)
           g.l[["pval"]] = gl.pv
           cat("done\n")
         }
@@ -162,17 +193,29 @@ pheatmap_plots <-
         cat("  Plotting FDR-filtered genes...")
         gl.fdr = list()
         gl.fdr$regular = fdr_hm_list$row$regular
+        gl.fdr$regular.split = fdr_hm_list$rowsplit$regular
         gl.fdr$gene.correlogram = fdr_hm_list$none$correlogram
+        gl.fdr$gene.correlogram.split = fdr_hm_list$nonesplit$correlogram
         gl.fdr$gene.correlogram.small = fdr_hm_list$nonesmall$correlogram.small
+        gl.fdr$gene.correlogram.small.split = fdr_hm_list$nonesmallsplit$correlogram.small
         gl.fdr$samp.correlogram = fdr_hm_list$none$correlogram.sample
+        gl.fdr$samp.correlogram.split = fdr_hm_list$nonesplit$correlogram.sample
         grid::grid.newpage()
         print(gl.fdr$regular )
         grid::grid.newpage()
+        print(gl.fdr$regular.split )
+        grid::grid.newpage()
         print(gl.fdr$gene.correlogram)
+        grid::grid.newpage()
+        print(gl.fdr$gene.correlogram.split)
         grid::grid.newpage()
         print(gl.fdr$gene.correlogram.small)
         grid::grid.newpage()
+        print(gl.fdr$gene.correlogram.small.split)
+        grid::grid.newpage()
         print(gl.fdr$samp.correlogram)
+        grid::grid.newpage()
+        print(gl.fdr$samp.correlogram.split)
         g.l[["fdr"]] = gl.fdr
         cat("done\n")
       }

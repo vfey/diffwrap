@@ -212,8 +212,18 @@ diff_expr_extract_contrasts <-
            host="https://www.ensembl.org", biom.filter="ensembl_gene_id", biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"),
            biom.cache = NULL, use.cache = FALSE, sym.col="hgnc_symbol",
            rm.dups=FALSE, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE, font.size=5, plots=TRUE, lists=TRUE, filtered.lists = TRUE,
-           samp.info = samp.info, samples = samples, groups = groups, sample.plot.names = sample.plot.names)
+           samp.info = NULL, samples = NULL, groups = NULL, sample.plot.names = NULL)
   {
+    # initial checks
+    if (is.null(samp.info)) stop("Need sample sheet! Provide as data frame to 'samp.info' argument.")
+    if (is.null(samples)) stop("Need name of column in sample sheet containing sample names!")
+    if (is.null(groups)) stop("Need name of column in sample sheet containing grouping information!")
+    if (is.null(analysis.name)) {
+      analysis.name <- paste0(paste(levels(groups)[1:2], collapse="_"), "_")
+      cat("Using default settings for the 'analysis name':", sQuote(analysis.name), "\n")
+      warning("A unique and descriptive name for the analysis should always be provided!")
+    }
+
     if (!length(grep("contrasts", names(out.l)))) {
       out.l$contrasts <- list()
     }
@@ -242,6 +252,7 @@ diff_expr_extract_contrasts <-
       cat("Storing all results under", contr.out.dir, "\n")
 
       if (do.voom) {
+        if (is.null(fit2)) stop("Need 'fit2' object!")
         cat("Generating output table of differentially expressed features...\n")
         tt <- limma::topTable(fit2, coef=contr, number=nrow(fit2), sort.by="P")
       } else {
@@ -332,7 +343,7 @@ diff_expr_extract_contrasts <-
         diff_expr_pval_hist_plot(d3)
 
         cat("Heatmap plots...\n")
-        out.l$heatmapPlots[[contr]] <- pheatmap_plots(d3, id, sym.col="gene_symbol", samp.info = samp.info, samples, groups, sample.plot.names = sample.plot.names, main=NULL, p.thr=0.05, fdr.thr=0.05, logfc.thr=1)
+        out.l$heatmapPlots[[contr]] <- pheatmap_plots(d3, id, sym.col="gene_symbol", samp.info = samp.info, samples, groups, sample.plot.names = sample.plot.names, main=NULL, p.thr=0.05, fdr.thr=0.05, logfc.thr = 1)
         #print(class(out.l$heatmapPlots[[contr]]))
         dev.off()
       }

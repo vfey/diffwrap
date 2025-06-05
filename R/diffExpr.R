@@ -130,7 +130,7 @@ diffExpr <-
            p.thr = 0.05,
            fdr.thr = 0.05,
            logfc.thr = 1,
-           numlab = 15,
+           numlab = 20,
            point.lab = TRUE,
            min.samp = NULL,
            strict = TRUE,

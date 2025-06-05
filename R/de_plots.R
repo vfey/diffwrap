@@ -174,13 +174,21 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot = c("fdr"
 	data.df$FC[(data.df$logFC < -1*logfc.thr | data.df$logFC > logfc.thr)] <- paste0("more than ", 2^logfc.thr, "-fold")
 
 	# Filtering data.df to label points
-	filtdat <- data.df[ data.df[[property.to.plot]] < property.thr & abs(data.df$logFC) > logfc.thr, ]
+	filtdat <- data.df[data.df[[property.to.plot]] < property.thr & abs(data.df$logFC) > logfc.thr, ]
 	cat("    ", nrow(filtdat), "point(s) labelled...\n")
 	if (nrow(filtdat) > numlab) {
 		cat("     Restricting to", numlab, "...\n")
 		ix <- sort(filtdat[,property.to.plot], index=T)$ix
-		filtdat <- filtdat[ix[1:numlab], ][order(ix[1:numlab]), ]
+		filtdat1 <- filtdat[ix[1:numlab], ][order(ix[1:numlab]), ]
 	}
+	if (length(which(filtdat1$logFC < 0)) < (numlab %/% 2)) {
+	  filtdat1 <- rbind(filtdat1, data.df[data.df[[property.to.plot]] < property.thr & data.df$logFC > logfc.thr, ])
+	}
+	if (length(which(filtdat1$logFC > 0)) < (numlab %/% 2)) {
+	  filtdat1 <- rbind(filtdat1, data.df[data.df[[property.to.plot]] < property.thr & data.df$logFC < logfc.thr, ])
+	}
+	  filtdat1 <- filtdat1[order(abs(filtdat1$logFC)), ]
+	  filtdat <- filtdat1[1:min(nrow(filtdat1), numlab), ]
 
 	# Constructing the plot
 	volcano.plot <- ggplot(data.df, aes(x = data.df$logFC, y = -log10(data.df[,property.to.plot]), alpha = data.df$FC))# ,

@@ -102,17 +102,20 @@ pheatmap_plots <-
       fdr_hm_list = list()
 
       if (nrow(dat.sign.fdr) > 0) {
-        cat("Creating pheatmap objects for FDR-filtered genes...")
+        cat("  Creating pheatmap objects for FDR-filtered genes...\n")
         if (nrow(dat.sign.fdr) > topn) {
+          cat("    Labelling", topn, "genes...\n")
           dat.sign.fdr = as.data.frame(dat.sign.fdr[1:topn,])
         }
         #make 2nd option smaller pheatmap for genes
+        cat("    Creating 2nd, smaller data frame labelling only 50 genes...")
         dat.sign.fdr.small = as.data.frame(dat.sign.fdr[1:50,])
+        cat("done\n")
         fdr_hm_list[["row"]] = diffr_pheatmap(dat.sign.fdr, clinical.mat = samp.anno, scale.fl = "row", sign.val = "FDR")
         fdr_hm_list[["none"]] = diffr_pheatmap(dat.sign.fdr, clinical.mat = samp.anno, scale.fl = "none", sign.val = "FDR")
         fdr_hm_list[["rowsmall"]] = diffr_pheatmap(dat.sign.fdr.small, clinical.mat = samp.anno, sign.val = "FDR")
         fdr_hm_list[["nonesmall"]] = diffr_pheatmap(dat.sign.fdr.small, clinical.mat = samp.anno, sign.val = "FDR")
-      cat("done\n")
+      cat(" Pheatmap objects for FDR done\n")
       } else {
         print("There are 0 entries with significant adjusted P-values in the differential expression data frame")
         print("Checking P-value entries...")

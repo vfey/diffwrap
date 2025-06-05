@@ -103,9 +103,9 @@ pheatmap_plots <-
       if (nrow(dat.sign.fdr) > 0) {
         if (nrow(dat.sign.fdr) > topn) {
           dat.sign.fdr = as.data.frame(dat.sign.fdr[1:topn,])
-          #make 2nd option smaller pheatmap for genes
-          dat.sign.fdr.small = as.data.frame(dat.sign.fdr[1:50,])
         }
+        #make 2nd option smaller pheatmap for genes
+        dat.sign.fdr.small = as.data.frame(dat.sign.fdr[1:50,])
         fdr_hm_list[["row"]] = diffr_pheatmap(dat.sign.fdr, clinical.mat = samp.anno, scale.fl = "row", sign.val = "FDR")
         fdr_hm_list[["none"]] = diffr_pheatmap(dat.sign.fdr, clinical.mat = samp.anno, scale.fl = "none", sign.val = "FDR")
         fdr_hm_list[["rowsmall"]] = diffr_pheatmap(dat.sign.fdr.small, clinical.mat = samp.anno, sign.val = "FDR")
@@ -118,13 +118,13 @@ pheatmap_plots <-
         if (nrow(dat.sign.pv) > 0) {
           if (nrow(dat.sign.pv) > topn) {
             dat.sign.pv = as.data.frame(dat.sign.pv[1:topn,])
-            dat.sign.pv.small = as.data.frame(dat.sign.pv[1:50,])
           }
+          dat.sign.pv.small = as.data.frame(dat.sign.pv[1:50,])
           pv_hm_list[["row"]] = diffr_pheatmap(dat.sign.pv, clinical.mat = samp.anno, scale.fl = "row", sign.val = "P-value")
           pv_hm_list[["none"]] = diffr_pheatmap(dat.sign.pv, clinical.mat = samp.anno, scale.fl = "none", sign.val = "P-value")
           pv_hm_list[["rowsmall"]] = diffr_pheatmap(dat.sign.pv.small, clinical.mat = samp.anno, scale.fl = "row", sign.val = "P-value")
           pv_hm_list[["nonesmall"]] = diffr_pheatmap(dat.sign.pv.small, clinical.mat = samp.anno, scale.fl = "none", sign.val = "P-value")
-          } else {
+        } else {
           print("There are 0 entries with significant P-values in the differential expression data frame")
         }
 

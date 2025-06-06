@@ -93,8 +93,7 @@ run_clusterProfiler_KEGG <- function(input_genes,
     names(sel.cols) <- c("Term ID", "Term description", "Gene Ratio", "Background Ratio", "P-Value",
                          "Adjusted P-Value", "DEGs Annotated to Term", "No of DEGs Annotated to Term")
     sel.cols <- sel.cols[sel.cols %in% names(ORA.results.df)]
-    ORA.results.df <- ORA.results.df[ORA.results.df$Count >= min_overlap,
-                                     sel.cols]
+    ORA.results.df <- ORA.results.df[ORA.results.df$Count >= min_overlap, sel.cols]
     colnames(ORA.results.df) <- names(sel.cols)
 
     # switching default gene separator of clusterProfiler into comma:

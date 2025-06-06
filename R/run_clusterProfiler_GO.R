@@ -116,12 +116,16 @@ run_clusterProfiler_GO <- function(input_genes,
         print("Simplifying results...")
         ORA.results <- clusterProfiler::simplify(ORA.results)
       }
-browser()
+
       ORA.results.df <- data.frame(ORA.results)
       # Filter by minimun overlap and extract only interesting columns
-      ORA.results.df <- ORA.results.df[ORA.results.df$Count >= min_overlap, c(1:6,8:9)]
-      colnames(ORA.results.df) <- c("Term ID", "Term description", "Gene Ratio", "Background Ratio", "P-Value",
-                                  "Adjusted P-Value", "DEGs Annotated to Term", "No of DEGs Annotated to Term")
+
+      sel.cols <- c("ID", "Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "geneID", "Count")
+      names(sel.cols) <- c("Term ID", "Term description", "Gene Ratio", "Background Ratio", "P-Value",
+                           "Adjusted P-Value", "DEGs Annotated to Term", "No of DEGs Annotated to Term")
+      sel.cols <- sel.cols[sel.cols %in% names(ORA.results.df)]
+      ORA.results.df <- ORA.results.df[ORA.results.df$Count >= min_overlap, sel.cols]
+      colnames(ORA.results.df) <- names(sel.cols)
 
       # switching default gene separator of clusterProfiler into comma
       ORA.results.df$`DEGs Annotated to Term` = gsub('/', ',', ORA.results.df$`DEGs Annotated to Term`)

@@ -74,7 +74,7 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
   geneSymbolColumn = names(DE.table)[grep("ymbol", tolower(names(DE.table)))]
   logFoldChangeColumn = names(DE.table)[grep("foldch|logfc", tolower(names(DE.table)))]
   adjPvalColumn = names(DE.table)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(DE.table)))]
-  termColumn = names(enrichment.table)[grep("description|^term_", tolower(names(enrichment.table)))]
+  termColumn = names(enrichment.table)[grep("description|^term_name", tolower(names(enrichment.table)))]
   DEGcolumn =   names(enrichment.table)[grep("^degs|^genes|^intersection$", tolower(names(enrichment.table)))]
   cat("         Detected following columns in data inputted for network visualisation: \n")
   cat("         DE (log) fold changes: ", logFoldChangeColumn,  "\n")
@@ -576,7 +576,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
 
         }
 
-        cat("  Running tests...")
+        cat("  Running tests...\n")
         result <- run_clusterProfiler_KEGG(input_genes = genes,
                                               background_genes = background.gene.entrez,
                                               ordered_query = ordered.query,
@@ -638,7 +638,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
       #   cat("   Performing DAVID... \n")
       #   if (david.params$email.address != "") {
       #
-      #     cat("  Running tests...")
+      #     cat("  Running tests...\n")
       #     result <- doDavidEnrichmentAnalysis(background.ensembl.ids = background.genes,
       #                              foreground.ensembl.ids = input.genes,
       #                              email.address = david.params$email.address,
@@ -688,7 +688,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
         print(paste0("Organism: ",org))
         print(paste0("Data sources: ",gProfileR.params$data.sources))
 
-        cat("  Running tests...")
+        cat("  Running tests...\n")
         results <- run_gprofiler(input.genes, background.genes,
                                 organism = org,
                                 data_sources = gProfileR.params$data.sources,

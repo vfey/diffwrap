@@ -86,7 +86,7 @@ run_clusterProfiler_KEGG <- function(input_genes,
                                               qvalueCutoff = 0.2,
                                               minGSSize = min_set_size,
                                               maxGSSize = max_set_size)
-
+browser()
     ORA.results.df <- data.frame(ORA.results)
     # Filter by minimun overlap and extract only interesting columns
     ORA.results.df <- ORA.results.df[ORA.results.df$Count >= min_overlap, c(1:6,8:9)]

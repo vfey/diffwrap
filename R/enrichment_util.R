@@ -143,6 +143,7 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
   # Parse the pathway table to create edges
   edges <- c()
   genes = c()
+  browser()
   for (i in 1:length(enrichment.table[[termColumn]])) {
     cat("\n")
     x <- strsplit(as.character(enrichment.table[i, DEGcolumn]), split = ",")[[1]]

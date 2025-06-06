@@ -186,8 +186,8 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot = c("fdr"
 	    filtdat1 <- rbind(filtdat, data.df[data.df[[property.to.plot]] < property.thr & data.df$logFC < logfc.thr, ])
 	    filtdat1 <- filtdat1[!duplicated(filtdat1$ensembl_gene_id), ]
 	  }
-	  if (nrow(filtdat1) & length(which(filtdat1$logFC > 0)) < (numlab %/% 2.5)) {
-	    filtdat1 <- rbind(filtdat1, data.df[data.df[[property.to.plot]] < property.thr & data.df$logFC > logfc.thr, ])
+	  if (nrow(filtdat) & length(which(filtdat$logFC > 0)) < (numlab %/% 2.5)) {
+	    filtdat1 <- rbind(filtdat, data.df[data.df[[property.to.plot]] < property.thr & data.df$logFC > logfc.thr, ])
 	    filtdat1 <- filtdat1[!duplicated(filtdat1$ensembl_gene_id), ]
 	  }
 	  filtdat1 <- filtdat1[order(abs(filtdat1$logFC), decreasing = T), ]

@@ -52,13 +52,14 @@ prepare_scale_for_legend = function(scale.minimum, scale.maximum, int.values.for
 #' @param legend.cex.main,legend.cex.text Numeric; text sizes of legend title and text, given as character expansion
 #'   (magnification) relative to the default.
 #' @export
-plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename, show.terms = 5,
-                                   logfc.thr = NULL,
-                                   fdr.thr = NULL,
-                                   pdf.width = 11,
-                                   pdf.height = 8,
-                                   legend.cex.main = 0.8,
-                                   legend.cex.text = 0.7) {
+plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
+                                    show.terms = 5,
+                                    logfc.thr = NULL,
+                                    fdr.thr = NULL,
+                                    pdf.width = 11,
+                                    pdf.height = 8,
+                                    legend.cex.main = 0.8,
+                                    legend.cex.text = 0.7) {
 
   if (typeof(enrichment.result) == "character") {
     # Read in enrichment result table
@@ -73,8 +74,8 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
   geneSymbolColumn = names(DE.table)[grep("ymbol", tolower(names(DE.table)))]
   logFoldChangeColumn = names(DE.table)[grep("foldch|logfc", tolower(names(DE.table)))]
   adjPvalColumn = names(DE.table)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(DE.table)))]
-  termColumn = names(enrichment.table)[grep("description", tolower(names(enrichment.table)))]
-  DEGcolumn =   names(enrichment.table)[grep("^degs|^genes", tolower(names(enrichment.table)))]
+  termColumn = names(enrichment.table)[grep("description|^term", tolower(names(enrichment.table)))]
+  DEGcolumn =   names(enrichment.table)[grep("^degs|^genes|^intersection$", tolower(names(enrichment.table)))]
   cat("         Detected following columns in data inputted for network visualisation: \n")
   cat("         DE (log) fold changes: ", logFoldChangeColumn,  "\n")
   cat("         FDR: ",adjPvalColumn, "\n")
@@ -302,8 +303,12 @@ format_ensembl_ids_annotated_to_term <- function(result, species, which.split = 
 #' @param p.thr \code{numeric}. Threshold for un-adjusted p-values (applied in both filtering of DE-genes and in enrichment results,
 #'  when relevant (i.e. no significant fdr-entries are found)). Default 0.05
 #' @param fdr.thr \code{numeric}. Threshold for adjusted p-values (applied in both filtering of DE-genes and in enrichment results). Default 0.05
-#' @param logfc.thr \code{numeric}.
+#' @param logfc.thr \code{numeric}. Threshold for the log2-fold-change. Defaults to 1.
 #' @param do.plot code{logical}. Whether or not to draw a network plot for the enrichment results. Defaults to \code{FALSE}.
+#' @param plot.fdr.thr \code{numeric}. FDR threshold used in the enrichment plot. This may be useful to tweak to produce a more informative plot.
+#' Defaults to 0.05.
+#' @param plot.logfc.thr \code{numeric}. FC threshold on the log2-scale used in the enrichment plot. Defaults to 1.
+#' @param plot.num.terms \code{integer}. Number of terms shown in the plot. Defaults to 5.
 #' @param enrichment.methods \code{character}. Enrichment methods to be run. One or more of the following: c("clusterProfilerGO", "clusterProfilerKEGG","DAVID", "gProfileR", "topGO")
 #' @param clusterProfilerGO.params \code{list}. Method-specific parameters for clusterProfilerGO. One or more of the following (default values shown
 #' and used for all such elements not given in the call):
@@ -327,7 +332,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                                   out.dir=NULL,
                                   species="human",
                                   p.thr=0.05, fdr.thr=0.05, logfc.thr=1,
-                                  do.plot=FALSE,
+                                  do.plot=FALSE, plot.fdr.thr=fdr.thr, plot.logfc.thr=logfc.thr, plot.num.terms=5,
                                   enrichment.methods=c("clusterProfilerGO", "clusterProfilerKEGG","DAVID", "gProfileR", "topGO"),
                                   clusterProfilerGO.params=list(analysis.approach = "ORA",
                                                                   do.similarity.filtering = F,
@@ -502,7 +507,8 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
            graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)
            cat("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
            plot_enrichment_network(enrichment.result = result, DE.result = de_table,
-                                   plot.filename = graph.name, show.terms = 5, logfc.thr = 1, fdr.thr = 0.05)
+                                   plot.filename = graph.name, show.terms = plot.num.terms,
+                                   logfc.thr = plot.logfc.thr, fdr.thr = plot.fdr.thr)
          }
        }
 
@@ -613,7 +619,8 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
             graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)
             cat("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
             plot_enrichment_network(enrichment.result = result, DE.result = de_table,
-                                    plot.filename = graph.name, show.terms = 5, logfc.thr = 1, fdr.thr = 0.05)
+                                    plot.filename = graph.name, show.terms = plot.num.terms,
+                                    logfc.thr = plot.logfc.thr, fdr.thr = plot.fdr.thr)
           }
         }
 
@@ -665,7 +672,8 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
       #       graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)
       #       cat("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
       #       plot_enrichment_network(enrichment.result = result, DE.result = de_table,
-      #                               plot.filename = graph.name, show.terms = 5, logfc.thr = 1, fdr.thr = 0.05)
+      #                               plot.filename = graph.name, show.terms = plot.num.terms,
+      #                               logfc.thr = plot.logfc.thr, fdr.thr = plot.fdr.thr)
       #     }
       #   }
       #
@@ -709,7 +717,8 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
             graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)
             cat("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
             plot_enrichment_network(enrichment.result = result, DE.result = de_table,
-                                    plot.filename = graph.name, show.terms = 5, logfc.thr = 1, fdr.thr = 0.05)
+                                    plot.filename = graph.name, show.terms = plot.num.terms,
+                                    logfc.thr = plot.logfc.thr, fdr.thr = plot.fdr.thr)
           }
         }
         else {
@@ -749,7 +758,8 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
             graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)
             cat("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
             plot_enrichment_network(enrichment.result = result, DE.result = de_table,
-                                    plot.filename = graph.name, show.terms = 5, logfc.thr = 1, fdr.thr = 0.05)
+                                    plot.filename = graph.name, show.terms = plot.num.terms,
+                                    logfc.thr = plot.logfc.thr, fdr.thr = plot.fdr.thr)
           }
         }
         else {

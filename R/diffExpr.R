@@ -35,6 +35,10 @@
 #'     the aesthetics to display.
 #' @param do.enrichment \code{logical}. Whether or not to call enrichment wrapper. Defaults to \code{TRUE}.
 #' @param enrichment.plot code{logical}. Whether or not to draw a network plot for the enrichment results. Defaults to \code{FALSE}.
+#' @param enrichment.plot.fdr.thr \code{numeric}. FDR threshold used in the enrichment plot. This may be useful to tweak to produce a more informative plot.
+#' Defaults to 0.05.
+#' @param enrichment.plot.logfc.thr \code{numeric}. FC threshold on the log2-scale used in the enrichment plot. Defaults to 1.
+#' @param enrichment.plot.num.terms \code{integer}. Number of terms shown in the plot. Defaults to 5.
 #' @param enrichment.methods \code{character}. One or more of the following: c("clusterProfilerGO", "clusterProfilerKEGG","DAVID", "gProfileR", "topGO"). By default, uses them all.
 #' @param dry.run \code{logical}. If \code{TRUE}, the function will not create any output files or directories.
 #' @param ... \code{ANY}. Additional arguments passed to functions.
@@ -164,6 +168,9 @@ diffExpr <-
            filtered.lists = TRUE,
            do.enrichment = TRUE,
            enrichment.plot = FALSE,
+           enrichment.plot.fdr.thr = fdr.thr,
+           enrichment.plot.logfc.thr = logfc.thr,
+           enrichment.plot.num.terms = 5,
            enrichment.methods = c("clusterProfilerGO", "clusterProfilerKEGG","DAVID", "gProfileR", "topGO"),
            ...,
            dry.run=FALSE)
@@ -669,7 +676,10 @@ diffExpr <-
                                                 use.pval.in.DE.filtering.if.no.sign.fdrs = FALSE,
                                                 species = enrich_spec,
                                                 enrichment.methods = enrichment.methods,
-                                                do.plot = enrichment.plot
+                                                do.plot = enrichment.plot,
+                                                plot.fdr.thr=enrichment.plot.fdr.thr,
+                                                plot.logfc.thr=enrichment.plot.logfc.thr,
+                                                plot.num.terms=enrichment.plot.num.terms
       )
     }
     on.exit()

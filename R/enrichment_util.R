@@ -143,9 +143,9 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
   # Parse the pathway table to create edges
   edges <- c()
   genes = c()
+  browser()
   for (i in 1:length(enrichment.table[[termColumn]])) {
     cat("\n")
-    browser()
     x <- strsplit(as.character(enrichment.table[i, DEGcolumn]), split = ",")[[1]]
     cat("         Genes associated with the term '", enrichment.table[i, termColumn], "': ", length(x), "\n")
     x <- x[x %in% DE.table[[geneSymbolColumn]]] # Remove genes that are not in DE table

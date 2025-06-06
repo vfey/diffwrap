@@ -132,7 +132,7 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
     posSaturated = to_be_saturated & all.foldchanges > 0
     print(sum(posSaturated))
     all.foldchanges[posSaturated] <- upper_limit
-
+browser()
     #replacing the fold change column with saturated values
     DE.table[[logFoldChangeColumn]] <- all.foldchanges
   }

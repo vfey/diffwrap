@@ -182,14 +182,36 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot = c("fdr"
 		filtdat1 <- filtdat[ix[1:numlab], ][order(ix[1:numlab]), ]
 	}
 	browser()
-	if (length(which(filtdat1$logFC < 0)) < (numlab %/% 2)) {
-	  filtdat1 <- rbind(filtdat1, data.df[data.df[[property.to.plot]] < property.thr & data.df$logFC > logfc.thr, ])
-	}
-	if (length(which(filtdat1$logFC > 0)) < (numlab %/% 2)) {
+	if (nrow(filtdat1) & length(which(filtdat1$logFC < 0)) < (numlab %/% 2.5)) {
 	  filtdat1 <- rbind(filtdat1, data.df[data.df[[property.to.plot]] < property.thr & data.df$logFC < logfc.thr, ])
+	  filtdat1 <- filtdat1[!duplicated(filtdat1$ensembl_gene_id), ]
 	}
-	  filtdat1 <- filtdat1[order(abs(filtdat1$logFC)), ]
-	  filtdat <- filtdat1[1:min(nrow(filtdat1), numlab), ]
+	if (nrow(filtdat1) & length(which(filtdat1$logFC > 0)) < (numlab %/% 2.5)) {
+	  filtdat1 <- rbind(filtdat1, data.df[data.df[[property.to.plot]] < property.thr & data.df$logFC > logfc.thr, ])
+	  filtdat1 <- filtdat1[!duplicated(filtdat1$ensembl_gene_id), ]
+	}
+	filtdat1 <- filtdat1[order(abs(filtdat1$logFC), decreasing = T), ]
+	filtdat <- filtdat1[1:min(nrow(filtdat1), numlab), ]
+
+	if (nrow(filtdat) & length(which(filtdat$logFC < 0)) < (numlab %/% 2.5)) {
+	  filtdat.d <- data.df[data.df[[property.to.plot]] < property.thr & data.df$logFC < logfc.thr, ]
+	  filtdat.d <- filtdat.d[!duplicated(filtdat.d$ensembl_gene_id), ]
+	} else {
+	  filtdat.d <- data.df[which(data.df$logFC < 0), ]
+	}
+	filtdat.d <- filtdat.d[order(abs(filtdat.d$logFC), decreasing = T), ][1:min(nrow(filtdat.d), numlab), ]
+	if (nrow(filtdat) & length(which(filtdat$logFC > 0)) < (numlab %/% 2.5)) {
+	  filtdat.u <- data.df[data.df[[property.to.plot]] < property.thr & data.df$logFC > logfc.thr, ]
+	  filtdat.u <- filtdat.u[!duplicated(filtdat.u$ensembl_gene_id), ]
+	} else {
+	  filtdat.u <- data.df[which(data.df$logFC > 0), ]
+	}
+	filtdat.u <- filtdat.u[order(abs(filtdat.u$logFC), decreasing = T), ][1:min(nrow(filtdat.u), numlab), ]
+
+	filtdat1 <- rbind(filtdat.d, filtdat.u)
+	filtdat1 <- filtdat1[abs(filtdat1$logFC) > logfc.thr, ]
+	filtdat1 <- filtdat1[order(abs(filtdat1$logFC), decreasing = T), ]
+	filtdat <- filtdat1[1:min(nrow(filtdat1), numlab), ]
 
 	# Constructing the plot
 	volcano.plot <- ggplot(data.df, aes(x = data.df$logFC, y = -log10(data.df[,property.to.plot]), alpha = data.df$FC))# ,

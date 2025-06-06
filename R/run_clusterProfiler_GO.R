@@ -75,7 +75,6 @@ run_clusterProfiler_GO <- function(input_genes,
     if (dim(GSE.results)[1] >= 1) {
 
       GSE.results.df <- data.frame(GSE.results)
-      browser()
       GSE.results.df$Count <- sapply(GSE.results.df$core_enrichment, function(x) length(unlist(strsplit(x, split = "/"))))
       # Filter by minimun overlap and extract only interesting columns
       GSE.results.df <- GSE.results.df[GSE.results.df$Count >= min_overlap, c(1:3,5:7,11:12)]
@@ -117,7 +116,7 @@ run_clusterProfiler_GO <- function(input_genes,
         print("Simplifying results...")
         ORA.results <- clusterProfiler::simplify(ORA.results)
       }
-
+browser()
       ORA.results.df <- data.frame(ORA.results)
       # Filter by minimun overlap and extract only interesting columns
       ORA.results.df <- ORA.results.df[ORA.results.df$Count >= min_overlap, c(1:6,8:9)]

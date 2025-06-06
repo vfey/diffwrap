@@ -161,6 +161,7 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
 
   # Acquire vertices names
   vertices <- igraph::V(g)$name
+  browser()
   #print(vertices)
 
   # Assign categories to vertices

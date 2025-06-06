@@ -75,6 +75,7 @@ run_clusterProfiler_GO <- function(input_genes,
     if (dim(GSE.results)[1] >= 1) {
 
       GSE.results.df <- data.frame(GSE.results)
+      browser()
       GSE.results.df$Count <- sapply(GSE.results.df$core_enrichment, function(x) length(unlist(strsplit(x, split = "/"))))
       # Filter by minimun overlap and extract only interesting columns
       GSE.results.df <- GSE.results.df[GSE.results.df$Count >= min_overlap, c(1:3,5:7,11:12)]

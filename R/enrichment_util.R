@@ -166,7 +166,7 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
   # Assign categories to vertices
   categories <- c()
   for (i in 1:length(vertices)) {
-    if(is(try(vertices[i] %in% enrichment.table[[termColumn]]), "try-error")) browser()
+    if(length(vertices[i] %in% enrichment.table[[termColumn]])==0) browser()
     if (vertices[i] %in% enrichment.table[[termColumn]]) {
       categories <- append(categories, "pathway")
     } else {

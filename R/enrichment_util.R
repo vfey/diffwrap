@@ -266,8 +266,6 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
 #' Enrichment tools report all genes annotated to a certain term in one string, separated by comma or similar. The function
 #'   splits each row into individual IDs before converting and later re-collapses converted IDs.
 #'
-#' @note
-#' DAVID enrchment is not implemented in the current version of diffwrap.
 format_ensembl_ids_annotated_to_term <- function(result, species, which.split = ",")
 {
   gene.col <- colnames(result)[grepl("ENSG", result)]
@@ -289,7 +287,7 @@ format_ensembl_ids_annotated_to_term <- function(result, species, which.split = 
 #' Wrapper for executing various enrichment analyses
 #' @description \command{runEnrichmentAnalyses} enables the auto-run of some over-representation analysis (ORA) and
 #' gene set enrichment analysis (GSEA) functions for the output of diffExpr main wrapper.
-#' Functions in various R-packages (clusterProfiler, topGO, gProfileR and RDAVIDWebService)
+#' Functions in various R-packages (clusterProfiler, topGO, gProfileR)
 #' are integrated. Currently supports human or mouse!
 #' @param diffr.wrapper.output \code{list}.  Nested list system produced by diffrExpr-wrapper.
 #' Has to contain element "contrasts" that contains contrast-specific expression tables
@@ -309,20 +307,15 @@ format_ensembl_ids_annotated_to_term <- function(result, species, which.split = 
 #' Defaults to 0.05.
 #' @param plot.logfc.thr \code{numeric}. FC threshold on the log2-scale used in the enrichment plot. Defaults to 1.
 #' @param plot.num.terms \code{integer}. Number of terms shown in the plot. Defaults to 5.
-#' @param enrichment.methods \code{character}. Enrichment methods to be run. One or more of the following: c("clusterProfilerGO", "clusterProfilerKEGG","DAVID", "gProfileR", "topGO")
+#' @param enrichment.methods \code{character}. Enrichment methods to be run. One or more of the following: c("clusterProfilerGO", "clusterProfilerKEGG", "gProfileR", "topGO")
 #' @param clusterProfilerGO.params \code{list}. Method-specific parameters for clusterProfilerGO. One or more of the following (default values shown
 #' and used for all such elements not given in the call):
 #' analysis.approach="ORA", do.similarity.filtering=F,min.gene.set.size=10,max.gene.set.size=1000, ontology="BP", min.overlap=2,p.adjust.method="BH".
 #' Analysis approach can be "ORA" or "KEGG". If do.similarity.filtering is set to TRUE, clusterProfiler::simplify() is run.
 #' @param clusterProfilerKEGG.params \code{list}.
-#' @param david.params \code{list}. NOT IN USE!
 #' @param gProfileR.params \code{list}.
 #' @param topGO.params \code{list}.
 #'
-#' @details DAVID approach needs to be reimplemented as the package RDAVIDWebService is deprecated.
-#' Old notes:
-#' DAVID web service requires a registered email-address, correct java-version and an url configured with the settings.
-#' url="https://david.ncifcrf.gov/webservice/services/DAVIDWebService.DAVIDWebServiceHttpSoap12Endpoint/"
 #' @return A list of all relevant objects generated in the course of the enrichment analyses
 ###############################################################################
 
@@ -333,7 +326,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                                   species="human",
                                   p.thr=0.05, fdr.thr=0.05, logfc.thr=1,
                                   do.plot=FALSE, plot.fdr.thr=fdr.thr, plot.logfc.thr=logfc.thr, plot.num.terms=5,
-                                  enrichment.methods=c("clusterProfilerGO", "clusterProfilerKEGG","DAVID", "gProfileR", "topGO"),
+                                  enrichment.methods=c("clusterProfilerGO", "clusterProfilerKEGG", "gProfileR", "topGO"),
                                   clusterProfilerGO.params=list(analysis.approach = "ORA",
                                                                   do.similarity.filtering = F,
                                                                   min.gene.set.size = 10,
@@ -349,12 +342,6 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                                                                     min.overlap = 2,
                                                                     p.adjust.method = "BH"
                                                                     ),
-                                  david.params = NULL,
-                                  # david.params = list(email.address = "",
-                                  #                     url = "",
-                                  #                     time.out.value = 60000,
-                                  #                     annotation.category = "GOTERM_BP_FAT",
-                                  #                     max.gene.set.size = 1000),
                                   gProfileR.params = list(data.sources = "GO:BP", show.only.significant = TRUE,
                                                           measure_underrepresentation = FALSE,
                                                           evidence_codes = TRUE,
@@ -391,7 +378,6 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
   enrichment_out.l <- list()
   enrichment_out.l$clusterProfiler_GO <- list()
   enrichment_out.l$clusterProfiler_KEGG <- list()
-  # enrichment_out.l$DAVID <- list()
   enrichment_out.l$gProfileR <- list()
   enrichment_out.l$topGO <- list()
 
@@ -626,59 +612,6 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
 
         enrichment_out.l$clusterProfiler_KEGG[[contrast]] <- result
       }
-
-      # if (method == "DAVID") {
-      #
-      #   default.params <- list(email.address = "", url = "",time.out.value = 60000,
-      #                         annotation.category = "GOTERM_BP_FAT", max.gene.set.size = 1000)
-      #   missing.params = default.params[names(default.params)[!(names(default.params) %in% names(david.params))]]
-      #   david.params = c(david.params, missing.params)
-      #
-      #   cat("   Performing DAVID... \n")
-      #   if (david.params$email.address != "") {
-      #
-      #     cat("  Running tests...\n")
-      #     result <- doDavidEnrichmentAnalysis(background.ensembl.ids = background.genes,
-      #                              foreground.ensembl.ids = input.genes,
-      #                              email.address = david.params$email.address,
-      #                              url.address = david.params$url,
-      #                              time.out.value = david.params$time.out.value,
-      #                              annotation.category = david.params$annotation.category,
-      #                              pval.thr = p.thr,
-      #                              max.gene.set.size = david.params$max.gene.set.size)
-      #     cat("done\n")
-      #
-      #
-      #   }
-      #   else{
-      #     cat("      No e-mail address. No connection into DAVID...\n")
-      #     result <- "No e-mail address. DAVID could not be performed."
-      #   }
-      #
-      #   # Formattig and saving the table, if relevant
-      #   method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE) # detecting output directory
-      #   if (length(result) > 0 && is.data.frame(result) && nrow(result) > 0) {
-      #
-      #     spec.name <- as.character(enrich.resource.terms[species, "species4conversion"])
-      #     result <- format_ensembl_ids_annotated_to_term(result, spec.name)
-      #
-      #     filename <- paste0(analysis.name, ".", contrast,".", method, ".", david.params$annotation.category,".xls" )
-      #     full.filename <- file.path(method.dir, filename)
-      #     cat("      Saving ", method, " result table into ",  full.filename, "...\n")
-      #     WriteXLS::WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
-      #
-      #     #Making the graph visualisation
-      #     if (do.plot) {
-      #       graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)
-      #       cat("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
-      #       plot_enrichment_network(enrichment.result = result, DE.result = de_table,
-      #                               plot.filename = graph.name, show.terms = plot.num.terms,
-      #                               logfc.thr = plot.logfc.thr, fdr.thr = plot.fdr.thr)
-      #     }
-      #   }
-      #
-      #   enrichment_out.l$DAVID[[contrast]] = result
-      # }
 
       if (method == "gProfileR") {
 

@@ -39,7 +39,7 @@
 #' Defaults to 0.05.
 #' @param enrichment.plot.logfc.thr \code{numeric}. FC threshold on the log2-scale used in the enrichment plot. Defaults to 1.
 #' @param enrichment.plot.num.terms \code{integer}. Number of terms shown in the plot. Defaults to 5.
-#' @param enrichment.methods \code{character}. One or more of the following: c("clusterProfilerGO", "clusterProfilerKEGG","DAVID", "gProfileR", "topGO"). By default, uses them all.
+#' @param enrichment.methods \code{character}. One or more of the following: c("clusterProfilerGO", "clusterProfilerKEGG", "gProfileR", "topGO"). By default, uses them all.
 #' @param dry.run \code{logical}. If \code{TRUE}, the function will not create any output files or directories.
 #' @param ... \code{ANY}. Additional arguments passed to functions.
 #' @param out.dir \code{character}. Path to the output directory. If not provided, a new directory will be created in the project directory.
@@ -171,7 +171,7 @@ diffExpr <-
            enrichment.plot.fdr.thr = fdr.thr,
            enrichment.plot.logfc.thr = logfc.thr,
            enrichment.plot.num.terms = 5,
-           enrichment.methods = c("clusterProfilerGO", "clusterProfilerKEGG","DAVID", "gProfileR", "topGO"),
+           enrichment.methods = c("clusterProfilerGO", "clusterProfilerKEGG", "gProfileR", "topGO"),
            ...,
            dry.run=FALSE)
   {

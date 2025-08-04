@@ -4,7 +4,7 @@
 #' @param n desired length of the numeric vector of probabilities (see ?quantile)
 #'
 #' @seealso [quantile()]
-quantile.breaks <- function(xs, n = 20) {
+quantile_breaks <- function(xs, n = 20) {
   breaks <- quantile(xs, probs = seq(0, 1, length.out = n))
   breaks[!duplicated(breaks)]
 }
@@ -214,7 +214,7 @@ correlogram_pheatmap = function(expr.mat, clinical.mat, scale.fl = "none", legen
 
 # Output: list of pheatmap objects that should be preferably handled with lapply
 #
-# Details: calls function quantile.breaks
+# Details: calls function quantile_breaks
 #          calls function reorderFactors written by https://stackoverflow.com/users/1701600/boern,
 #                                        which reorders the levels of a column of a data frame specified as a factor,
 #                                        the desired order is a vector containing the levels of the factor
@@ -273,7 +273,7 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
 
   #change the colours of the matrix based on quantile breaks, the default is above
   if (quantile.breaks.fl) {
-    mat.breaks = quantile.breaks(as.matrix(expr.mat), n = 11)
+    mat.breaks = quantile_breaks(as.matrix(expr.mat), n = 11)
     colour = colorRampPalette(rev(brewer.pal(n = 11, name = color.blind.pal)))(length(mat.breaks) - 1)
   }
   #cat("mat.breaks")

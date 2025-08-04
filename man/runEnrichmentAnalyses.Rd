@@ -18,14 +18,13 @@ runEnrichmentAnalyses(
   plot.fdr.thr = fdr.thr,
   plot.logfc.thr = logfc.thr,
   plot.num.terms = 5,
-  enrichment.methods = c("clusterProfilerGO", "clusterProfilerKEGG", "DAVID",
-    "gProfileR", "topGO"),
+  enrichment.methods = c("clusterProfilerGO", "clusterProfilerKEGG", "gProfileR",
+    "topGO"),
   clusterProfilerGO.params = list(analysis.approach = "ORA", do.similarity.filtering = F,
     min.gene.set.size = 10, max.gene.set.size = 1000, ontology = "BP", min.overlap = 2,
     p.adjust.method = "BH"),
   clusterProfilerKEGG.params = list(analysis.approach = "ORA", min.gene.set.size = 10,
     max.gene.set.size = 1000, ontology = "BP", min.overlap = 2, p.adjust.method = "BH"),
-  david.params = NULL,
   gProfileR.params = list(data.sources = "GO:BP", show.only.significant = TRUE,
     measure_underrepresentation = FALSE, evidence_codes = TRUE, domain_scope =
     "annotated", highlight = TRUE),
@@ -64,7 +63,7 @@ Defaults to 0.05.}
 
 \item{plot.num.terms}{\code{integer}. Number of terms shown in the plot. Defaults to 5.}
 
-\item{enrichment.methods}{\code{character}. Enrichment methods to be run. One or more of the following: c("clusterProfilerGO", "clusterProfilerKEGG","DAVID", "gProfileR", "topGO")}
+\item{enrichment.methods}{\code{character}. Enrichment methods to be run. One or more of the following: c("clusterProfilerGO", "clusterProfilerKEGG", "gProfileR", "topGO")}
 
 \item{clusterProfilerGO.params}{\code{list}. Method-specific parameters for clusterProfilerGO. One or more of the following (default values shown
 and used for all such elements not given in the call):
@@ -72,8 +71,6 @@ analysis.approach="ORA", do.similarity.filtering=F,min.gene.set.size=10,max.gene
 Analysis approach can be "ORA" or "KEGG". If do.similarity.filtering is set to TRUE, clusterProfiler::simplify() is run.}
 
 \item{clusterProfilerKEGG.params}{\code{list}.}
-
-\item{david.params}{\code{list}. NOT IN USE!}
 
 \item{gProfileR.params}{\code{list}.}
 
@@ -85,12 +82,6 @@ A list of all relevant objects generated in the course of the enrichment analyse
 \description{
 \command{runEnrichmentAnalyses} enables the auto-run of some over-representation analysis (ORA) and
 gene set enrichment analysis (GSEA) functions for the output of diffExpr main wrapper.
-Functions in various R-packages (clusterProfiler, topGO, gProfileR and RDAVIDWebService)
+Functions in various R-packages (clusterProfiler, topGO, gProfileR)
 are integrated. Currently supports human or mouse!
-}
-\details{
-DAVID approach needs to be reimplemented as the package RDAVIDWebService is deprecated.
-Old notes:
-DAVID web service requires a registered email-address, correct java-version and an url configured with the settings.
-url="https://david.ncifcrf.gov/webservice/services/DAVIDWebService.DAVIDWebServiceHttpSoap12Endpoint/"
 }

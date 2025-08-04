@@ -66,8 +66,8 @@ diffExpr(
   enrichment.plot.fdr.thr = fdr.thr,
   enrichment.plot.logfc.thr = logfc.thr,
   enrichment.plot.num.terms = 5,
-  enrichment.methods = c("clusterProfilerGO", "clusterProfilerKEGG", "DAVID",
-    "gProfileR", "topGO"),
+  enrichment.methods = c("clusterProfilerGO", "clusterProfilerKEGG", "gProfileR",
+    "topGO"),
   ...,
   dry.run = FALSE
 )
@@ -209,7 +209,7 @@ Defaults to 0.05.}
 
 \item{enrichment.plot.num.terms}{\code{integer}. Number of terms shown in the plot. Defaults to 5.}
 
-\item{enrichment.methods}{\code{character}. One or more of the following: c("clusterProfilerGO", "clusterProfilerKEGG","DAVID", "gProfileR", "topGO"). By default, uses them all.}
+\item{enrichment.methods}{\code{character}. One or more of the following: c("clusterProfilerGO", "clusterProfilerKEGG", "gProfileR", "topGO"). By default, uses them all.}
 
 \item{...}{\code{ANY}. Additional arguments passed to functions.}
 

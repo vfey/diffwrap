@@ -20,6 +20,3 @@ Helper function for formatting the gene ID column of enrichment data frame.
 Enrichment tools report all genes annotated to a certain term in one string, separated by comma or similar. The function
   splits each row into individual IDs before converting and later re-collapses converted IDs.
 }
-\note{
-DAVID enrchment is not implemented in the current version of diffwrap.
-}

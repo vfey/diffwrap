@@ -34,7 +34,7 @@
 #'     if any aesthetics are mapped. FALSE never includes, and TRUE always includes. It can also be a named logical vector to finely select
 #'     the aesthetics to display.
 #' @param do.enrichment \code{logical}. Whether or not to call enrichment wrapper. Defaults to \code{TRUE}.
-#' @param enrichment.plot code{logical}. Whether or not to draw a network plot for the enrichment results. Defaults to \code{FALSE}.
+#' @param enrichment.plot \code{logical}. Whether or not to draw a network plot for the enrichment results. Defaults to \code{FALSE}.
 #' @param enrichment.plot.fdr.thr \code{numeric}. FDR threshold used in the enrichment plot. This may be useful to tweak to produce a more informative plot.
 #' Defaults to 0.05.
 #' @param enrichment.plot.logfc.thr \code{numeric}. FC threshold on the log2-scale used in the enrichment plot. Defaults to 1.

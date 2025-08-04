@@ -32,8 +32,10 @@ diffExpr(
   p.thr = 0.05,
   fdr.thr = 0.05,
   logfc.thr = 1,
-  numlab = 15,
+  numlab = 20,
   point.lab = TRUE,
+  heatmap.topn = 100,
+  heatmap.split.expr = FALSE,
   min.samp = NULL,
   strict = TRUE,
   disp = c("gene", "trend", "common"),
@@ -61,6 +63,9 @@ diffExpr(
   filtered.lists = TRUE,
   do.enrichment = TRUE,
   enrichment.plot = FALSE,
+  enrichment.plot.fdr.thr = fdr.thr,
+  enrichment.plot.logfc.thr = logfc.thr,
+  enrichment.plot.num.terms = 5,
   enrichment.methods = c("clusterProfilerGO", "clusterProfilerKEGG", "DAVID",
     "gProfileR", "topGO"),
   ...,
@@ -128,6 +133,11 @@ values calculated by any thresholds. Defaults to 15.}
 
 \item{point.lab}{\code{logical}. Should point labels be shown in the plot? Defaults to \code{TRUE}.}
 
+\item{heatmap.topn}{\code{numeric}. Number of top values to be plotted. Defaults to 100.}
+
+\item{heatmap.split.expr}{\code{logical}. Should the top up- and top down-regulated genes be displayed at equal numbers (50/50),
+if they meet the significance threshold (regardless of the actual significance)? Defaults to \code{FALSE}.}
+
 \item{min.samp}{\code{integer}. Number of samples in which a feature needs to be covered by at least one read per million.
 Defaults to the size of the smallest group of replicates. See \emph{details}.}
 
@@ -190,7 +200,14 @@ Defaults to "both".}
 
 \item{do.enrichment}{\code{logical}. Whether or not to call enrichment wrapper. Defaults to \code{TRUE}.}
 
-\item{enrichment.plot}{code{logical}. Whether or not to draw a network plot for the enrichment results. Defaults to \code{FALSE}.}
+\item{enrichment.plot}{\code{logical}. Whether or not to draw a network plot for the enrichment results. Defaults to \code{FALSE}.}
+
+\item{enrichment.plot.fdr.thr}{\code{numeric}. FDR threshold used in the enrichment plot. This may be useful to tweak to produce a more informative plot.
+Defaults to 0.05.}
+
+\item{enrichment.plot.logfc.thr}{\code{numeric}. FC threshold on the log2-scale used in the enrichment plot. Defaults to 1.}
+
+\item{enrichment.plot.num.terms}{\code{integer}. Number of terms shown in the plot. Defaults to 5.}
 
 \item{enrichment.methods}{\code{character}. One or more of the following: c("clusterProfilerGO", "clusterProfilerKEGG","DAVID", "gProfileR", "topGO"). By default, uses them all.}
 

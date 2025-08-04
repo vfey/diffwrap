@@ -15,6 +15,9 @@ runEnrichmentAnalyses(
   fdr.thr = 0.05,
   logfc.thr = 1,
   do.plot = FALSE,
+  plot.fdr.thr = fdr.thr,
+  plot.logfc.thr = logfc.thr,
+  plot.num.terms = 5,
   enrichment.methods = c("clusterProfilerGO", "clusterProfilerKEGG", "DAVID",
     "gProfileR", "topGO"),
   clusterProfilerGO.params = list(analysis.approach = "ORA", do.similarity.filtering = F,
@@ -50,9 +53,16 @@ when relevant (i.e. no significant fdr-entries are found)). Default 0.05}
 
 \item{fdr.thr}{\code{numeric}. Threshold for adjusted p-values (applied in both filtering of DE-genes and in enrichment results). Default 0.05}
 
-\item{logfc.thr}{\code{numeric}.}
+\item{logfc.thr}{\code{numeric}. Threshold for the log2-fold-change. Defaults to 1.}
 
-\item{do.plot}{code{logical}. Whether or not to draw a network plot for the enrichment results. Defaults to \code{FALSE}.}
+\item{do.plot}{\code{logical}. Whether or not to draw a network plot for the enrichment results. Defaults to \code{FALSE}.}
+
+\item{plot.fdr.thr}{\code{numeric}. FDR threshold used in the enrichment plot. This may be useful to tweak to produce a more informative plot.
+Defaults to 0.05.}
+
+\item{plot.logfc.thr}{\code{numeric}. FC threshold on the log2-scale used in the enrichment plot. Defaults to 1.}
+
+\item{plot.num.terms}{\code{integer}. Number of terms shown in the plot. Defaults to 5.}
 
 \item{enrichment.methods}{\code{character}. Enrichment methods to be run. One or more of the following: c("clusterProfilerGO", "clusterProfilerKEGG","DAVID", "gProfileR", "topGO")}
 

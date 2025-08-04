@@ -61,7 +61,7 @@
 #' @importFrom graphics hist layout legend par rasterImage text
 #' @importFrom stats IQR as.dendrogram as.dist dist hclust model.matrix p.adjust prcomp predict qchisq quantile relevel var
 #' @importFrom utils head read.table read.delim write.table
-#' @importFrom methods new
+#' @importFrom methods new is
 #' @importFrom Hmisc rcorr
 #' @importFrom data.table as.data.table
 #' @importFrom convertid convertId2 convert.bm

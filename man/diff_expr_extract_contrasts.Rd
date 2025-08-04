@@ -29,14 +29,16 @@ diff_expr_extract_contrasts(
   logfc.thr = 1,
   numlab = 15,
   point.lab = TRUE,
+  heatmap.topn = 100,
+  heatmap.split.expr = FALSE,
   font.size = 5,
   plots = TRUE,
   lists = TRUE,
   filtered.lists = TRUE,
-  samp.info = samp.info,
-  samples = samples,
-  groups = groups,
-  sample.plot.names = sample.plot.names
+  samp.info = NULL,
+  samples = NULL,
+  groups = NULL,
+  sample.plot.names = NULL
 )
 }
 \arguments{
@@ -92,6 +94,11 @@ likelihood ratio test is used. Olease note the main wrapper function \code{diffE
 \item{numlab}{\code{numeric}. Maximum number of labels per plot. Overrides numbers calculated based on `p.thr` and `fdr.thr`.}
 
 \item{point.lab}{\code{logical}. Should points be labelled, at all?}
+
+\item{heatmap.topn}{\code{numeric}. Number of top values to be plotted. Defaults to 100.}
+
+\item{heatmap.split.expr}{\code{logical}. Should the top up- and top down-regulated genes be displayed at equal numbers (50/50),
+if they meet the significance threshold (regardless of the actual significance)? Defaults to \code{FALSE}.}
 
 \item{font.size}{Size of point labels in M-A plots.}
 

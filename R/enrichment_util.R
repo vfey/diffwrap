@@ -304,7 +304,7 @@ format_ensembl_ids_annotated_to_term <- function(result, species, which.split = 
 #'  when relevant (i.e. no significant fdr-entries are found)). Default 0.05
 #' @param fdr.thr \code{numeric}. Threshold for adjusted p-values (applied in both filtering of DE-genes and in enrichment results). Default 0.05
 #' @param logfc.thr \code{numeric}. Threshold for the log2-fold-change. Defaults to 1.
-#' @param do.plot code{logical}. Whether or not to draw a network plot for the enrichment results. Defaults to \code{FALSE}.
+#' @param do.plot \code{logical}. Whether or not to draw a network plot for the enrichment results. Defaults to \code{FALSE}.
 #' @param plot.fdr.thr \code{numeric}. FDR threshold used in the enrichment plot. This may be useful to tweak to produce a more informative plot.
 #' Defaults to 0.05.
 #' @param plot.logfc.thr \code{numeric}. FC threshold on the log2-scale used in the enrichment plot. Defaults to 1.

@@ -15,7 +15,9 @@ pheatmap_plots(
   main = NULL,
   p.thr = 0.05,
   fdr.thr = 0.05,
-  logfc.thr = 1
+  logfc.thr = 1,
+  topn = 100,
+  split.expr = FALSE
 )
 }
 \arguments{
@@ -32,15 +34,23 @@ vector of sample names.}
 
 \item{groups}{Factor of sample groups for colouring and legend.}
 
-\item{sample.plot.names}{\code{character}. Optional name of a column with "nice" sample names for plotting.}
+\item{sample.plot.names}{\code{character}. Optional name of a column with "nice" sample names for plotting.
+Need to be in the same order as sample column names!}
 
-\item{main}{\code{character}. Main plot title. (Will be complemented with additional information, e.g., 'FDR' when labelling according to and FDR threshold.)}
+\item{main}{\code{character}. Main plot title. (Will be complemented with additional information, e.g., 'FDR' when
+labelling according to and FDR threshold.)}
 
 \item{p.thr}{\code{numeric}. Plotted values with a P-Value below this threshold will be labelled in the P-Value plot.}
 
 \item{fdr.thr}{\code{numeric}. Plotted values with a FDR below this threshold will be labelled in the FDR plot.}
 
-\item{logfc.thr}{\code{numeric}. Plotted (`abs`olute) values above this threshold will have bigger dots.}
+\item{logfc.thr}{\code{numeric}. FC threshold on the log2-scale. Only used if 'split.expr' is TRUE. Values above this
+threshold will be retained. Defaults to 1.}
+
+\item{topn}{\code{numeric}. Number of top values to be plotted. Defaults to 100.}
+
+\item{split.expr}{\code{logical}. Should the top up- and top down-regulated genes be displayed at equal numbers (50/50),
+if they meet the significance threshold (regardless of the actual significance)? Defaults to \code{FALSE}.}
 }
 \value{
 Returns a list of pheatmap plot objects

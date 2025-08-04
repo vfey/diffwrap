@@ -1,3 +1,9 @@
 ^.*\.Rproj$
+^.*\.Rhistory$
+^.*\.gitignore$
 ^\.Rproj\.user$
-doDavidEnrichmentAnalysis.R
+^cran-comments\.md$
+^README\.md$
+^\.project$
+^\.settings$
+^\.DS_Store

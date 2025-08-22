@@ -14,7 +14,7 @@
 #' @param groups \code{character}. Name of the column in 'samp.info' containing grouping information. If 'samp.info' is not supplied
 #'     vector of groups.
 #' @param pairs \code{character}. Name of the column in 'samp.info' containing paired sample information.
-#' @param block \code{logical}. Are the comparisons to be made within AND between subjects? See Details section.
+#' @param block \code{logical}. Are the the samples not independent? See Details section.
 #' @param contrasts \code{character}. Vector of contrasts to be made. If not provided, all possible contrasts will be made.
 #'   This specifies group name pairs to be compared in the format expected by \code{makeContrasts()}, i.e., "group2-group1".
 #' @param bayes.trend \code{logical}. Should an intensity-trend be allowed for the prior variance? Passed to 'limma::eBayes'.
@@ -68,7 +68,9 @@
 #' @param strict \code{logical}. For miRNA analysis: only keep a miRNA if there are > 5 reads per million in at least half of the samples?
 #' @param disp \code{character}. The dispersion method to be used. Defaults to "gene".
 #' @param do.voom \code{logical}. Should the voom function be used? Defaults to \code{FALSE}.
-#' @param voom.fun \code{function}. The voom function to be used. Defaults to \code{limma::voom}.
+#' @param voom.fun \code{function}. The voom function to be used. Should be one of 'limma::voom', 'limma::voomWithQualityWeights' or
+#' 'edgeR::voomLmFit'. Defaults to \code{edgeR::voomLmFit}. See 'Details'.
+#' @param use_weights \code{logical}. Should sample-specific quality weights be estimated?
 #' @param norm.method \code{character}. The normalisation method to be used. Defaults to "tmm".
 #' @param n \code{integer}. Passed to \code{plotMDS()} (\code{top}): number of top genes used to calculate pairwise distances. Defaults to 500.
 #' @param gene.selection \code{character}. passed to \code{plotMDS()} specifying the mode to select genes for comparisons. Defaults to "common".
@@ -87,10 +89,15 @@
 #' @details For experimental designs involving comparisons within as well as between subjects inter-subject needs to be computed.
 #'     In this case, the column specified in the 'pairs' argument must assign the subjects to the treatment/tissue/etc groups.
 #'     For example, if we have two treatments the effects of which are to be observed in each two tissues, this design would apply.
-#'     The 'pairs' factor is passed to the functions 'duplicateCorrelation' and 'lmFit'.
-#'     The 'block' argument is used to specify whether the comparisons are to be made within AND between subjects.
-#'     If 'block' is set to \code{TRUE}, the 'voom' function is enforced.
-#'     The 'voom' function is also enforced if paired samples are detected.
+#'     The 'pairs' factor is passed to the functions 'duplicateCorrelation()' and 'lmFit()'.
+#'     The 'block' argument is used to specify whether the comparisons are to be made within AND between subjects or in the case of
+#'     technical replicates, i.e., if the samples are not independent, in other words, correlated. That correlation is addressed by
+#'     means of the 'duplicateCorrelation()' function in the limma package.
+#'     If 'block' is set to \code{TRUE}, the (selected) 'voom' function is enforced.
+#'     The (selected) 'voom' function is also enforced if paired samples are detected.
+#'     As of version 0.4, the 'edgeR::voomLmFit()' function is incorporated, which replaces 'voom()', 'lmFit()' and
+#'     'voomWithQualityWeights()'. voomLmFit()' ensures unbiased estimation of the residual variances and automates the estimation
+#'     of sample weights and intrablock correlations.
 #'     In edgeR, it is recommended to remove features without at least 1 read per million in n of the
 #'     samples, where n is the size of the smallest group of replicates (determined from the 'groups' vector).
 #'     The 'min.samp' argument is used to specify the number of samples in which a feature needs to be covered by at least one read per million.
@@ -145,7 +152,8 @@ diffExpr <-
            strict = TRUE,
            disp = c("gene", "trend", "common"),
            do.voom = FALSE,
-           voom.fun = limma::voom,
+           voom.fun = edgeR::voomLmFit,
+           use_weights = FALSE,
            norm.method = c("tmm", "quantile"),
            bayes.trend = FALSE,
            bayes.robust = FALSE,
@@ -233,6 +241,11 @@ diffExpr <-
       if (!is.data.frame(samp.info)) {
         stop("'samp.info' needs to be a data.frame object containing at least two columns: 'SampleNames' and 'Groups' (the actual names can be provided\nby the 'samples' and 'groups' arguments, repsectively.)")
       }
+    }
+    vf <- match.call()$voom.fun
+    if (length(grep("Weights", vf))) {
+      cat ("  'voomWithQualityWeights' is set as voom function; using settings for sample weights...\n")
+      use_weights <- TRUE
     }
 
     #Checking whether the enrichment analyses can be run
@@ -377,7 +390,14 @@ diffExpr <-
 
     # create design matrix
     if (is.null(design)) {
-      design <- diff_expr_make_design(samp.info, groups, pairs, block)
+      # create a design matix based on the choices for pairs or block
+      ## if block is TRUE or there are no paired samples, a simple design matrix is created without an intercept
+      ### the block argument here is logical and determines whether or not the samples are independent
+      ## if there are paired samples, a design matrix with covariates is created which will have an intercept;
+      ### this is used for any (block) design involving batch effects or similar
+      ### NOTE that the term 'block' in this context refers to the batch or pair factor and must be provided in the pairs column/argument
+      ### internally it is used with duplicateCorrelation()
+      design <- diff_expr_make_design(samp.info, groups, pairs, block, use_weights)
     } else {
       grp.col <- grep(paste0("^", grp.nam), colnames(design))
       if (length(grp.col)) {
@@ -407,7 +427,6 @@ diffExpr <-
     if (do.voom) {
       cat("Running 'voom'...\n")
       norm.method <- match.arg(norm.method)
-      vf <- match.call()$voom.fun
       cat("  Running", sQuote(vf), "with", norm.method, "normalisation...\n")
       ## compute linear model fit and optionally apply voom beforehand
       #### NOTE: voom generates log2-cpms

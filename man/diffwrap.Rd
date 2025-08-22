@@ -23,7 +23,7 @@ It comes with a wrapper function, "diffExpr", performing all steps of the analys
 These functions may be applicable to different kinds of data/input, rely, however, on the conventions set for this package.
 }
 \author{
-Vidal Fey <vidal.fey@tuni.fi>, Meeri Pekkarinen <meeri.pekkarinen@tuni.fi>, Reija Hieta <reija.hieta@geneviatechnologies.com>, Bogdan Iancu <bogdan.iancu@abo.fi>, Adrien Janssens <adrien.janssens@geneviatechnologies.com>
+Vidal Fey <vidal.fey@gmail.com>, Meeri Pekkarinen <meeri.pekkarinen@gmail.com>, Reija Hieta <reija.hieta@geneviatechnologies.com>, Bogdan Iancu <bogdan.iancu@abo.fi>, Adrien Janssens <Adrien.RFM.Janssens@proton.me>
 Maintainer: Vidal Fey <vidal.fey@tuni.fi>
 }
 \keyword{"_PACKAGE"}

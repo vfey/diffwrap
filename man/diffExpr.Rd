@@ -40,7 +40,8 @@ diffExpr(
   strict = TRUE,
   disp = c("gene", "trend", "common"),
   do.voom = FALSE,
-  voom.fun = limma::voom,
+  voom.fun = edgeR::voomLmFit,
+  use_weights = FALSE,
   norm.method = c("tmm", "quantile"),
   bayes.trend = FALSE,
   bayes.robust = FALSE,
@@ -91,7 +92,7 @@ vector of groups.}
 
 \item{pairs}{\code{character}. Name of the column in 'samp.info' containing paired sample information.}
 
-\item{block}{\code{logical}. Are the comparisons to be made within AND between subjects? See Details section.}
+\item{block}{\code{logical}. Are the the samples not independent? See Details section.}
 
 \item{contrasts}{\code{character}. Vector of contrasts to be made. If not provided, all possible contrasts will be made.
 This specifies group name pairs to be compared in the format expected by \code{makeContrasts()}, i.e., "group2-group1".}
@@ -147,7 +148,10 @@ Defaults to the size of the smallest group of replicates. See \emph{details}.}
 
 \item{do.voom}{\code{logical}. Should the voom function be used? Defaults to \code{FALSE}.}
 
-\item{voom.fun}{\code{function}. The voom function to be used. Defaults to \code{limma::voom}.}
+\item{voom.fun}{\code{function}. The voom function to be used. Should be one of 'limma::voom', 'limma::voomWithQualityWeights' or
+'edgeR::voomLmFit'. Defaults to \code{edgeR::voomLmFit}. See 'Details'.}
+
+\item{use_weights}{\code{logical}. Should sample-specific quality weights be estimated?}
 
 \item{norm.method}{\code{character}. The normalisation method to be used. Defaults to "tmm".}
 
@@ -235,10 +239,15 @@ However, the function is first and foremost called for its side effects of gener
 For experimental designs involving comparisons within as well as between subjects inter-subject needs to be computed.
     In this case, the column specified in the 'pairs' argument must assign the subjects to the treatment/tissue/etc groups.
     For example, if we have two treatments the effects of which are to be observed in each two tissues, this design would apply.
-    The 'pairs' factor is passed to the functions 'duplicateCorrelation' and 'lmFit'.
-    The 'block' argument is used to specify whether the comparisons are to be made within AND between subjects.
-    If 'block' is set to \code{TRUE}, the 'voom' function is enforced.
-    The 'voom' function is also enforced if paired samples are detected.
+    The 'pairs' factor is passed to the functions 'duplicateCorrelation()' and 'lmFit()'.
+    The 'block' argument is used to specify whether the comparisons are to be made within AND between subjects or in the case of
+    technical replicates, i.e., if the samples are not independent, in other words, correlated. That correlation is addressed by
+    means of the 'duplicateCorrelation()' function in the limma package.
+    If 'block' is set to \code{TRUE}, the (selected) 'voom' function is enforced.
+    The (selected) 'voom' function is also enforced if paired samples are detected.
+    As of version 0.4, the 'edgeR::voomLmFit()' function is incorporated, which replaces 'voom()', 'lmFit()' and
+    'voomWithQualityWeights()'. voomLmFit()' ensures unbiased estimation of the residual variances and automates the estimation
+    of sample weights and intrablock correlations.
     In edgeR, it is recommended to remove features without at least 1 read per million in n of the
     samples, where n is the size of the smallest group of replicates (determined from the 'groups' vector).
     The 'min.samp' argument is used to specify the number of samples in which a feature needs to be covered by at least one read per million.

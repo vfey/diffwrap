@@ -9,8 +9,9 @@ diff_expr_fit(
   d,
   design,
   do.voom = TRUE,
-  voom.fun = limma::voom,
+  voom.fun = edgeR::voomLmFit,
   norm.method = c("quantile", "tmm"),
+  use_weights = FALSE,
   quasi.likelihood = TRUE,
   bayes.trend = FALSE,
   bayes.robust = FALSE,
@@ -34,6 +35,8 @@ or a DGEList object.}
 \item{voom.fun}{Voom function: one of "voom", "voomWithQualityWeights".}
 
 \item{norm.method}{Character; one of "quantile", "tmm".}
+
+\item{use_weights}{\code{logical}. Should sample-specific quality weights be estimated?}
 
 \item{quasi.likelihood}{Logical; should quasi-likelihood methods be used? See \emph{Details} section.
 If \code{TRUE}, the default, then the quasi-likelihood methods are used, if \code{FALSE}, then the

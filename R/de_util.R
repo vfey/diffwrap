@@ -10,6 +10,7 @@
 #' @param design Numeric design matrix.
 #' @param do.voom Logical; should data be "voomed"?
 #' @param voom.fun Voom function: one of "voom", "voomWithQualityWeights".
+#' @param use_weights \code{logical}. Should sample-specific quality weights be estimated?
 #' @param norm.method Character; one of "quantile", "tmm".
 #' @param quasi.likelihood Logical; should quasi-likelihood methods be used? See \emph{Details} section.
 #'   If \code{TRUE}, the default, then the quasi-likelihood methods are used, if \code{FALSE}, then the
@@ -38,7 +39,7 @@
 #'     glmQLFit() and glmQLFTest().
 #' @export
 diff_expr_fit <-
-  function(counts, d, design, do.voom=TRUE, voom.fun=limma::voom, norm.method=c("quantile", "tmm"), quasi.likelihood=TRUE,
+  function(counts, d, design, do.voom=TRUE, voom.fun=edgeR::voomLmFit, norm.method=c("quantile", "tmm"), use_weights=FALSE, quasi.likelihood=TRUE,
            bayes.trend=FALSE, bayes.robust=FALSE, pairs=NULL, pairs_col=NULL, block=FALSE, contrasts=NULL, disp="tagwise.dispersion")
   {
     if (do.voom) {
@@ -55,26 +56,40 @@ diff_expr_fit <-
       } else {
         cts <- counts
       }
-      v <- voom.fun(cts, design=design, plot=FALSE, normalize.method=norm.method)
 
-      # For paired samples or block designs:
-      if (block && !is.null(pairs)) {
-        if (!is.factor(pairs)) {
-          stop("For block designs 'pairs' needs to be a factor.")
+      if (block && !is.null(pairs) && !is.factor(pairs)) {
+        stop("For block designs 'pairs' needs to be a factor.")
+      }
+      vf <- match.call()$voom.fun
+      if (vf == "voomLmFit") {
+        if (block && !is.null(pairs)) {
+          cat("  Samples are not independent. Using column", sQuote(pairs_col), "as block variable...\n")
+          cat("    ", levels(pairs), "\n")
+        } else {
+          cat("  Performing standard linear model fit...\n")
+          pairs <- NULL
         }
-        cat("  Samples are paired. Using column", sQuote(pairs_col), "as block variable...\n")
-        cat("    ", levels(pairs), "\n")
-        cat("  Calculating consensus correlation...\n")
-        corfit <- limma::duplicateCorrelation(v$E , design, block=pairs)
-        cat("  Fitting linear model using consensus correlation...\n")
-        fit <- limma::lmFit(v, design, block=pairs, correlation=corfit$consensus)
+        if (use_weights) cat("    Empirical sample quality weights will be estimated...\n")
+        v <- voomLmFit(cts, design = design, plot = FALSE, block = pairs, sample.weights = use_weights, normalize.method = norm.method)
       } else {
-        cat("  Fitting linear model...\n")
-        fit <- limma::lmFit(v, design)
+        v <- voom.fun(cts, design=design, plot=FALSE, normalize.method=norm.method)
+
+        # For paired samples or block designs:
+        if (block && !is.null(pairs)) {
+          cat("  Samples are not independent. Using column", sQuote(pairs_col), "as block variable...\n")
+          cat("    ", levels(pairs), "\n")
+          cat("  Calculating consensus correlation...\n")
+          corfit <- limma::duplicateCorrelation(v$E , design, block=pairs)
+          cat("  Fitting linear model using consensus correlation...\n")
+          fit <- limma::lmFit(v, design, block=pairs, correlation=corfit$consensus)
+        } else {
+          cat("  Fitting linear model...\n")
+          fit <- limma::lmFit(v, design)
+        }
       }
       if (!is.null(contrasts)) {
         # Contrasts have been provided in a character vector and a contrast matrix was created, so pair-wise comparisons
-        # are calculated here. Since we used voom limma function are applied.
+        # are calculated here. Since we used voom, limma function are applied.
         if (length(grep("^Intercept$", rownames(contrasts)))) {
           rownames(contrasts)[grep("^Intercept$", rownames(contrasts))] <- "(Intercept)"
         }

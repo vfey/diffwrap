@@ -53,11 +53,21 @@ diff_expr_get_samp_info <-
 #' @param groups \code{character}. Name of the column in 'samp.info' containing grouping information. If 'samp.info' is not supplied
 #'     vector of groups.
 #' @param pairs \code{character}. Name of the column in 'samp.info' containing paired sample information.
-#' @param block \code{logical}. Are the comparisons to be made within AND between subjects? See Details section.
+#' @param block \code{logical}. Are the samples not independent? See Details section.
+#' @param use_weights \code{logical}. Are sample-specific quality weights used? See Details section. (Placeholder for future versions)
+#' @details
+#' The 'block' argument is used to specify whether the comparisons are to be made within AND between subjects or in the case of
+#' technical replicates, i.e., if the samples are not independent, in other words, correlated.
+#' If sample-specific quality weights are to be estimated by means of 'voomWithQualityWeights()' or 'voomLmFit()' and 'sample.weights' set
+#' to TRUE, 'use_weights' will be TRUE, enforcing a design matrix containing an 'intercept' column, i.e., where the columns reflect contrasts.
+#' The choice of the design matrix type impacts the estimated weights due to the effect of the intercept on the residual variance per sample
+#' in more complex designs, e.g., involving blocking factors, interactions or continuous covariates. The recommendation by the limma authors
+#' is to use the default design matrix, i.e., with intercept. With simple designs, the type of design matrix is not relevant.
+#' NOTE: This argument is not yet functional but a mere place-holder for future versions allowing for readily implemented more complex designs.
 #' @seealso [model.matrix()]
 #' @export
 diff_expr_make_design <-
-		function(samp.info, groups, pairs=NULL, block=FALSE)
+		function(samp.info, groups, pairs=NULL, block=FALSE, use_weights=FALSE)
 {
 	if (block || is.null(pairs)) {
 		cat("Creating simple design matrix...\n")
@@ -81,9 +91,12 @@ diff_expr_make_design <-
 #' Function to make contrast matrix
 #' @param design Numeric design matrix.
 #' @param pairs \code{character}. Name of the column in 'samp.info' containing paired sample information.
-#' @param block \code{logical}. Are the comparisons to be made within AND between subjects? See Details section.
+#' @param block \code{logical}. Are the samples not independent? See Details section.
 #' @param contrasts Character vector specifying group name pairs to be compared in the format expected by
 #'   \code{makeContrasts()}, i.e., "group2-group1".
+#' @details
+#' The 'block' argument is used to specify whether the comparisons are to be made within AND between subjects or in the case of
+#' technical replicates, i.e., if the samples are not independent, in other words, correlated.
 #'   @seealso [makeContrasts()]
 #' @export
 diff_expr_make_contrasts <-

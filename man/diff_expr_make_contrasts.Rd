@@ -11,12 +11,16 @@ diff_expr_make_contrasts(design, pairs = NULL, block = FALSE, contrasts = NULL)
 
 \item{pairs}{\code{character}. Name of the column in 'samp.info' containing paired sample information.}
 
-\item{block}{\code{logical}. Are the comparisons to be made within AND between subjects? See Details section.}
+\item{block}{\code{logical}. Are the samples not independent? See Details section.}
 
 \item{contrasts}{Character vector specifying group name pairs to be compared in the format expected by
-\code{makeContrasts()}, i.e., "group2-group1".
-@seealso [makeContrasts()]}
+\code{makeContrasts()}, i.e., "group2-group1".}
 }
 \description{
 Function to make contrast matrix
+}
+\details{
+The 'block' argument is used to specify whether the comparisons are to be made within AND between subjects or in the case of
+technical replicates, i.e., if the samples are not independent, in other words, correlated.
+  @seealso [makeContrasts()]
 }

@@ -195,11 +195,12 @@ diff_expr_PCA_ggbiplot <-
 #' @param geom.point.size Numeric passed to \code{geom_point} giving the point size.
 #' @param label.font.size Numeric passed to \code{geom_text_repel} giving the label font size.
 #' @param plot.ellipse.legend Logical; should the ellipse legend be plotted. \code{NA}, the default, will plot it if any aesthetics are mapped.
+#' @param do.plot Logical; should the plot be printed to the graphics device? Defaults to \code{TRUE}.
 #' @seealso [stat_ellipse()]
 #' @export
 diff_expr_PCA_ggplot <-
   function(PCA, samp.name=NULL, groups, grp.nam=NULL, PC=c(1,2), main=NULL, ellipse = TRUE, ellipse.mapping.groups=NULL, ellipse.grp.nam=NULL,
-           label.samples = TRUE, geom.point.size = 2, label.font.size = 5, plot.ellipse.legend=NA)
+           label.samples = TRUE, geom.point.size = 2, label.font.size = 5, plot.ellipse.legend=NA, do.plot = TRUE)
   {
 
     cat("    Preparing data...")
@@ -249,8 +250,8 @@ diff_expr_PCA_ggplot <-
 
     g <- g + theme(panel.border = element_blank(),
                    axis.line = element_line(color='black'),
-                   panel.grid.major = element_line(size = 0.2),
-                   panel.grid.minor = element_line(size = 0.2))
+                   panel.grid.major = element_line(linewidth = 0.2),
+                   panel.grid.minor = element_line(linewidth = 0.2))
 
     if ( ellipse ) {
       if (min(grp.size<4)) {
@@ -276,7 +277,9 @@ diff_expr_PCA_ggplot <-
                                           show.legend = F)
       }
     }
-    print(g)
+    if (do.plot) {
+      print(g)
+    }
     cat("done\n")
     return(g)
   }

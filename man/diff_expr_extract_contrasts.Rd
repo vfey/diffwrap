@@ -20,6 +20,7 @@ diff_expr_extract_contrasts(
   host = "https://www.ensembl.org",
   biom.filter = "ensembl_gene_id",
   biom.attributes = c("ensembl_gene_id", "hgnc_symbol", "description"),
+  biom.force.ensg = FALSE,
   biom.cache = NULL,
   use.cache = FALSE,
   sym.col = "hgnc_symbol",
@@ -76,6 +77,8 @@ likelihood ratio test is used. Olease note the main wrapper function \code{diffE
 \item{biom.filter}{\code{character} of length one. Name of biomart filter, i.e., type of query ids, defaults to "ensembl_gene_id".}
 
 \item{biom.attributes}{\code{character} vector. Biomart attributes, i.e., type of desired result(s); make sure query id type is included!}
+
+\item{biom.force.ensg}{\code{logical}. Should Ensembl Gene IDs be checked for (and stripped of) ensemble version numbers? Defaults to \code{FALSE}.}
 
 \item{biom.cache}{\code{character}. Path name giving the location of the cache \command{getBM()} uses if \code{use.cache=TRUE}. Defaults to the value in the \emph{BIOMART_CACHE} environment variable.}
 

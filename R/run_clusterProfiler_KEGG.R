@@ -48,7 +48,7 @@ run_clusterProfiler_KEGG <- function(input_genes,
   if (ordered_query) {
     print("Running gene set enrichment analysis...")
     set.seed(123)
-    GSE.results <- clusterProfiler::gseKEGG(geneList = input_genes,
+    GSE.results <- try(clusterProfiler::gseKEGG(geneList = input_genes,
                                             organism = organism,
                                             keyType = id_type,
                                             nPerm = 1000,
@@ -56,7 +56,11 @@ run_clusterProfiler_KEGG <- function(input_genes,
                                             maxGSSize = max_set_size,
                                             pvalueCutoff = pvalueCutoff,
                                             pAdjustMethod = "BH",
-                                            seed = T)
+                                            seed = T))
+    if (is(GSE.results, "try-error")) {
+      cat(" ~~ NOTE: KEGG GSE analysis failed ~~\n")
+      return(NULL)
+    }
 
     GSE.results.df <- data.frame(GSE.results)
     GSE.results.df$Count <- sapply(GSE.results.df$core_enrichment, function(x) length(unlist(strsplit(x, split = "/"))))
@@ -77,7 +81,7 @@ run_clusterProfiler_KEGG <- function(input_genes,
   if (!ordered_query) {
 
     print("Running over-representation analysis...")
-    ORA.results <- clusterProfiler::enrichKEGG(gene = input_genes,
+    ORA.results <- try(clusterProfiler::enrichKEGG(gene = input_genes,
                                               universe = background_genes,
                                               organism = organism,
                                               keyType = id_type,
@@ -85,7 +89,11 @@ run_clusterProfiler_KEGG <- function(input_genes,
                                               pvalueCutoff  = pvalueCutoff,
                                               qvalueCutoff = 0.2,
                                               minGSSize = min_set_size,
-                                              maxGSSize = max_set_size)
+                                              maxGSSize = max_set_size))
+    if (is(ORA.results, "try-error")) {
+      cat(" ~~ NOTE: KEGG ORA failed ~~\n")
+      return(NULL)
+    }
 
     ORA.results.df <- data.frame(ORA.results)
     # Filter by minimun overlap and extract only interesting columns

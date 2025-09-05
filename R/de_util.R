@@ -60,7 +60,20 @@ diff_expr_fit <-
       if (block && !is.null(pairs) && !is.factor(pairs)) {
         stop("For block designs 'pairs' needs to be a factor.")
       }
-      vf <- match.call()$voom.fun
+
+      vf <- voom.fun
+      if (length(grep("Weights", vf))) {
+        cat ("  'voomWithQualityWeights' is set as voom function; using settings for sample weights...\n")
+        use_weights <- TRUE
+        voom.fun <- limma::voomWithQualityWeights
+      } else if (vf == "voom") {
+        cat("  Using standard voom...\n")
+        voom.fun <- limma::voom
+      } else if (vf == "voomLmFit") {
+        cat("  Using voom wrapper 'voomLmFit'\n")
+        voom.fun <- edgeR::voomLmFit
+      }
+
       if (vf == "voomLmFit") {
         if (block && !is.null(pairs)) {
           cat("  Samples are not independent. Using column", sQuote(pairs_col), "as block variable...\n")
@@ -70,7 +83,14 @@ diff_expr_fit <-
           pairs <- NULL
         }
         if (use_weights) cat("    Empirical sample quality weights will be estimated...\n")
-        v <- voomLmFit(cts, design = design, plot = FALSE, block = pairs, sample.weights = use_weights, normalize.method = norm.method)
+        fit <- voomLmFit(cts,
+                       design = design,
+                       plot = FALSE,
+                       block = pairs,
+                       sample.weights = use_weights,
+                       normalize.method = norm.method,
+                       keep.EList = TRUE)
+        v <- fit$EList
       } else {
         v <- voom.fun(cts, design=design, plot=FALSE, normalize.method=norm.method)
 
@@ -201,6 +221,7 @@ diffr_expr_generate_cleaned_de_table_output <-
 #' @param host \code{character} of length one. Host URL.
 #' @param biom.filter \code{character} of length one. Name of biomart filter, i.e., type of query ids, defaults to "ensembl_gene_id".
 #' @param biom.attributes \code{character} vector. Biomart attributes, i.e., type of desired result(s); make sure query id type is included!
+#' @param biom.force.ensg \code{logical}. Should Ensembl Gene IDs be checked for (and stripped of) ensemble version numbers? Defaults to \code{FALSE}.
 #' @param biom.cache \code{character}. Path name giving the location of the cache \command{getBM()} uses if \code{use.cache=TRUE}. Defaults to the value in the \emph{BIOMART_CACHE} environment variable.
 #' @param use.cache (\code{logical}). Should \command{getBM()} use the cache? Defaults to \code{TRUE} as in the \command{getBM()} function and is passed on to that.
 #' @param sym.col \code{character}. Name of the column in the query result with gene symbols.
@@ -228,7 +249,7 @@ diff_expr_extract_contrasts <-
   function(contrasts=NULL, fit, fit2=NULL, normcnt, out.l, do.voom=TRUE, quasi.likelihood=TRUE, out.dir=".",
            analysis.name=NULL, biomart=FALSE, biom.data.set="hsapiens_gene_ensembl", biom.mart=c("ensembl", "snp", "funcgen", "vega", "pride", "plants"),
            host="https://www.ensembl.org", biom.filter="ensembl_gene_id", biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"),
-           biom.cache = NULL, use.cache = FALSE, sym.col="hgnc_symbol",
+           biom.force.ensg = FALSE, biom.cache = NULL, use.cache = FALSE, sym.col="hgnc_symbol",
            rm.dups=FALSE, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE, heatmap.topn = 100,
            heatmap.split.expr = FALSE, font.size=5, plots=TRUE, lists=TRUE, filtered.lists = TRUE,
            samp.info = NULL, samples = NULL, groups = NULL, sample.plot.names = NULL)
@@ -312,7 +333,8 @@ diff_expr_extract_contrasts <-
       cat("Renaming ID column...\n")
       names(d3)[1] <- "ID"
       if (biomart) {
-        d3 <- diff_expr_biomart(d3, biom.data.set, biom.mart, host, biom.filter, biom.attributes, biom.cache, use.cache, sym.col, rm.dups)
+        cat(" --> Retrieving additional annotation from biomart...\n")
+        d3 <- diff_expr_biomart(d3, biom.data.set, biom.mart, host, biom.filter, biom.attributes, biom.cache, use.cache, sym.col, rm.dups, force.ensg = biom.force.ensg)
         id.col <- names(d3)[names(d3) %in% biom.filter]
       } else {
         syms <- convertid::convertId2(as.character(d3$ID))
@@ -365,14 +387,35 @@ diff_expr_extract_contrasts <-
           dev.off()
           pdf(file.path(contr.out.dir, paste(analysis.name, contr, "_heatmaps.pdf", sep="_")), width = 25, height = 35)
           cat("Heatmap plots...\n")
-          out.l$heatmapPlots[[contr]] <- pheatmap_plots(d3, id, sym.col="gene_symbol", samp.info = samp.info, samples, groups, sample.plot.names = sample.plot.names, main=NULL,
-                                                        p.thr=0.05, fdr.thr=0.05, logfc.thr = 1, topn = heatmap.topn, split.expr = heatmap.split.expr)
-          #print(class(out.l$heatmapPlots[[contr]]))
+          out.l$heatmapPlots[[contr]] <- pheatmap_plots(d3 = d3,
+                                                        id = id,
+                                                        sym.col="gene_symbol",
+                                                        samp.info = samp.info,
+                                                        samples = samples,
+                                                        groups = groups,
+                                                        sample.plot.names = sample.plot.names,
+                                                        main=NULL,
+                                                        p.thr=0.05,
+                                                        fdr.thr=0.05,
+                                                        logfc.thr = 1,
+                                                        topn = heatmap.topn,
+                                                        split.expr = heatmap.split.expr)
           dev.off()
         } else {
           cat("Heatmap plots...\n")
-          out.l$heatmapPlots[[contr]] <- pheatmap_plots(d3, id, sym.col="gene_symbol", samp.info = samp.info, samples, groups, sample.plot.names = sample.plot.names, main=NULL,
-                                                        p.thr=0.05, fdr.thr=0.05, logfc.thr = 1, topn = heatmap.topn, split.expr = heatmap.split.expr)
+          out.l$heatmapPlots[[contr]] <- pheatmap_plots(d3 = d3,
+                                                        id = id,
+                                                        sym.col="gene_symbol",
+                                                        samp.info = samp.info,
+                                                        samples = samples,
+                                                        groups = groups,
+                                                        sample.plot.names = sample.plot.names,
+                                                        main=NULL,
+                                                        p.thr=0.05,
+                                                        fdr.thr=0.05,
+                                                        logfc.thr = 1,
+                                                        topn = heatmap.topn,
+                                                        split.expr = heatmap.split.expr)
           dev.off()
         }
       }
@@ -409,7 +452,7 @@ diff_expr_extract_contrasts <-
       dev.off()
       cat("done\n")
     }
-    #browser()
+
     ifelse(!dir.exists(file.path(out.dir, "Venn sections")), dir.create(file.path(out.dir, "Venn sections")), FALSE)
     for(j in 1:length(v[["venn.sections"]])){
       print(names(v[["venn.sections"]])[j])
@@ -432,11 +475,12 @@ diff_expr_extract_contrasts <-
 #' @param use.cache (\code{logical}). Should \command{getBM()} use the cache? Defaults to \code{TRUE} as in the \command{getBM()} function and is passed on to that.
 #' @param sym.col \code{character}. Name of the column in the query result with gene symbols.
 #' @param rm.dups \code{logical}. Should duplicated input IDs (\option{biom.filter}) be removed from the result?
+#' @param force.ensg \code{logical}. Should Ensembl Gene IDs be checked for (and stripped of) ensemble version numbers? Defaults to \code{FALSE}.
 #' @export
 diff_expr_biomart <-
   function(d3, biom.data.set="hsapiens_gene_ensembl", biom.mart=c("ensembl", "snp", "funcgen", "vega", "pride", "plants"),
            host="https://www.ensembl.org", biom.filter="ensembl_gene_id", biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"),
-           biom.cache = NULL, use.cache = FALSE, sym.col="hgnc_symbol", rm.dups=FALSE)
+           biom.cache = NULL, use.cache = FALSE, sym.col="hgnc_symbol", rm.dups=FALSE, force.ensg=FALSE)
   {
     # test if needed packages are installed
     if (use.cache && !requireNamespace("rappdirs", quietly = TRUE)) {
@@ -447,6 +491,18 @@ diff_expr_biomart <-
     }
     if (use.cache && is.null(biom.cache)) {
       biom.cache <- rappdirs::user_cache_dir("biomaRt")
+    }
+    # make sure the filter column is also retrieved with the query
+    if (!biom.filter %in% biom.attributes) {
+      biom.attributes <- c(biom.attributes, biom.filter)
+    }
+    if (force.ensg) {
+      cat(" Enforcing standard Ensembl Gene IDs...\n")
+      if (length(grep("\\.[[:digit:]]{1,}$", d3$ID, perl = T))) {
+        d3$ID <- sub("\\.[[:digit:]]{1,}$", "", d3$ID)
+      } else {
+        cat("  -> Nothing to do\n")
+      }
     }
     gene.lab <- convertid::convert.bm(d3, "ID", biom.data.set, biom.mart, host, biom.filter, biom.attributes, biom.cache, use.cache, sym.col, rm.dups)
     names(gene.lab)[names(gene.lab)==sym.col] <- "gene_symbol"

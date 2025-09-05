@@ -496,6 +496,8 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                                    plot.filename = graph.name, show.terms = plot.num.terms,
                                    logfc.thr = plot.logfc.thr, fdr.thr = plot.fdr.thr)
          }
+       } else {
+         result <- "No significant enrichment found"
        }
 
        enrichment_out.l$clusterProfiler_GO[[contrast]] <- result
@@ -608,6 +610,8 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                                     plot.filename = graph.name, show.terms = plot.num.terms,
                                     logfc.thr = plot.logfc.thr, fdr.thr = plot.fdr.thr)
           }
+        } else {
+          result <- "No significant enrichment found"
         }
 
         enrichment_out.l$clusterProfiler_KEGG[[contrast]] <- result

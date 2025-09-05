@@ -95,11 +95,11 @@ pheatmap_plots <-
         dat.sign.fdr.down <- dat.sign.fdr.down[order(dat.sign.fdr.down[[fdr.col]], rev(dat.sign.fdr.down[[fc.col]])), ]
         dat.sign.fdr.down <- dat.sign.fdr.down[1:min(nrow(dat.sign.fdr.down), topn-(topn %/% 2)), ]
         dat.sign.fdr.split <- rbind(dat.sign.fdr.up, dat.sign.fdr.down)
-        dat.sign.pv.split = dat.sign.pv.split[samp.names]
-        dat.sign.fdr.split = dat.sign.fdr.split[samp.names]
+        dat.sign.pv.split <- dat.sign.pv.split[samp.names]
+        dat.sign.fdr.split <- dat.sign.fdr.split[samp.names]
         if (!is.null(sample.plot.names)) {
-          colnames(dat.sign.pv.split) = sample.plot.names
-          colnames(dat.sign.fdr.split) = sample.plot.names
+          colnames(dat.sign.pv.split) <- sample.plot.names
+          colnames(dat.sign.fdr.split) <- sample.plot.names
         }
         cat("done\n")
       }
@@ -116,7 +116,7 @@ pheatmap_plots <-
         #make 2nd option smaller pheatmap for genes
         cat("    Creating 2nd, smaller data frame labelling only 50 genes...")
         dat.sign.fdr.small = as.data.frame(dat.sign.fdr[1:min(nrow(dat.sign.fdr), 50),])
-        dat.sign.fdr.small.split = as.data.frame(dat.sign.fdr.split[1:min(nrow(dat.sign.fdr.split), 50),])
+        if (split.expr) dat.sign.fdr.small.split = as.data.frame(dat.sign.fdr.split[1:min(nrow(dat.sign.fdr.split), 50),])
         cat("done\n")
 
         fdr_hm_list[["row"]] = diffr_pheatmap(dat.sign.fdr, clinical.mat = samp.anno, scale.fl = "row", add.main = "FDR-filtered")

@@ -25,6 +25,7 @@ diffExpr(
   host = "https://www.ensembl.org",
   biom.filter = "ensembl_gene_id",
   biom.attributes = c("ensembl_gene_id", "hgnc_symbol", "description", "entrezgene_id"),
+  biom.force.ensg = FALSE,
   biom.cache = NULL,
   use.cache = FALSE,
   sym.col = "hgnc_symbol",
@@ -40,7 +41,7 @@ diffExpr(
   strict = TRUE,
   disp = c("gene", "trend", "common"),
   do.voom = FALSE,
-  voom.fun = edgeR::voomLmFit,
+  voom.fun = "voomLmFit",
   use_weights = FALSE,
   norm.method = c("tmm", "quantile"),
   bayes.trend = FALSE,
@@ -115,6 +116,8 @@ This specifies group name pairs to be compared in the format expected by \code{m
 
 \item{biom.attributes}{\code{character}. The biomart attributes to be used. Defaults to c("ensembl_gene_id", "hgnc_symbol", "description", "entrezgene_id").}
 
+\item{biom.force.ensg}{\code{logical}. Should Ensembl Gene IDs be checked for (and stripped of) ensemble version numbers? Defaults to \code{FALSE}.}
+
 \item{biom.cache}{\code{character}. Path name giving the location of the cache \command{getBM()} uses if \code{use.cache=TRUE}. Defaults to the value in the \emph{BIOMART_CACHE} environment variable.}
 
 \item{use.cache}{(\code{logical}). Should \command{getBM()} use the cache? Defaults to \code{TRUE} as in the \command{getBM()} function and is passed on to that.}
@@ -148,7 +151,7 @@ Defaults to the size of the smallest group of replicates. See \emph{details}.}
 
 \item{do.voom}{\code{logical}. Should the voom function be used? Defaults to \code{FALSE}.}
 
-\item{voom.fun}{\code{function}. The voom function to be used. Should be one of 'limma::voom', 'limma::voomWithQualityWeights' or
+\item{voom.fun}{\code{character}. The voom function to be used. Should be one of 'limma::voom', 'limma::voomWithQualityWeights' or
 'edgeR::voomLmFit'. Defaults to \code{edgeR::voomLmFit}. See 'Details'.}
 
 \item{use_weights}{\code{logical}. Should sample-specific quality weights be estimated?}

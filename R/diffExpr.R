@@ -51,6 +51,7 @@
 #' @param host \code{character}. The host to be used for the biomart. Defaults to "www.ensembl.org".
 #' @param biom.filter \code{character}. The biomart filter to be used. Defaults to "ensembl_gene_id".
 #' @param biom.attributes \code{character}. The biomart attributes to be used. Defaults to c("ensembl_gene_id", "hgnc_symbol", "description", "entrezgene_id").
+#' @param biom.force.ensg \code{logical}. Should Ensembl Gene IDs be checked for (and stripped of) ensemble version numbers? Defaults to \code{FALSE}.
 #' @param biom.cache \code{character}. Path name giving the location of the cache \command{getBM()} uses if \code{use.cache=TRUE}. Defaults to the value in the \emph{BIOMART_CACHE} environment variable.
 #' @param use.cache (\code{logical}). Should \command{getBM()} use the cache? Defaults to \code{TRUE} as in the \command{getBM()} function and is passed on to that.
 #' @param rm.dups \code{logical}. Should duplicates be removed from the output of the biomart request? Defaults to \code{FALSE}.
@@ -68,7 +69,7 @@
 #' @param strict \code{logical}. For miRNA analysis: only keep a miRNA if there are > 5 reads per million in at least half of the samples?
 #' @param disp \code{character}. The dispersion method to be used. Defaults to "gene".
 #' @param do.voom \code{logical}. Should the voom function be used? Defaults to \code{FALSE}.
-#' @param voom.fun \code{function}. The voom function to be used. Should be one of 'limma::voom', 'limma::voomWithQualityWeights' or
+#' @param voom.fun \code{character}. The voom function to be used. Should be one of 'limma::voom', 'limma::voomWithQualityWeights' or
 #' 'edgeR::voomLmFit'. Defaults to \code{edgeR::voomLmFit}. See 'Details'.
 #' @param use_weights \code{logical}. Should sample-specific quality weights be estimated?
 #' @param norm.method \code{character}. The normalisation method to be used. Defaults to "tmm".
@@ -137,6 +138,7 @@ diffExpr <-
            host = "https://www.ensembl.org",
            biom.filter = "ensembl_gene_id",
            biom.attributes = c("ensembl_gene_id", "hgnc_symbol", "description", "entrezgene_id"),
+           biom.force.ensg = FALSE,
            biom.cache = NULL,
            use.cache = FALSE,
            sym.col = "hgnc_symbol",
@@ -152,7 +154,7 @@ diffExpr <-
            strict = TRUE,
            disp = c("gene", "trend", "common"),
            do.voom = FALSE,
-           voom.fun = edgeR::voomLmFit,
+           voom.fun = "voomLmFit",
            use_weights = FALSE,
            norm.method = c("tmm", "quantile"),
            bayes.trend = FALSE,
@@ -242,8 +244,7 @@ diffExpr <-
         stop("'samp.info' needs to be a data.frame object containing at least two columns: 'SampleNames' and 'Groups' (the actual names can be provided\nby the 'samples' and 'groups' arguments, repsectively.)")
       }
     }
-    vf <- match.call()$voom.fun
-    if (length(grep("Weights", vf))) {
+    if (length(grep("Weights", voom.fun))) {
       cat ("  'voomWithQualityWeights' is set as voom function; using settings for sample weights...\n")
       use_weights <- TRUE
     }
@@ -317,7 +318,7 @@ diffExpr <-
     #### save Groups name and ellipse mapping groups name first
     ellipse.grp.nam <- ellipse.mapping.groups
     grp.nam <- groups
-    #### reformat samp.info data frame
+    #### reformat samp.info data frame to meet down-stream conditions
     samp.info <- diff_expr_get_samp_info(samp.info, samples, groups, ellipse.mapping.groups)
 
     ## make control group first levels to ensure it becomes the '(Intercept)'
@@ -397,7 +398,11 @@ diffExpr <-
       ### this is used for any (block) design involving batch effects or similar
       ### NOTE that the term 'block' in this context refers to the batch or pair factor and must be provided in the pairs column/argument
       ### internally it is used with duplicateCorrelation()
-      design <- diff_expr_make_design(samp.info, groups, pairs, block, use_weights)
+      design <- diff_expr_make_design(samp.info = samp.info,
+                                      groups = groups,
+                                      pairs = pairs,
+                                      block = block,
+                                      use_weights = use_weights)
     } else {
       grp.col <- grep(paste0("^", grp.nam), colnames(design))
       if (length(grp.col)) {
@@ -410,7 +415,10 @@ diffExpr <-
     }
 
     ## set contrasts
-    contrasts <- diff_expr_make_contrasts(design, pairs, block, contrasts)
+    contrasts <- diff_expr_make_contrasts(design = design,
+                                          pairs = pairs,
+                                          block = block,
+                                          contrasts = contrasts)
 
     ## set dispersion method
     disp <- match.arg(disp)
@@ -427,21 +435,41 @@ diffExpr <-
     if (do.voom) {
       cat("Running 'voom'...\n")
       norm.method <- match.arg(norm.method)
-      cat("  Running", sQuote(vf), "with", norm.method, "normalisation...\n")
+      cat("  Running", sQuote(voom.fun), "with", norm.method, "normalisation...\n")
       ## compute linear model fit and optionally apply voom beforehand
       #### NOTE: voom generates log2-cpms
 
-      fit.l <- diff_expr_fit(counts, d, design, do.voom=TRUE, voom.fun, norm.method, quasi.likelihood, bayes.trend, bayes.robust, pairs, pairs_col, block, contrasts)
+      fit.l <- diff_expr_fit(counts = counts,
+                             d = d,
+                             design = design,
+                             do.voom=TRUE,
+                             voom.fun = voom.fun,
+                             norm.method = norm.method,
+                             quasi.likelihood = quasi.likelihood,
+                             bayes.trend = bayes.trend,
+                             bayes.robust = bayes.robust,
+                             pairs = pairs,
+                             pairs_col = pairs_col,
+                             block = block,
+                             contrasts = contrasts,
+                             use_weights = use_weights)
 
       out.l <- list(v=fit.l$v, fit=fit.l$fit, fit2=fit.l$fit2)
       if (!block && !is.null(pairs)) {
         cat("    Paired samples: additional eBayes on first fit object...\n")
-        fit3 <- limma::eBayes(fit.l$fit, trend = bayes.trend, robust = bayes.robust)
+        fit3 <- limma::eBayes(fit = fit.l$fit, trend = bayes.trend, robust = bayes.robust)
         out.l$fit3 <- fit.l$fit3
       }
       normcnt <- fit.l$v$E
     } else {
-      fit.l <- diff_expr_fit(counts, d, design, do.voom=FALSE, quasi.likelihood=quasi.likelihood, bayes.trend=bayes.trend, bayes.robust=bayes.robust, disp=disp)
+      fit.l <- diff_expr_fit(counts = counts,
+                             d = d,
+                             design = design,
+                             do.voom = FALSE,
+                             quasi.likelihood = quasi.likelihood,
+                             bayes.trend = bayes.trend,
+                             bayes.robust = bayes.robust,
+                             disp = disp)
       out.l <- list(d=fit.l$d, d2=fit.l$d2, fit=fit.l$fit)
       # normalized expression
       # Get the depth-adjusted reads per million
@@ -545,6 +573,7 @@ diffExpr <-
                                              host = host,
                                              biom.filter = biom.filter,
                                              biom.attributes = biom.attributes,
+                                             biom.force.ensg = biom.force.ensg,
                                              biom.cache = biom.cache,
                                              use.cache = use.cache,
                                              sym.col = sym.col,
@@ -561,7 +590,7 @@ diffExpr <-
                                              lists = lists,
                                              filtered.lists = filtered.lists,
                                              samp.info = samp.info,
-                                             samples = samples,
+                                             samples = "SampleNames",
                                              groups = groups,
                                              sample.plot.names = sample.plot.names)
       }
@@ -583,6 +612,7 @@ diffExpr <-
                                              host = host,
                                              biom.filter = biom.filter,
                                              biom.attributes = biom.attributes,
+                                             biom.force.ensg = biom.force.ensg,
                                              biom.cache = biom.cache,
                                              use.cache = use.cache,
                                              sym.col = sym.col,
@@ -599,7 +629,7 @@ diffExpr <-
                                              lists = lists,
                                              filtered.lists,
                                              samp.info = samp.info,
-                                             samples = samples,
+                                             samples = "SampleNames",
                                              groups = groups,
                                              sample.plot.names = sample.plot.names)
       }
@@ -623,6 +653,7 @@ diffExpr <-
                                              host = host,
                                              biom.filter = biom.filter,
                                              biom.attributes = biom.attributes,
+                                             biom.force.ensg = biom.force.ensg,
                                              biom.cache = biom.cache,
                                              use.cache = use.cache,
                                              sym.col = sym.col,
@@ -639,7 +670,7 @@ diffExpr <-
                                              lists = lists,
                                              filtered.lists = filtered.lists,
                                              samp.info = samp.info,
-                                             samples = samples,
+                                             samples = "SampleNames",
                                              groups = groups,
                                              sample.plot.names = sample.plot.names)
       }
@@ -661,6 +692,7 @@ diffExpr <-
                                              host = host,
                                              biom.filter = biom.filter,
                                              biom.attributes = biom.attributes,
+                                             biom.force.ensg = biom.force.ensg,
                                              biom.cache = biom.cache,
                                              use.cache = use.cache,
                                              sym.col = sym.col,
@@ -677,7 +709,7 @@ diffExpr <-
                                              lists = lists,
                                              filtered.lists = filtered.lists,
                                              samp.info = samp.info,
-                                             samples = samples,
+                                             samples = "SampleNames",
                                              groups = groups,
                                              sample.plot.names = sample.plot.names)
       }

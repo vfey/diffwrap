@@ -14,7 +14,8 @@ diff_expr_biomart(
   biom.cache = NULL,
   use.cache = FALSE,
   sym.col = "hgnc_symbol",
-  rm.dups = FALSE
+  rm.dups = FALSE,
+  force.ensg = FALSE
 )
 }
 \arguments{
@@ -38,6 +39,8 @@ corresponding statistical tests.}
 \item{sym.col}{\code{character}. Name of the column in the query result with gene symbols.}
 
 \item{rm.dups}{\code{logical}. Should duplicated input IDs (\option{biom.filter}) be removed from the result?}
+
+\item{force.ensg}{\code{logical}. Should Ensembl Gene IDs be checked for (and stripped of) ensemble version numbers? Defaults to \code{FALSE}.}
 }
 \description{
 Function to retrieve additional information from biomart

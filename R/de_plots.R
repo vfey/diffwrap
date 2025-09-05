@@ -57,7 +57,7 @@ diff_expr_ma_plot <-
 
 		## ggplot2 M-A plot
 		g <- ggplot(data=dat, aes(x=`Average Expression`, y=logFC))
-		g <- g + geom_point(aes(size=`log2 Fold-Change`, color=`adj. P-Value`, alpha=`log2 Fold-Change`))
+		g <- g + geom_point(aes(size=`log2 Fold-Change`, color=`adj. P-Value`))
 		g <- g + scale_colour_gradient2(low="#00106B", high="#A4B1FF", mid="#F3F5FF", midpoint=0.2)
 		if (point.lab) {
 			gene.lab <- dat[rn %in% degFDR, ]
@@ -75,14 +75,14 @@ diff_expr_ma_plot <-
 				print(gene.lab[1:8, 1:2])
 			}
 			g <- g + ggtitle(paste0("M-A plot for ", contr, " (highl.: FDR < ", fdr.thr, "; FC >= ", 2^logfc.thr, "-fold)"))
-			g <- g + ggrepel::geom_text_repel(data = gene.lab, aes(label = label_id), size = font.size, box.padding = unit(0.35, "lines"), point.padding = unit(0.3, "lines"), show.legend = F)
+			g <- g + ggrepel::geom_text_repel(data = gene.lab, aes(label = label_id), size = font.size, box.padding = unit(0.35, "lines"), point.padding = unit(0.3, "lines"), max.overlaps = 15, show.legend = F)
 			if (lists) {
 				write.table(gene.lab, file.path(out.dir, paste(analysis.name, contr, "labelledPointsSmearPlot.tsv", sep="_")), sep="\t", quote=FALSE, row.names=FALSE)
 			}
 		} else {
 			g <- g + ggtitle(paste("M-A plot for", contr))
 		}
-		print(g)
+		suppressWarnings(print(g))
 		g.l[["FDR"]] <- g
 	}
 	if (length(degPval)>0) {
@@ -90,7 +90,7 @@ diff_expr_ma_plot <-
 
 		## ggplot implemetation of MA plot
 		g <- ggplot(data=dat, aes(x=`Average Expression`, y=logFC))
-		g <- g + geom_point(aes(size=`log2 Fold-Change`, color=`P-Value`, alpha=`log2 Fold-Change`))
+		g <- g + geom_point(aes(size=`log2 Fold-Change`, color=`P-Value`))
 		g <- g + scale_colour_gradient2(low="#00106B", high="#A4B1FF", mid="#F3F5FF", midpoint=0.2)
 		if (point.lab) {
 			gene.lab <- dat[rn %in% degPval, ]
@@ -108,7 +108,7 @@ diff_expr_ma_plot <-
 				print(gene.lab[1:8, 1:2])
 			}
 			g <- g + ggtitle(paste0("M-A plot for ", contr, " (highl.: P-value < ", p.thr, "; FC >= ", 2^logfc.thr, "-fold)"))
-			g <- g + ggrepel::geom_text_repel(data = gene.lab, aes(label = label_id), size = font.size, box.padding = unit(0.35, "lines"), point.padding = unit(0.3, "lines"), show.legend = F)
+			g <- g + ggrepel::geom_text_repel(data = gene.lab, aes(label = label_id), size = font.size, box.padding = unit(0.35, "lines"), point.padding = unit(0.3, "lines"), max.overlaps = 15, show.legend = F)
 			if (lists) {
 				write.table(gene.lab, file.path(out.dir, paste(analysis.name, contr, "labelledPointsSmearPlot.tsv", sep="_")), sep="\t", quote=FALSE, row.names=FALSE)
 			}
@@ -217,18 +217,18 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot = c("fdr"
 	}
 
 	# Constructing the plot
-	volcano.plot <- ggplot(data.df, aes(x = data.df$logFC, y = -log10(data.df[,property.to.plot]), alpha = data.df$FC))# ,
-	volcano.plot <- volcano.plot + geom_point(inherit.aes= TRUE, aes(color = data.df[[name.of.legend]]), size = 1.75)
+	volcano.plot <- ggplot(data.df, aes(x = logFC, y = -log10(data.df[, property.to.plot])))# ,
+	volcano.plot <- volcano.plot + geom_point(inherit.aes= TRUE, aes(color = .data[[name.of.legend]]), size = 1.75)
 	volcano.plot <- volcano.plot + scale_alpha_discrete(range = c(0.04, 0.5))
 	volcano.plot <- volcano.plot + theme_bw(base_size = 10)
 
 	volcano.plot <- volcano.plot + theme(panel.border = element_blank(),
 			axis.line = element_line(color='black'),
-			panel.grid.major = element_line(size = 0.2),
-			panel.grid.minor = element_line(size = 0.2))
+			panel.grid.major = element_line(linewidth = 0.2),
+			panel.grid.minor = element_line(linewidth = 0.2))
 
 	volcano.plot <- volcano.plot + xlab(x.axis.name) + ylab(y.axis.name)
-	volcano.plot <- volcano.plot + labs(color = name.of.legend, alpha="Fold change")
+	volcano.plot <- volcano.plot + labs(color = name.of.legend)
 
 	#volcano.plot <- volcano.plot + scale_color_manual(values=c("#0066FF", "#CC0000"))
 	if (pretty.breaks) {
@@ -243,14 +243,14 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot = c("fdr"
 			theme(plot.title = element_text(hjust = 0.5)) +
 			theme(plot.subtitle = element_text(hjust = 0.5)) #hjust 0.5 for centering
 
-	volcano.plot <- volcano.plot + geom_text(inherit.aes= FALSE, data=data.df, aes(x=floor(min(data.df$logFC)), y=-log10(property.thr)), label = line_label_text, nudge_x=0.5, nudge_y=max(-log10(data.df[,property.to.plot]))/nrow(data.df), size=3.5, color="red")
+	volcano.plot <- volcano.plot + geom_text(inherit.aes= FALSE, data=data.df, aes(x=floor(min(logFC)), y=-log10(property.thr)), label = line_label_text, nudge_x=0.5, nudge_y=max(-log10(data.df[,property.to.plot]))/nrow(data.df), size=3.5, color="red")
 	#volcano.plot <- volcano.plot + geom_text(x=0, y=0, label="two-fold FC", size=3, color="red") # TO DO: FIND GOOD POSITION, USE VARIABLE (fold change can sometimes be other than 2-fold?)
 
 	if (point.lab && nrow(filtdat)>0) {
 
 		volcano.plot <- volcano.plot + ggrepel::geom_text_repel(inherit.aes= FALSE,
 				data = filtdat,
-				aes(x= filtdat$logFC, y = -log10(filtdat[[property.to.plot]]), label = filtdat[[sym.col]]),
+				aes(x= filtdat$logFC, y = -log10(.data[[property.to.plot]]), label = .data[[sym.col]]),
 				size = 3,
 				colour = "gray30",
 				box.padding = unit(0.35, "lines"),
@@ -314,9 +314,8 @@ diff_expr_volcano_plot <-
 			sym.col = sym.col)
 
 	#Printing the plots so they can be stored into pdf-file when this function is called
-	print(g.l[["Pval"]])
-	print(g.l[["FDR"]])
-
+	suppressWarnings(print(g.l[["Pval"]]))
+	suppressWarnings(print(g.l[["FDR"]]))
 
 	return(g.l)
 
@@ -329,7 +328,7 @@ diff_expr_volcano_plot <-
 diff_expr_pval_hist_plot <-
 		function(d3)
 {
-	cat("  Histogram of P-value distribution...\n")
+	cat("   Histogram of P-value distribution...\n")
 	pv.col <- names(d3)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
 	hist(d3[[pv.col]],breaks=20, xlab="P Value", ylab="Frequency", main="P-value distribution")
 }

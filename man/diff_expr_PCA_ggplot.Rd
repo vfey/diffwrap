@@ -17,7 +17,8 @@ diff_expr_PCA_ggplot(
   label.samples = TRUE,
   geom.point.size = 2,
   label.font.size = 5,
-  plot.ellipse.legend = NA
+  plot.ellipse.legend = NA,
+  do.plot = TRUE
 )
 }
 \arguments{
@@ -47,6 +48,8 @@ Use for selective highlighting of user-defined sample groups.}
 \item{label.font.size}{Numeric passed to \code{geom_text_repel} giving the label font size.}
 
 \item{plot.ellipse.legend}{Logical; should the ellipse legend be plotted. \code{NA}, the default, will plot it if any aesthetics are mapped.}
+
+\item{do.plot}{Logical; should the plot be printed to the graphics device? Defaults to \code{TRUE}.}
 }
 \description{
 Function to generate an ordinary two-dimensional PCA plot using `ggplot2`

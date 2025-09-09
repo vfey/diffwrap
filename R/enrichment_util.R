@@ -127,11 +127,11 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
     to_be_saturated = all.foldchanges %in% outliers
 
     negSaturated = to_be_saturated & all.foldchanges < 0
-    print(sum(negSaturated))
+    #print(sum(negSaturated))
     all.foldchanges[negSaturated] <- lower_limit
 
     posSaturated = to_be_saturated & all.foldchanges > 0
-    print(sum(posSaturated))
+    #print(sum(posSaturated))
     all.foldchanges[posSaturated] <- upper_limit
 
     #replacing the fold change column with saturated values
@@ -207,7 +207,7 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
   vertex.label.dists <- c()
   for (i in 1:length(igraph::V(g)$name)) {
     if (igraph::V(g)$categories[i] == "pathway") {
-      print(vertices[i])
+      #print(vertices[i])
       shapes <- append(shapes, "circle")
       colors <- append(colors, "white")
       sizes <- append(sizes, 7)
@@ -215,7 +215,7 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
       vertex.label.dists = append(vertex.label.dists, 0)
       igraph::V(g)$name[i] = gsub('(.{1,15})(\\s|$)', '\\1\n', igraph::V(g)$name[i])
       #print(gsub('(.{1,15})(\\s|$)', '\\1\n', igraph::V(g)$name[i]))
-      print(igraph::V(g)$name[i])
+      #print(igraph::V(g)$name[i])
     } else {
       shapes <- append(shapes, "circle")
       colors <- append(colors, DE.table[DE.table[[geneSymbolColumn]] == igraph::V(g)$name[i],"color"])
@@ -225,7 +225,7 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
 
     }
   }
-  print(length(colors))
+  #print(length(colors))
   igraph::V(g)$shapes <- shapes
   igraph::V(g)$colors <- colors
   igraph::V(g)$sizes <- sizes

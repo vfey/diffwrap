@@ -32,6 +32,7 @@ diff_expr_extract_contrasts(
   point.lab = TRUE,
   heatmap.topn = 100,
   heatmap.split.expr = FALSE,
+  heatmap.main = NULL,
   font.size = 5,
   plots = TRUE,
   lists = TRUE,
@@ -103,7 +104,9 @@ likelihood ratio test is used. Olease note the main wrapper function \code{diffE
 \item{heatmap.split.expr}{\code{logical}. Should the top up- and top down-regulated genes be displayed at equal numbers (50/50),
 if they meet the significance threshold (regardless of the actual significance)? Defaults to \code{FALSE}.}
 
-\item{font.size}{Size of point labels in M-A plots.}
+\item{heatmap.main}{\code{character}. Additional information printed in the heatmap title.}
+
+\item{font.size}{\code{numeric}. Size of point labels in M-A plots.}
 
 \item{plots}{Logical; should plots be generated?}
 

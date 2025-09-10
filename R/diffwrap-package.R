@@ -43,18 +43,30 @@
 #' for different approaches, such as "pure" 'edgeR', 'voom' or paired samples. The functions in the package generate text files with differential expression lists,
 #' optionally annotated with information from 'biomart', expression summary plots as well as several QC plots.
 #' @author Vidal Fey <vidal.fey@gmail.com>, Meeri Pekkarinen <meeri.pekkarinen@gmail.com>, Reija Hieta <reija.hieta@geneviatechnologies.com>, Bogdan Iancu <bogdan.iancu@abo.fi>, Adrien Janssens <Adrien.RFM.Janssens@proton.me>
-#' Maintainer: Vidal Fey <vidal.fey@tuni.fi>
+#' Maintainer: Vidal Fey <vidal.fey@gmail.com>
 #' @details \tabular{ll}{
 #' Package: \tab diffwrap\cr
 #' Type: \tab Package\cr
 #' Initial version: \tab 0.1-0\cr
 #' Created: \tab 2015-08-27\cr
-#' License: \tab to be determined \cr
+#' License: \tab GNU GPL v3 \cr
 #' LazyLoad: \tab yes\cr
 #' }
 #' The package contains utilities and methods for differential expression analysis of RNA-Seq data.
 #' It comes with a wrapper function, "diffExpr", performing all steps of the analysis. Most sub-functions are exported and can be called by the user, as well, if desired.
 #' These functions may be applicable to different kinds of data/input, rely, however, on the conventions set for this package.
+#'
+#' @section Acknowledgements:
+#' This work was largely supported by university-level strategic and profiling area funding schemes at University of Turku
+#' and Tampere University. Downstream analysis functionality including all pathway analyses and visualisations as well as some
+#' DGE visualisations and helper functions were created or further developed at Genevia Technologies Oy.
+#'
+#' @concept differential gene expression
+#' @concept RNA-seq
+#' @concept pathway analysis
+#' @concept limma
+#' @concept edgeR
+#' @concept linear modelling
 
 ## usethis namespace: start
 #' @importFrom grDevices as.raster colorRampPalette dev.list dev.off pdf rainbow

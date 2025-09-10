@@ -13,6 +13,7 @@ pheatmap_plots(
   groups,
   sample.plot.names,
   main = NULL,
+  add.main = NULL,
   p.thr = 0.05,
   fdr.thr = 0.05,
   logfc.thr = 1,
@@ -39,6 +40,8 @@ Need to be in the same order as sample column names!}
 
 \item{main}{\code{character}. Main plot title. (Will be complemented with additional information, e.g., 'FDR' when
 labelling according to and FDR threshold.)}
+
+\item{add.main}{\code{character}. Additional information printed in the heatmap title.}
 
 \item{p.thr}{\code{numeric}. Plotted values with a P-Value below this threshold will be labelled in the P-Value plot.}
 

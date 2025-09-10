@@ -17,7 +17,9 @@ diffr_pheatmap(
   cell.size = 8,
   font.size = 10,
   color.blind.pal = "PuOr",
-  add.main = NULL
+  main = NULL,
+  add.main = NULL,
+  filt.info = NULL
 )
 }
 \arguments{
@@ -50,7 +52,11 @@ the colors of the heatmap, otherwise min-max breaks are used by default}
 \item{color.blind.pal}{string determining the RColorBrewer color blind palette (default = "PuOr");
 other option can be visualized with the following command: brewer.pal.info[brewer.pal.info$colorblind,]}
 
+\item{main}{\code{character}. Main plot title.}
+
 \item{add.main}{\code{character}. Optional text added in parenthesis to the plot title.}
+
+\item{filt.info}{\code{character}. Optional information on the filtering strategy added in parenthesis to the plot title.}
 }
 \value{
 Returns a list of pheatmap plot objects used in the pheatmap_plots() function.

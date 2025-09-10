@@ -50,6 +50,7 @@ diff_expr_pseudo_counts <-
 	cat("done\n    Getting pseudo-counts...")
 	pseudo.counts <- edgeR::q2qnbinom(d$counts, old.fitted, new.fitted, dispersion=disp.mat[[disp]])
 	cat("done\n")
+	browser()
 	if (do.cpm) {
 		cat("    Getting CPMs...")
 		pseudo.counts <- edgeR::cpm(pseudo.counts, log=TRUE, prior.count=3)

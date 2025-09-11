@@ -50,7 +50,19 @@ diff_expr_pseudo_counts <-
 	cat("done\n    Getting pseudo-counts...")
 	pseudo.counts <- edgeR::q2qnbinom(d$counts, old.fitted, new.fitted, dispersion=disp.mat[[disp]])
 	cat("done\n")
-	browser()
+	if (any(pseudo.counts < 0)) {
+	  cat("    #! Negative pseudo-counts detected...\n")
+	  lpc <- length(which(pseudo.counts<0))/length(pseudo.counts)*100
+	  if (lpc < 1) {
+	    cat(paste0("     --> Less than 1% negative pseudo-counts (", lpc, "). Correcting...\n"))
+	    cat("         Setting negative pseudo-counts to 0.1...\n")
+	    pseudo.counts[which(pseudo.counts<0)] <- 0.1
+	    cat("done")
+	  } else {
+	    cat("     --> More than 1% negative pseudo-counts. Skipping...\n")
+	    stop("Too many negative pseudo-counts!")
+	  }
+	}
 	if (do.cpm) {
 		cat("    Getting CPMs...")
 		pseudo.counts <- edgeR::cpm(pseudo.counts, log=TRUE, prior.count=3)

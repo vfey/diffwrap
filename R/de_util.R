@@ -58,7 +58,9 @@ diff_expr_fit <-
       }
 
       if (block && !is.null(pairs) && !is.factor(pairs)) {
-        stop("For block designs 'pairs' needs to be a factor.")
+        cat("  Attempting to coerce the pairs vector to a factor...")
+        pairs <- try(as.factor(pairs))
+        if (is(pairs, "try-error")) stop("For block designs 'pairs' needs to be a factor.")
       }
 
       vf <- voom.fun

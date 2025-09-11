@@ -54,13 +54,13 @@ diff_expr_QC_plots <-
     pdf(pdf_file, width=11, height=11)
     main <- paste(type, analysis.name)
     cat("   MDS ggplot...\n")
-    out.l$QCplots[["MDS"]] <- diff_expr_ggplot_mds(counts=counts, samp.name=samp.name, groups=groups, grp.nam=grp.nam, pairs=pairs,
+    out.l$QCplots[[paste0(type, "_MDS")]] <- diff_expr_ggplot_mds(counts=counts, samp.name=samp.name, groups=groups, grp.nam=grp.nam, pairs=pairs,
                                                    pairs.name=pairs.name, gene.selection=gene.selection, dim.plot=PC[1:2], main=main)
     cat("   done.\n   PCA ggbiplot...\n")
-    out.l$QCplots[["PCAbiplot"]] <- diff_expr_PCA_ggbiplot(PCA=PCA, groups=groups, grp.nam=grp.nam, ellipse=ellipse, circle=circle,
+    out.l$QCplots[[paste0(type, "_PCAbiplot")]] <- diff_expr_PCA_ggbiplot(PCA=PCA, groups=groups, grp.nam=grp.nam, ellipse=ellipse, circle=circle,
                                                            varname.size=varname.size, var.axes=var.axes, main=main)
     cat("   done.\n   PCA ggplot...\n")
-    out.l$QCplots[["PCAlabelledPlot"]] <- diff_expr_PCA_ggplot(PCA=PCA, samp.name=sample.plot.names, groups=groups, grp.nam=grp.nam, PC=c(1,2),
+    out.l$QCplots[[paste0(type, "_PCAlabelledPlot")]] <- diff_expr_PCA_ggplot(PCA=PCA, samp.name=sample.plot.names, groups=groups, grp.nam=grp.nam, PC=c(1,2),
                                                                main=main, ellipse=ellipse, ellipse.mapping.groups=ellipse.mapping.groups, ellipse.grp.nam=ellipse.grp.nam, label.samples=label.samples,
                                                                geom.point.size=geom.point.size, label.font.size = label.font.size, plot.ellipse.legend=plot.ellipse.legend)
     cat("   done.\n   PCA 3d scatterplot...\n")

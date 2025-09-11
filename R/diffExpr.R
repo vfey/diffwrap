@@ -522,32 +522,36 @@ diffExpr <-
         cat("  Corrected, normalised pseudo-counts...\n")
         ## get pseudo counts for blocked designs (e.g., paired samples or batch factors)
         cat("   Calculating pseudo-counts...\n")
-        pseudo.counts <- diff_expr_pseudo_counts(design=design, d=d, pairs=pairs, disp=disp, do.cpm=TRUE)
-        cat("   done\n")
-        out.l <- diff_expr_QC_plots(counts=pseudo.counts,
-                                    samp.info=samp.info,
-                                    control=control,
-                                    out.l=out.l,
-                                    grp.nam=grp.nam,
-                                    PC=PC,
-                                    sample.plot.names=sample.plot.names,
-                                    ellipse=ellipse,
-                                    ellipse.mapping.groups=ellipse.mapping.groups,
-                                    ellipse.grp.nam=ellipse.grp.nam,
-                                    label.samples=label.samples,
-                                    geom.point.size=geom.point.size,
-                                    label.font.size = label.font.size,
-                                    plot.ellipse.legend=plot.ellipse.legend,
-                                    circle=circle,
-                                    varname.size=varname.size,
-                                    var.axes=var.axes,
-                                    pairs=pairs,
-                                    pairs.name=pairs_col,
-                                    gene.selection=gene.selection,
-                                    n=n,
-                                    type="pseudo-corrected, normalised DGEList",
-                                    analysis.name=analysis.name,
-                                    out.dir=out.dir)
+        pseudo.counts <- try(diff_expr_pseudo_counts(design=design, d=d, pairs=pairs, disp=disp, do.cpm=TRUE))
+        if (is(pseudo.counts, "try-error")) {
+          cat(" !NOTE! - Pseudo-count calculation failed. Omitting from output...\n")
+        } else {
+          cat("   done\n")
+          out.l <- diff_expr_QC_plots(counts=pseudo.counts,
+                                      samp.info=samp.info,
+                                      control=control,
+                                      out.l=out.l,
+                                      grp.nam=grp.nam,
+                                      PC=PC,
+                                      sample.plot.names=sample.plot.names,
+                                      ellipse=ellipse,
+                                      ellipse.mapping.groups=ellipse.mapping.groups,
+                                      ellipse.grp.nam=ellipse.grp.nam,
+                                      label.samples=label.samples,
+                                      geom.point.size=geom.point.size,
+                                      label.font.size = label.font.size,
+                                      plot.ellipse.legend=plot.ellipse.legend,
+                                      circle=circle,
+                                      varname.size=varname.size,
+                                      var.axes=var.axes,
+                                      pairs=pairs,
+                                      pairs.name=pairs_col,
+                                      gene.selection=gene.selection,
+                                      n=n,
+                                      type="pseudo-corrected, normalised DGEList",
+                                      analysis.name=analysis.name,
+                                      out.dir=out.dir)
+        }
       }
     }
 

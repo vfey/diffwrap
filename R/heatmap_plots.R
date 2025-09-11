@@ -204,29 +204,39 @@ pheatmap_plots <-
         cat("  Plotting FDR-filtered genes...")
         gl.fdr = list()
         gl.fdr$regular = fdr_hm_list$row$regular
-        gl.fdr$regular.split = fdr_hm_list$rowsplit$regular
         gl.fdr$gene.correlogram = fdr_hm_list$none$correlogram
-        gl.fdr$gene.correlogram.split = fdr_hm_list$nonesplit$correlogram
         gl.fdr$gene.correlogram.small = fdr_hm_list$nonesmall$correlogram.small
-        gl.fdr$gene.correlogram.small.split = fdr_hm_list$nonesmallsplit$correlogram.small
         gl.fdr$samp.correlogram = fdr_hm_list$none$correlogram.sample
-        gl.fdr$samp.correlogram.split = fdr_hm_list$nonesplit$correlogram.sample
+        if (split.expr) {
+          gl.fdr$regular.split = fdr_hm_list$rowsplit$regular
+          gl.fdr$gene.correlogram.split = fdr_hm_list$nonesplit$correlogram
+          gl.fdr$gene.correlogram.small.split = fdr_hm_list$nonesmallsplit$correlogram.small
+          gl.fdr$samp.correlogram.split = fdr_hm_list$nonesplit$correlogram.sample
+        }
         grid::grid.newpage()
         print(gl.fdr$regular )
-        grid::grid.newpage()
-        print(gl.fdr$regular.split )
+        if (split.expr) {
+          grid::grid.newpage()
+          print(gl.fdr$regular.split )
+        }
         grid::grid.newpage()
         print(gl.fdr$gene.correlogram)
-        grid::grid.newpage()
-        print(gl.fdr$gene.correlogram.split)
+        if (split.expr) {
+          grid::grid.newpage()
+          print(gl.fdr$gene.correlogram.split)
+        }
         grid::grid.newpage()
         print(gl.fdr$gene.correlogram.small)
-        grid::grid.newpage()
-        print(gl.fdr$gene.correlogram.small.split)
+        if (split.expr) {
+          grid::grid.newpage()
+          print(gl.fdr$gene.correlogram.small.split)
+        }
         grid::grid.newpage()
         print(gl.fdr$samp.correlogram)
-        grid::grid.newpage()
-        print(gl.fdr$samp.correlogram.split)
+        if (split.expr) {
+          grid::grid.newpage()
+          print(gl.fdr$samp.correlogram.split)
+        }
         g.l[["fdr"]] = gl.fdr
         cat("done\n")
       }

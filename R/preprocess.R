@@ -125,6 +125,7 @@ diff_expr_make_contrasts <-
 		cat("  Comparing selected groups", contrasts, "\n")
 	}
 	cat("  Creating contrast matrix...\n")
+	browser()
 	contrasts <- suppressWarnings(makeContrasts(contrasts=contrasts, levels=design))
 	return(contrasts)
 }

@@ -416,6 +416,7 @@ diffExpr <-
 
     ## set contrasts
     contrasts <- diff_expr_make_contrasts(design = design,
+                                          groups = groups,
                                           pairs = pairs,
                                           block = block,
                                           contrasts = contrasts)

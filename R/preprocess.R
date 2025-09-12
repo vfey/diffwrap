@@ -90,6 +90,7 @@ diff_expr_make_design <-
 
 #' Function to make contrast matrix
 #' @param design Numeric design matrix.
+#' @param groups \code{character}. Vector of group names.
 #' @param pairs \code{character}. Name of the column in 'samp.info' containing paired sample information.
 #' @param block \code{logical}. Are the samples not independent? See Details section.
 #' @param contrasts Character vector specifying group name pairs to be compared in the format expected by
@@ -100,7 +101,7 @@ diff_expr_make_design <-
 #'   @seealso [makeContrasts()]
 #' @export
 diff_expr_make_contrasts <-
-		function(design, pairs=NULL, block=FALSE, contrasts=NULL)
+		function(design, groups, pairs=NULL, block=FALSE, contrasts=NULL)
 {
 	if (is.null(contrasts)) {
 		cat("Comparing all groups vs. all...\n")
@@ -122,10 +123,40 @@ diff_expr_make_contrasts <-
 						}))
 		cat("  ", contrasts, "\n")
 	} else {
-		cat("  Comparing selected groups", contrasts, "\n")
+	  cat("  Comparing selected groups", contrasts, "\n")
+	  if (!is.null(pairs)) {
+	    cat("  Extracting existing contrasts of interest from design matrix...\n")
+	    cat("  - Complementing 'existing groups' vector...")
+	    # Column names in the design matrix starting with "groups" represent comparisons to the baseline which is the grand mean
+	    # of the first level of the groups factor and, in the context of this package, always the control, e.g., "normal",
+	    # and represented by the "Intercept". In order to grep all existing comparisons, i.e., those inherent to the design,
+	    # the name if the control, so, e.g., "groupsnormal", needs to be added in place of the Intercept.
+	    n <- grep("^groups.+", colnames(design), value=TRUE)
+	    n <- c(paste0("groups", levels(groups)[1]), n)
+	    cat("done\n")
+	    cat("  - Correcting 'contrasts' names...")
+	    # The contrasts are provided based on the group names, so the word "groups" precedes column names in the design matrix.
+	    # Hence, that word needs to be added to the provided contrasts.
+	    cont <- unlist(strsplit(contrasts, "-"))
+	    cont <- paste0("groups", cont)
+	    cont <- unlist(lapply(seq(1, length(cont), 2), function(x) {
+	      paste(cont[x], cont[x+1], sep="-")
+	    }))
+	    cat("done\n")
+	    cat("  - Getting existing names...")
+	    contrasts <- unlist(plyr::llply(cont, function(x) {
+	      y <- unlist(strsplit(x, "-"))
+	      if (n[1] != y[2]) {
+	        cat("  -->", x, "is not inherent to the design matrix and will be extracted in addition to the 'group vs control' contrasts.\n")
+	        return(x)
+	      } else {
+	        cat("  -->", x, "is inherent to the design matrix and will be extracted by default.\n")
+	      }
+	    }))
+	    cat("done\n")
+	}
 	}
 	cat("  Creating contrast matrix...\n")
-	browser()
 	contrasts <- suppressWarnings(makeContrasts(contrasts=contrasts, levels=design))
 	return(contrasts)
 }

@@ -140,7 +140,7 @@ pheatmap_plots <-
 
           cat("    Creating 2nd, smaller data frame labelling only 50 genes...")
           dat.sign.pv.small = as.data.frame(dat.sign.pv[1:min(nrow(dat.sign.pv), 50),])
-          dat.sign.pv.small.split = as.data.frame(dat.sign.pv.split[1:min(nrow(dat.sign.pv.split), 50),])
+          if (split.expr) dat.sign.pv.small.split = as.data.frame(dat.sign.pv.split[1:min(nrow(dat.sign.pv.split), 50),])
           cat("done\n")
 
           pv_hm_list[["row"]] = diffr_pheatmap(dat.sign.pv, clinical.mat = samp.anno, scale.fl = "row", main = main, add.main = add.main, filt.info = "P-value-filtered")

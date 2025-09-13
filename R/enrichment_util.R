@@ -404,7 +404,8 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
   for (contrast in contrast.names) {
 
     contr.out.dir  <- dir(out.dir, pattern = paste0("^",contrast), full.names = TRUE)
-    #Creating subfolders
+    #Creating sub-folders
+    browser()
     lapply(enrichment.methods, function(method) dir.create(file.path(contr.out.dir, method), showWarnings = F))
 
 

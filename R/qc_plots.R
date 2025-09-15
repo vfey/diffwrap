@@ -47,7 +47,7 @@ diff_expr_QC_plots <-
     samp.name <- samp.info$SampleNames
     main <- paste(type, analysis.name, sep="_")
     main <- gsub("\\.{1,}", "_", make.names(main))
-    out.l$QCplots <- list()
+    if (!length(out.l$QCplots)) out.l$QCplots <- list()
     cat("  Plotting...\n")
     pdf_file <- file.path(out.dir, paste0(Sys.Date(), "_", main, "_QC_plots.pdf"))
     cat("   Saving plot to", pdf_file, "...\n")

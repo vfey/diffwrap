@@ -9,7 +9,7 @@
 #'   or a DGEList object.
 #' @param design Numeric design matrix.
 #' @param do.voom Logical; should data be "voomed"?
-#' @param voom.fun Voom function: one of "voom", "voomWithQualityWeights".
+#' @param voom.fun Voom function: one of "voom", "voomWithQualityWeights" or voomLmFit.
 #' @param use_weights \code{logical}. Should sample-specific quality weights be estimated?
 #' @param norm.method Character; one of "quantile", "tmm".
 #' @param quasi.likelihood Logical; should quasi-likelihood methods be used? See \emph{Details} section.

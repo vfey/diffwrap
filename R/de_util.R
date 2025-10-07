@@ -96,7 +96,7 @@ diff_expr_fit <-
       } else {
         v <- voom.fun(cts, design=design, plot=FALSE, normalize.method=norm.method)
 
-        # For paired samples or block designs:
+        # For block designs (here, the pairs column has the blocking information):
         if (block && !is.null(pairs)) {
           cat("  Samples are not independent. Using column", sQuote(pairs_col), "as block variable...\n")
           cat("    ", levels(pairs), "\n")

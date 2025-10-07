@@ -36,6 +36,7 @@ diff_expr_PCA <-
 diff_expr_pseudo_counts <-
 		function(d, design, pairs, disp="tagwise.dispersion", do.cpm=TRUE)
 {
+	cat("   --> Using pairs:", pairs, "\n")
 	cat("    Estimating dispersion...")
 	disp.mat <- edgeR::estimateDisp(d, design)
 	cat("done\n    Fitting generalised linear model...")

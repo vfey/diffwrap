@@ -29,20 +29,22 @@ diff_expr_PCA <-
 #' Function to calculate pseudo counts representing batch-corrected normalised but untransformed values
 #' @param d Passed to \code{edgeR} functions: matrix of counts, or a DGEList object, or a SummarizedExperiment object.
 #' @param design numeric design matrix
-#' @param pairs Factor of identifiers specifying paired samples for paired or other block designs, or batch effects.
-#' @param disp Character; one of "tagwise.dispersion", "trended.dispersion", "bin.dispersion"
-#' @param do.cpm Logical; should the pseudo counts be transformed to CPMs?
+#' @param pairs \code{character}. Name of column with identifiers specifying paired samples for paired or other block designs, or batch effects.
+#'   Defaults to "pairs" as this is the prefix added by 'diff_expr_make_design()'. When used outside the package's scope the user
+#'   must supply the correct prefix.
+#' @param disp \code{character}. one of "tagwise.dispersion", "trended.dispersion", "bin.dispersion"
+#' @param do.cpm \code{logical}. should the pseudo counts be transformed to CPMs?
 #' @export
 diff_expr_pseudo_counts <-
-		function(d, design, pairs, disp="tagwise.dispersion", do.cpm=TRUE)
+		function(d, design, pairs="pairs", disp="tagwise.dispersion", do.cpm=TRUE)
 {
-	cat("   --> Using pairs:", pairs, "\n")
+	cat("   --> Using pairs column identifier:", pairs, "\n")
 	cat("    Estimating dispersion...")
 	disp.mat <- edgeR::estimateDisp(d, design)
 	cat("done\n    Fitting generalised linear model...")
 	fit0 <- edgeR::glmFit(d, design, dispersion=disp.mat[[disp]])
 	old.fitted <- fit0$fitted.values
-	batch.coefs <- grep("pairs", colnames(design))
+	batch.coefs <- grep(pairs, colnames(design) )
 	new.coefs <- fit0$unshrunk.coefficients
 	cat("done\n    Set coefficients for blocking variable to 0...")
 	new.coefs[, batch.coefs] <- 0

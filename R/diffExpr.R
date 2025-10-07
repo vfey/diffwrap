@@ -391,6 +391,7 @@ diffExpr <-
 
     # create design matrix
     if (is.null(design)) {
+      user_design <- FALSE
       # create a design matix based on the choices for pairs or block
       ## if block is TRUE or there are no paired samples, a simple design matrix is created without an intercept
       ### the block argument here is logical and determines whether or not the samples are independent
@@ -408,6 +409,7 @@ diffExpr <-
       if (length(grp.col)) {
         colnames(design)[grp.col] <- sub(paste0("^", grp.nam), "groups", colnames(design)[grp.col])
       }
+      user_design <- TRUE
     }
     if (length(grep(":", colnames(design)))) {
       cat("  Checking design column names...\n")
@@ -420,6 +422,7 @@ diffExpr <-
                                           pairs = pairs,
                                           block = block,
                                           contrasts = contrasts)
+                                          # user_design = user_design)
 
     ## set dispersion method
     disp <- match.arg(disp)
@@ -523,7 +526,7 @@ diffExpr <-
         cat("  Corrected, normalised pseudo-counts...\n")
         ## get pseudo counts for blocked designs (e.g., paired samples or batch factors)
         cat("   Calculating pseudo-counts...\n")
-        pseudo.counts <- try(diff_expr_pseudo_counts(design=design, d=d, pairs=pairs, disp=disp, do.cpm=TRUE))
+        pseudo.counts <- try(diff_expr_pseudo_counts(design=design, d=d, pairs="pairs", disp=disp, do.cpm=TRUE))
         if (is(pseudo.counts, "try-error")) {
           cat(" !NOTE! - Pseudo-count calculation failed. Omitting from output...\n")
         } else {

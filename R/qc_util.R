@@ -42,6 +42,7 @@ diff_expr_pseudo_counts <-
 	cat("done\n    Fitting generalised linear model...")
 	fit0 <- edgeR::glmFit(d, design, dispersion=disp.mat[[disp]])
 	old.fitted <- fit0$fitted.values
+	browser()
 	batch.coefs <- grep(pairs, colnames(design))
 	new.coefs <- fit0$unshrunk.coefficients
 	cat("done\n    Set coefficients for blocking variable to 0...")

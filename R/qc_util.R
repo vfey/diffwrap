@@ -27,7 +27,7 @@ diff_expr_PCA <-
 }
 
 #' Function to calculate pseudo counts representing batch-corrected normalised but untransformed values
-#' @param d Passed to \code{edgeR} functions: matrix of counts, or a DGEList object, or a SummarizedExperiment object.
+#' @param d Passed to \code{edgeR} functions: matrix of counts or a DGEList object.
 #' @param design numeric design matrix
 #' @param pairs \code{character}. Name of column with identifiers specifying paired samples for paired or other block designs, or batch effects.
 #'   Defaults to "pairs" as this is the prefix added by 'diff_expr_make_design()'. When used outside the package's scope the user
@@ -38,7 +38,7 @@ diff_expr_PCA <-
 diff_expr_pseudo_counts <-
 		function(d, design, pairs="pairs", disp="tagwise.dispersion", do.cpm=TRUE)
 {
-	cat("   --> Using pairs column identifier:", pairs, "\n")
+	cat("   --> Using pairs column identifier:", dQuote(pairs), "\n")
 	cat("    Estimating dispersion...")
 	disp.mat <- edgeR::estimateDisp(d, design)
 	cat("done\n    Fitting generalised linear model...")
@@ -51,7 +51,15 @@ diff_expr_pseudo_counts <-
 	cat("done\n    Refit coefficients...")
 	new.fitted <- exp(new.coefs %*% t(design) + as.vector(fit0$offset))
 	cat("done\n    Getting pseudo-counts...")
-	pseudo.counts <- edgeR::q2qnbinom(d$counts, old.fitted, new.fitted, dispersion=disp.mat[[disp]])
+	if (is(d, "DGEList")) {
+	  dc <- d$counts
+	} else if (is.data.frame(d)) {
+	  dc <- try(as.matrix(d))
+	  if (is(dc, "try-error")) stop("An input data frame must only consist of numeric values so it can be coerced to a (numeric) matrix.")
+	} else if (is.matrix(d)) {
+	  dc <- d
+	}
+	pseudo.counts <- edgeR::q2qnbinom(dc, old.fitted, new.fitted, dispersion=disp.mat[[disp]])
 	cat("done\n")
 	if (any(pseudo.counts < 0)) {
 	  cat("    #! Negative pseudo-counts detected...\n")

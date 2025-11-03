@@ -236,6 +236,10 @@ diffr_expr_generate_cleaned_de_table_output <-
 #' @param heatmap.topn \code{numeric}. Number of top values to be plotted. Defaults to 100.
 #' @param heatmap.split.expr \code{logical}. Should the top up- and top down-regulated genes be displayed at equal numbers (50/50),
 #' if they meet the significance threshold (regardless of the actual significance)? Defaults to \code{FALSE}.
+#' @param color.blind.pal string determining the RColorBrewer color blind palette (default = "PuOr");
+#' other option can be visualized with the following command: brewer.pal.info[brewer.pal.info$colorblind,]
+#' @param color.extremes character vector of length 2 giving the two extremes of a user-defined colour palette
+#' varying from the first hue to the second via white.
 #' @param heatmap.main \code{character}. Additional information printed in the heatmap title.
 #' @param font.size \code{numeric}. Size of point labels in M-A plots.
 #' @param plots Logical; should plots be generated?
@@ -254,7 +258,8 @@ diff_expr_extract_contrasts <-
            host="https://www.ensembl.org", biom.filter="ensembl_gene_id", biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"),
            biom.force.ensg = FALSE, biom.cache = NULL, use.cache = FALSE, sym.col="hgnc_symbol",
            rm.dups=FALSE, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE, heatmap.topn = 100,
-           heatmap.split.expr = FALSE, heatmap.main = NULL, font.size=5, plots=TRUE, lists=TRUE, filtered.lists = TRUE,
+           heatmap.split.expr = FALSE, color.blind.pal = "PuOr", color.extremes = c("#3182BD", "#E6550D"),
+           heatmap.main = NULL, font.size=5, plots=TRUE, lists=TRUE, filtered.lists = TRUE,
            samp.info = NULL, samples = NULL, groups = NULL, sample.plot.names = NULL)
   {
     # initial checks
@@ -397,6 +402,8 @@ diff_expr_extract_contrasts <-
                                                         samples = samples,
                                                         groups = groups,
                                                         sample.plot.names = sample.plot.names,
+                                                        color.blind.pal = color.blind.pal,
+                                                        color.extremes = color.extremes,
                                                         main=NULL,
                                                         add.main = heatmap.main,
                                                         p.thr=0.05,
@@ -414,6 +421,8 @@ diff_expr_extract_contrasts <-
                                                         samples = samples,
                                                         groups = groups,
                                                         sample.plot.names = sample.plot.names,
+                                                        color.blind.pal = color.blind.pal,
+                                                        color.extremes = color.extremes,
                                                         main=NULL,
                                                         add.main = heatmap.main,
                                                         p.thr=0.05,

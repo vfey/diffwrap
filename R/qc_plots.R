@@ -348,10 +348,10 @@ diff_expr_3d_scatterplot <-
 #' @param col.grps Logical indicating whether to colour the dendrogram by groups.
 #' @export
 diff_expr_dendro_plot <-
-  function(counts, groups, grp.nam=NULL, main=NULL, col.grps=FALSE)
+    function(counts, groups, grp.nam=NULL, main=NULL, col.grps=FALSE)
   {
 
-    # test if neededs packages are installed
+    # test if needed packages are installed
     if (col.grps && !requireNamespace("dendextend", quietly = TRUE)) {
       stop(
         paste("Package", sQuote("dendextend"), "must be installed to colour the dendrogram by groups."),

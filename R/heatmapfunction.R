@@ -83,6 +83,8 @@ make_pheatmap_anno_color = function(clinical.mat) {
 #' @param font.size double determining the font size (default = 10)
 #' @param color.blind.pal string determining the RColorBrewer color blind palette (default = "PuOr");
 #' other option can be visualized with the following command: brewer.pal.info[brewer.pal.info$colorblind,]
+#' @param color.extremes character vector of length 2 giving the two extremes of a user-defined colour palette
+#' varying from the first hue to the second via white.
 #' @param main.correl Character; main title of the Correlogram
 #' @param sample.correl Logical;
 #' @details
@@ -97,6 +99,7 @@ correlogram_pheatmap = function(expr.mat, clinical.mat, scale.fl = "none", legen
                                 row.clust = TRUE, col.clust = TRUE,
                                 signif.stars.fl = FALSE, cell.size = 8,
                                 font.size = 11, color.blind.pal = "PuOr",
+                                color.extremes = c("#3182BD", "#E6550D"),
                                 main.correl = "Correlogram", sample.correl = FALSE) {
   #calculate the correlation matrix using Hmisc package
 
@@ -111,7 +114,11 @@ correlogram_pheatmap = function(expr.mat, clinical.mat, scale.fl = "none", legen
     mat.breaks.correl = seq(0, 1, by = 0.05)
   }
 
-  colour.correl = colorRampPalette(rev(brewer.pal(n = 11, name = color.blind.pal)))(length(mat.breaks.correl) - 1)
+  if (!is.null(color.blind.pal)) {
+    colour.correl = colorRampPalette(rev(brewer.pal(n = 11, name = color.blind.pal)))(length(mat.breaks.correl) - 1)
+  } else {
+    colour.correl = colorRampPalette(c(color.extremes[1], "white", color.extremes[2]))(length(mat.breaks.correl) - 1)
+  }
 
   #define new clustering distance
   dissimilarity <- 1 - cor.mat
@@ -239,7 +246,8 @@ correlogram_pheatmap = function(expr.mat, clinical.mat, scale.fl = "none", legen
 #' @param cell.size double determining the widh and height of the cell and the row/col font size (default = 8)
 #' @param font.size double determining the font size (default = 10)
 #' @param color.blind.pal string determining the RColorBrewer color blind palette (default = "PuOr");
-#' other option can be visualized with the following command: brewer.pal.info[brewer.pal.info$colorblind,]
+#' @param color.extremes character vector of length 2 giving the two extremes of a user-defined colour palette
+#' varying from the first hue to the second via white.
 #' @param main \code{character}. Main plot title.
 #' @param add.main \code{character}. Optional text added in parenthesis to the plot title.
 #' @param filt.info \code{character}. Optional information on the filtering strategy added in parenthesis to the plot title.
@@ -256,6 +264,7 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
                           biserial.fl = FALSE, quantile.breaks.fl = FALSE,
                           signif.stars.fl = FALSE, cell.size =8,
                           font.size = 10, color.blind.pal = "PuOr",
+                          color.extremes = c("#3182BD", "#E6550D"),
                           main = NULL, add.main = NULL, filt.info = NULL) {
 
   # make additional information for main title
@@ -274,7 +283,11 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
 
   #calculate min-max breaks
   palette.length <- 100
-  colour = colorRampPalette(rev(brewer.pal(n = 11, name = color.blind.pal)))(palette.length)
+  if (!is.null(color.blind.pal)) {
+    colour = colorRampPalette(rev(brewer.pal(n = 11, name = color.blind.pal)))( palette.length )
+  } else {
+    colour = colorRampPalette(c(color.extremes[1], "white", color.extremes[2]))( palette.length )
+  }
   # # length(breaks) == length(paletteLength) + 1
   # # use floor and ceiling to deal with even/odd length pallettelengths
   mat.breaks <- c(seq(min(expr.mat), 0, length.out=ceiling(palette.length/2) + 1),
@@ -282,12 +295,16 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
 
   mat.breaks <- seq(min(expr.mat), max(expr.mat), by = 0.05)
 
-  colour = colorRampPalette(rev(brewer.pal(n = 11, name = color.blind.pal)))(length(mat.breaks) - 1)
+  #colour = colorRampPalette(rev(brewer.pal(n = 11, name = color.blind.pal)))(length(mat.breaks) - 1)
 
   #change the colours of the matrix based on quantile breaks, the default is above
   if (quantile.breaks.fl) {
     mat.breaks = quantile_breaks(as.matrix(expr.mat), n = 11)
-    colour = colorRampPalette(rev(brewer.pal(n = 11, name = color.blind.pal)))(length(mat.breaks) - 1)
+    if (!is.null(color.blind.pal)) {
+      colour = colorRampPalette(rev(brewer.pal(n = 11, name = color.blind.pal)))( length(mat.breaks) - 1 )
+    } else {
+      colour = colorRampPalette(c(color.extremes[1], "white", color.extremes[2]))( length(mat.breaks) - 1 )
+    }
   }
   #cat("mat.breaks")
   #print(mat.breaks)
@@ -333,6 +350,7 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
     #   anno.color[[names(clinical.mat)[i]]] = anno.palette[1:length(anno.vars[[i]])]
     #   names(anno.color[[i]]) = levels(as.factor(clinical.mat[,i]))
     # }
+
     #if biserial flag is TRUE it calculates the biserial correlation based on the first column of the annotation file
     if (!biserial.fl) {
 
@@ -400,14 +418,30 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
   #create the heatmap list and populate it
   heatmap.list = list()
   heatmap.list[["regular"]] = p
-  heatmap.list[["correlogram"]] = correlogram_pheatmap(t_data_heat_map, clinical.mat, scale.fl = scale.fl, signif.stars.fl = signif.stars.fl, main.correl = ifelse(is.null(main), paste("Gene Correlogram", main.plus), main))
+  heatmap.list[["correlogram"]] = correlogram_pheatmap(t_data_heat_map, clinical.mat,
+                                                       scale.fl = scale.fl,
+                                                       signif.stars.fl = signif.stars.fl,
+                                                       color.blind.pal = color.blind.pal,
+                                                       color.extremes = color.extremes,
+                                                       main.correl = ifelse(is.null(main),
+                                                                            paste("Gene Correlogram", main.plus), main))
   cell.new = cell.size + 2
   font.new = font.size + 2
-  heatmap.list[["correlogram.small"]] = correlogram_pheatmap(t_data_heat_map, clinical.mat, scale.fl = scale.fl, signif.stars.fl = signif.stars.fl,
-                                                             main.correl = ifelse(is.null(main), paste("Gene Correlogram", main.plus), main),  cell.size =  cell.new, font.size = font.new)
+  heatmap.list[["correlogram.small"]] = correlogram_pheatmap(t_data_heat_map, clinical.mat,
+                                                             scale.fl = scale.fl,
+                                                             signif.stars.fl = signif.stars.fl,
+                                                             color.blind.pal = color.blind.pal,
+                                                             color.extremes = color.extremes,
+                                                             main.correl = ifelse(is.null(main),
+                                                                                  paste("Gene Correlogram", main.plus), main),  cell.size =  cell.new, font.size = font.new)
 
-  heatmap.list[["correlogram.sample"]] = correlogram_pheatmap(as.matrix(expr.mat), clinical.mat, scale.fl = scale.fl, signif.stars.fl = signif.stars.fl,
-                                                              main.correl = ifelse(is.null(main), paste("Sample Correlogram", main.plus), main), sample.correl = TRUE, cell.size =  cell.new, font.size = font.new)
+  heatmap.list[["correlogram.sample"]] = correlogram_pheatmap(as.matrix(expr.mat), clinical.mat,
+                                                              scale.fl = scale.fl,
+                                                              signif.stars.fl = signif.stars.fl,
+                                                              color.blind.pal = color.blind.pal,
+                                                              color.extremes = color.extremes,
+                                                              main.correl = ifelse(is.null(main),
+                                                                                   paste("Sample Correlogram", main.plus), main), sample.correl = TRUE, cell.size =  cell.new, font.size = font.new)
 
 
   if (biserial.fl) {

@@ -64,6 +64,10 @@
 #' @param heatmap.topn \code{numeric}. Number of top values to be plotted. Defaults to 100.
 #' @param heatmap.split.expr \code{logical}. Should the top up- and top down-regulated genes be displayed at equal numbers (50/50),
 #' if they meet the significance threshold (regardless of the actual significance)? Defaults to \code{FALSE}.
+#' @param color.blind.pal string determining the RColorBrewer color blind palette (default = "PuOr");
+#' other option can be visualized with the following command: brewer.pal.info[brewer.pal.info$colorblind,]
+#' @param color.extremes character vector of length 2 giving the two extremes of a user-defined colour palette
+#' varying from the first hue to the second via white.
 #' @param min.samp \code{integer}. Number of samples in which a feature needs to be covered by at least one read per million.
 #'   Defaults to the size of the smallest group of replicates. See \emph{details}.
 #' @param strict \code{logical}. For miRNA analysis: only keep a miRNA if there are > 5 reads per million in at least half of the samples?
@@ -150,6 +154,8 @@ diffExpr <-
            point.lab = TRUE,
            heatmap.topn = 100,
            heatmap.split.expr = FALSE,
+           color.blind.pal = "PuOr",
+           color.extremes = c("#3182BD", "#E6550D"),
            min.samp = NULL,
            strict = TRUE,
            disp = c("gene", "trend", "common"),
@@ -593,6 +599,8 @@ diffExpr <-
                                              point.lab = point.lab,
                                              heatmap.topn = heatmap.topn,
                                              heatmap.split.expr = heatmap.split.expr,
+                                             color.blind.pal = color.blind.pal,
+                                             color.extremes = color.extremes,
                                              heatmap.main = paste0("limma::", voom.fun),
                                              font.size = label.font.size,
                                              plots = plots,
@@ -633,6 +641,8 @@ diffExpr <-
                                              point.lab = point.lab,
                                              heatmap.topn = heatmap.topn,
                                              heatmap.split.expr = heatmap.split.expr,
+                                             color.blind.pal = color.blind.pal,
+                                             color.extremes = color.extremes,
                                              heatmap.main = paste0("limma::", voom.fun),
                                              font.size = label.font.size,
                                              plots = plots,
@@ -675,6 +685,8 @@ diffExpr <-
                                              point.lab = point.lab,
                                              heatmap.topn = heatmap.topn,
                                              heatmap.split.expr = heatmap.split.expr,
+                                             color.blind.pal = color.blind.pal,
+                                             color.extremes = color.extremes,
                                              heatmap.main = "edgeR GLM",
                                              font.size = label.font.size,
                                              plots = plots,
@@ -715,6 +727,8 @@ diffExpr <-
                                              point.lab = point.lab,
                                              heatmap.topn = heatmap.topn,
                                              heatmap.split.expr = heatmap.split.expr,
+                                             color.blind.pal = color.blind.pal,
+                                             color.extremes = color.extremes,
                                              heatmap.main = "edgeR GLM",
                                              font.size = label.font.size,
                                              plots = plots,

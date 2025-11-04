@@ -149,6 +149,7 @@ correlogram_pheatmap = function(expr.mat, clinical.mat, scale.fl = "none", legen
     #print("mat.breaks.correl")
     #print(mat.breaks.correl)
     anno.color = make_pheatmap_anno_color(clinical.mat = clinical.mat)
+    browser()
 
     if(sample.correl) {
 

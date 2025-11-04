@@ -68,6 +68,8 @@
 #' other option can be visualized with the following command: brewer.pal.info[brewer.pal.info$colorblind,]
 #' @param color.extremes character vector of length 2 giving the two extremes of a user-defined colour palette
 #' varying from the first hue to the second via white.
+#' @param anno.color list of named character vectors giving the colours used in the heatmap annotation bars. See 'annotation_colors'
+#' in [pheatmap()]. Automatically generated if NULL (default).
 #' @param min.samp \code{integer}. Number of samples in which a feature needs to be covered by at least one read per million.
 #'   Defaults to the size of the smallest group of replicates. See \emph{details}.
 #' @param strict \code{logical}. For miRNA analysis: only keep a miRNA if there are > 5 reads per million in at least half of the samples?
@@ -156,6 +158,7 @@ diffExpr <-
            heatmap.split.expr = FALSE,
            color.blind.pal = "PuOr",
            color.extremes = c("#3182BD", "#E6550D"),
+           anno.color = NULL,
            min.samp = NULL,
            strict = TRUE,
            disp = c("gene", "trend", "common"),
@@ -601,6 +604,7 @@ diffExpr <-
                                              heatmap.split.expr = heatmap.split.expr,
                                              color.blind.pal = color.blind.pal,
                                              color.extremes = color.extremes,
+                                             anno.color = anno.color,
                                              heatmap.main = paste0("limma::", voom.fun),
                                              font.size = label.font.size,
                                              plots = plots,
@@ -643,6 +647,7 @@ diffExpr <-
                                              heatmap.split.expr = heatmap.split.expr,
                                              color.blind.pal = color.blind.pal,
                                              color.extremes = color.extremes,
+                                             anno.color = anno.color,
                                              heatmap.main = paste0("limma::", voom.fun),
                                              font.size = label.font.size,
                                              plots = plots,
@@ -687,6 +692,7 @@ diffExpr <-
                                              heatmap.split.expr = heatmap.split.expr,
                                              color.blind.pal = color.blind.pal,
                                              color.extremes = color.extremes,
+                                             anno.color = anno.color,
                                              heatmap.main = "edgeR GLM",
                                              font.size = label.font.size,
                                              plots = plots,
@@ -729,6 +735,7 @@ diffExpr <-
                                              heatmap.split.expr = heatmap.split.expr,
                                              color.blind.pal = color.blind.pal,
                                              color.extremes = color.extremes,
+                                             anno.color = anno.color,
                                              heatmap.main = "edgeR GLM",
                                              font.size = label.font.size,
                                              plots = plots,

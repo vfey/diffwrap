@@ -85,6 +85,8 @@ make_pheatmap_anno_color = function(clinical.mat) {
 #' other option can be visualized with the following command: brewer.pal.info[brewer.pal.info$colorblind,]
 #' @param color.extremes character vector of length 2 giving the two extremes of a user-defined colour palette
 #' varying from the first hue to the second via white.
+#' @param anno.color list of named character vectors giving the colours used in the heatmap annotation bars. See 'annotation_colors'
+#' in [pheatmap()]. Automatically generated if NULL (default).
 #' @param main.correl Character; main title of the Correlogram
 #' @param sample.correl Logical;
 #' @details
@@ -100,6 +102,7 @@ correlogram_pheatmap = function(expr.mat, clinical.mat, scale.fl = "none", legen
                                 signif.stars.fl = FALSE, cell.size = 8,
                                 font.size = 11, color.blind.pal = "PuOr",
                                 color.extremes = c("#3182BD", "#E6550D"),
+                                anno.color = NULL,
                                 main.correl = "Correlogram", sample.correl = FALSE) {
   #calculate the correlation matrix using Hmisc package
 
@@ -148,8 +151,9 @@ correlogram_pheatmap = function(expr.mat, clinical.mat, scale.fl = "none", legen
   else {
     #print("mat.breaks.correl")
     #print(mat.breaks.correl)
-    anno.color = make_pheatmap_anno_color(clinical.mat = clinical.mat)
-    browser()
+    if (is.null(anno.color)) {
+      anno.color = make_pheatmap_anno_color(clinical.mat = clinical.mat)
+    }
 
     if(sample.correl) {
 
@@ -163,7 +167,7 @@ correlogram_pheatmap = function(expr.mat, clinical.mat, scale.fl = "none", legen
                                  cellwidth = cell.size, cellheight = cell.size, fontsize = font.size,
                                  fontsize_row = cell.size, fontsize_col = cell.size, silent = TRUE, main = main.correl,
                                  annotation_color = anno.color,
-                                 annotation = clinical.mat, annotation_row = clinical.mat)
+                                 annotation_col = clinical.mat, annotation_row = clinical.mat)
 
     } else{
       p.cor = pheatmap::pheatmap(cor.mat,
@@ -185,7 +189,7 @@ correlogram_pheatmap = function(expr.mat, clinical.mat, scale.fl = "none", legen
     #                        cluster_rows = row.clust, cluster_cols = col.clust,
     #                        legend = legend.fl, border_color = "white",
     #                        scale = scale.fl, color = colour,annotation_color = anno.color,
-    #                        annotation = clinical.mat, breaks = breaks.hm,
+    #                        annotation_col = clinical.mat, breaks = breaks.hm,
     #                        cellwidth = cell.size, cellheight = cell.size, fontsize = font.size,
     #                        fontsize_row = cell.size, fontsize_col = cell.size, silent = TRUE, main = "Heatmap of genes over samples")
   }
@@ -249,6 +253,8 @@ correlogram_pheatmap = function(expr.mat, clinical.mat, scale.fl = "none", legen
 #' @param color.blind.pal string determining the RColorBrewer color blind palette (default = "PuOr");
 #' @param color.extremes character vector of length 2 giving the two extremes of a user-defined colour palette
 #' varying from the first hue to the second via white.
+#' @param anno.color list of named character vectors giving the colours used in the heatmap annotation bars. See 'annotation_colors'
+#' in [pheatmap()]. Automatically generated if NULL (default).
 #' @param main \code{character}. Main plot title.
 #' @param add.main \code{character}. Optional text added in parenthesis to the plot title.
 #' @param filt.info \code{character}. Optional information on the filtering strategy added in parenthesis to the plot title.
@@ -266,6 +272,7 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
                           signif.stars.fl = FALSE, cell.size =8,
                           font.size = 10, color.blind.pal = "PuOr",
                           color.extremes = c("#3182BD", "#E6550D"),
+                          anno.color = NULL,
                           main = NULL, add.main = NULL, filt.info = NULL) {
 
   # make additional information for main title
@@ -332,7 +339,9 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
 
   }
   else {
-    anno.color = make_pheatmap_anno_color(clinical.mat = clinical.mat)
+    if (is.null(anno.color)) {
+      anno.color = make_pheatmap_anno_color(clinical.mat = clinical.mat)
+    }
 
     # #create the annotation colour list
     # anno.vars = list()
@@ -360,7 +369,7 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
                              cluster_rows = row.clust, cluster_cols = col.clust,
                              legend = legend.fl, border_color = "white",
                              scale = scale.fl, color = colour, annotation_color = anno.color,
-                             annotation = clinical.mat, breaks = breaks.hm,
+                             annotation_col = clinical.mat, breaks = breaks.hm,
                              cellwidth = cell.size, cellheight = cell.size, fontsize = font.size,
                              fontsize_row = cell.size, fontsize_col = cell.size, silent = TRUE,
                              main = ifelse(is.null(main), paste("Heatmap of genes over samples", main.plus), main))
@@ -373,7 +382,7 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
                              cluster_rows = row.clust, cluster_cols = col.clust,
                              legend = legend.fl, border_color = "white",
                              scale = scale.fl, color = colour, annotation_color = anno.color,
-                             annotation = clinical.mat, breaks = breaks.hm,
+                             annotation_col = clinical.mat, breaks = breaks.hm,
                              cellwidth = cell.size, cellheight = cell.size, fontsize = font.size,
                              fontsize_row = cell.size, fontsize_col = cell.size, silent = TRUE,
                              main = ifelse(is.null(main), paste("Heatmap of genes over samples", main.plus), main))
@@ -406,7 +415,7 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
                                       cluster_rows = row.clust, cluster_cols = col.clust,
                                       legend = legend.fl, border_color = "white",
                                       scale = scale.fl, color = colour, breaks = breaks.hm, annotation_color = anno.color,
-                                      annotation = clinical.mat, annotation_row = anno.correl,
+                                      annotation_col = clinical.mat, annotation_row = anno.correl,
                                       cellwidth = cell.size, cellheight = cell.size, fontsize = font.size,
                                       fontsize_row = cell.size, fontsize_col = cell.size, silent = TRUE,
                                       main = main)
@@ -424,6 +433,7 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
                                                        signif.stars.fl = signif.stars.fl,
                                                        color.blind.pal = color.blind.pal,
                                                        color.extremes = color.extremes,
+                                                       anno.color = anno.color,
                                                        main.correl = ifelse(is.null(main),
                                                                             paste("Gene Correlogram", main.plus), main))
   cell.new = cell.size + 2
@@ -433,6 +443,7 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
                                                              signif.stars.fl = signif.stars.fl,
                                                              color.blind.pal = color.blind.pal,
                                                              color.extremes = color.extremes,
+                                                             anno.color = anno.color,
                                                              main.correl = ifelse(is.null(main),
                                                                                   paste("Gene Correlogram", main.plus), main),  cell.size =  cell.new, font.size = font.new)
 
@@ -441,6 +452,7 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
                                                               signif.stars.fl = signif.stars.fl,
                                                               color.blind.pal = color.blind.pal,
                                                               color.extremes = color.extremes,
+                                                              anno.color = anno.color,
                                                               main.correl = ifelse(is.null(main),
                                                                                    paste("Sample Correlogram", main.plus), main), sample.correl = TRUE, cell.size =  cell.new, font.size = font.new)
 

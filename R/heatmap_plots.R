@@ -33,6 +33,7 @@
 #' varying from the first hue to the second via white.
 #' @param anno.color list of named character vectors giving the colours used in the heatmap annotation bars. See 'annotation_colors'
 #' in [pheatmap()]. Automatically generated if NULL (default).
+#' @param anno.name character string used as the column annotation legend title. If 'anno.color' is not NULL and of length 1 the slot name will be used if existing.
 #' @param p.thr \code{numeric}. Plotted values with a P-Value below this threshold will be labelled in the P-Value plot.
 #' @param fdr.thr \code{numeric}. Plotted values with a FDR below this threshold will be labelled in the FDR plot.
 #' @param logfc.thr \code{numeric}. FC threshold on the log2-scale. Only used if 'split.expr' is TRUE. Values above this
@@ -47,8 +48,8 @@ pheatmap_plots <-
     function(d3, id, sym.col="gene_symbol", samp.info = samp.info, samples,
              groups, sample.plot.names, main=NULL, add.main=NULL,
              color.blind.pal = "PuOr", color.extremes = c("#3182BD", "#E6550D"),
-             anno.color = NULL, p.thr=0.05, fdr.thr=0.05, logfc.thr = 1,
-             topn = 100, split.expr = FALSE)
+             anno.color = NULL, anno.name = "Sample Class", p.thr=0.05, fdr.thr=0.05,
+             logfc.thr = 1, topn = 100, split.expr = FALSE)
     {
       # elim row with duplicate sym.col entries, set rownames to gene_symbol names
 
@@ -78,9 +79,12 @@ pheatmap_plots <-
       dat.sign.fdr = dat.sign.fdr[samp.names]
 
       #get the heatmap column annotation
+      if (!is.null(anno.color) && is.list(anno.color)) {
+        if (length(anno.color) == 1 && !is.null(names(anno.color))) anno.name <- names(anno.color)
+      }
       samp.anno = as.data.frame(groups)
       rownames(samp.anno) = samp.names
-      colnames(samp.anno)[1] = "Sample Class"
+      colnames(samp.anno)[1] = anno.name
 
       #if pretty names for the plots are available change the names to the pretty names
       if (!is.null(sample.plot.names)) {

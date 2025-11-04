@@ -242,6 +242,7 @@ diffr_expr_generate_cleaned_de_table_output <-
 #' varying from the first hue to the second via white.
 #' @param anno.color list of named character vectors giving the colours used in the heatmap annotation bars. See 'annotation_colors'
 #' in [pheatmap()]. Automatically generated if NULL (default).
+#' @param anno.name character string used as the column annotation legend title. If 'anno.color' is not NULL and of length 1 the slot name will be used if existing.
 #' @param heatmap.main \code{character}. Additional information printed in the heatmap title.
 #' @param font.size \code{numeric}. Size of point labels in M-A plots.
 #' @param plots Logical; should plots be generated?
@@ -261,7 +262,7 @@ diff_expr_extract_contrasts <-
            biom.force.ensg = FALSE, biom.cache = NULL, use.cache = FALSE, sym.col="hgnc_symbol",
            rm.dups=FALSE, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE, heatmap.topn = 100,
            heatmap.split.expr = FALSE, color.blind.pal = "PuOr", color.extremes = c("#3182BD", "#E6550D"),
-           anno.color = NULL, heatmap.main = NULL, font.size=5, plots=TRUE, lists=TRUE, filtered.lists = TRUE,
+           anno.color = NULL, anno.name = "Sample Class", heatmap.main = NULL, font.size=5, plots=TRUE, lists=TRUE, filtered.lists = TRUE,
            samp.info = NULL, samples = NULL, groups = NULL, sample.plot.names = NULL)
   {
     # initial checks
@@ -407,6 +408,7 @@ diff_expr_extract_contrasts <-
                                                         color.blind.pal = color.blind.pal,
                                                         color.extremes = color.extremes,
                                                         anno.color = anno.color,
+                                                        anno.name = anno.name,
                                                         main=NULL,
                                                         add.main = heatmap.main,
                                                         p.thr=0.05,
@@ -427,6 +429,7 @@ diff_expr_extract_contrasts <-
                                                         color.blind.pal = color.blind.pal,
                                                         color.extremes = color.extremes,
                                                         anno.color = anno.color,
+                                                        anno.name = anno.name,
                                                         main=NULL,
                                                         add.main = heatmap.main,
                                                         p.thr=0.05,

@@ -22,6 +22,9 @@ get_hm_breaks <- function(
   if (is.data.frame(expr.mat)) {
     expr.mat <- as.matrix(expr.mat)
   }
+  if (scale.fl != "none") {
+    expr.mat <- scale(expr.mat)
+  }
 
   #change the colours of the matrix based on quantile breaks
   if (quantile.breaks.fl) {
@@ -29,14 +32,10 @@ get_hm_breaks <- function(
   } else {
     #calculate min-max breaks
     if (!is.null(palette.length)) {
-      if (scale.fl == "none") {
-        # # length(breaks) == palette.length + 1
-        # # use floor and ceiling to deal with even/odd palette lengths
-        breaks <- c(seq(min(expr.mat), 0, length.out=ceiling(palette.length/2) + 1),
-                    seq(max(expr.mat)/palette.length, max(expr.mat), length.out=floor(palette.length/2)))
-      } else {
-        breaks <- seq(1, palette.length, by = 0.05)
-      }
+      # # length(breaks) == palette.length + 1
+      # # use floor and ceiling to deal with even/odd palette lengths
+      breaks <- c(seq(min(expr.mat), 0, length.out=ceiling(palette.length/2) + 1),
+                  seq(max(expr.mat)/palette.length, max(expr.mat), length.out=floor(palette.length/2)))
     } else {
       # calculate fine-grained breaks without using the palette length (this is the default when called in diffr_pheatmap()
       # and corresponds to breaks=NA in get_hm_colors())
@@ -397,10 +396,10 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
   if (is.null(palette.length) && !quantile.breaks.fl) {
     breaks.hm <- NA
   }
-  # if quantile breaks are computed scaling is disabled as breaks are computed based on the unscaled expression matrix
-  if (quantile.breaks.fl) {
-    scale.fl <- "none"
-  }
+  # # if quantile breaks are computed scaling is disabled as breaks are computed based on the unscaled expression matrix
+  # if (quantile.breaks.fl) {
+  #   scale.fl <- "none"
+  # }
   #for the non-scaled case, use of computed breaks is enforced
   if (scale.fl == "none") {
     breaks.hm = mat.breaks

@@ -26,7 +26,7 @@ correlogram_pheatmap(
 
 \item{clinical.mat}{matrix with clinical annotation values in (clinical category, samples) format}
 
-\item{scale.fl}{character indicating if values should be centered and scaled in either
+\item{scale.fl}{character indicating if values should be centred and scaled in either
 the row direction or the column direction, or none (values %in%
 ("row","column","none"), default = none)}
 

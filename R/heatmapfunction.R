@@ -1,7 +1,9 @@
 #' Function to define breaks to be used for changing the palette of the heatmap.
 #' @param expr.mat differential gene expression matrix or data frame in (genes, samples) format
+#' @param scale.fl character indicating if values should be centred and scaled in either
+#' the row direction or the column direction, or none (values %in%
+#' ("row","column","none"), default = none)
 #' @param palette.length integer setting the desired length of the colour palette to be used in the heatmap
-#' @param palette.length integer setting the length of the colour palette
 #' @param quantile.breaks.fl boolean values determining if quantile breaks are used to change
 #' the colors of the heatmap, otherwise min-max breaks are used by default
 #' @param n desired length of the numeric vector of probabilities (see ?quantile); defaults to
@@ -11,6 +13,7 @@
 #' @seealso [quantile()]
 get_hm_breaks <- function(
     expr.mat,
+    scale.fl = "row",
     palette.length = 100,
     quantile.breaks.fl = FALSE,
     n = 11)
@@ -26,10 +29,14 @@ get_hm_breaks <- function(
   } else {
     #calculate min-max breaks
     if (!is.null(palette.length)) {
-      # # length(breaks) == palette.length + 1
-      # # use floor and ceiling to deal with even/odd palette lengths
-      breaks <- c(seq(min(expr.mat), 0, length.out=ceiling(palette.length/2) + 1),
-                      seq(max(expr.mat)/palette.length, max(expr.mat), length.out=floor(palette.length/2)))
+      if (scale.fl == "none") {
+        # # length(breaks) == palette.length + 1
+        # # use floor and ceiling to deal with even/odd palette lengths
+        breaks <- c(seq(min(expr.mat), 0, length.out=ceiling(palette.length/2) + 1),
+                    seq(max(expr.mat)/palette.length, max(expr.mat), length.out=floor(palette.length/2)))
+      } else {
+        breaks <- seq(1, palette.length, by = 0.05)
+      }
     } else {
       # calculate fine-grained breaks without using the palette length (this is the default when called in diffr_pheatmap()
       # and corresponds to breaks=NA in get_hm_colors())
@@ -148,7 +155,7 @@ make_pheatmap_anno_color = function(clinical.mat) {
 #' Function to create a correlogram pheatmap, i.e., a plot to check randomness in the data set.
 #' @param expr.mat differential expression matrix in  (genes, samples) format
 #' @param clinical.mat matrix with clinical annotation values in (clinical category, samples) format
-#' @param scale.fl character indicating if values should be centered and scaled in either
+#' @param scale.fl character indicating if values should be centred and scaled in either
 #' the row direction or the column direction, or none (values %in%
 #' ("row","column","none"), default = none)
 #' @param legend.fl logical to determine if legend should be drawn or not (default = TRUE)
@@ -315,7 +322,7 @@ correlogram_pheatmap = function(expr.mat, clinical.mat, scale.fl = "none", legen
 #' Function to create a heatmap from differential gene expression values
 #' @param expr.mat differential expression matrix in  (genes, samples) format
 #' @param clinical.mat matrix with clinical annotation values in (clinical category, samples) format
-#' @param scale.fl character indicating if values should be centered and scaled in either
+#' @param scale.fl character indicating if values should be centred and scaled in either
 #' the row direction or the column direction, or none (values %in%
 #' ("row","column","none"), default = none)
 #' @param legend.fl logical to determine if legend should be drawn or not (default = TRUE)

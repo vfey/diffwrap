@@ -6,6 +6,7 @@
 \usage{
 get_hm_breaks(
   expr.mat,
+  scale.fl = "row",
   palette.length = 100,
   quantile.breaks.fl = FALSE,
   n = 11
@@ -14,7 +15,11 @@ get_hm_breaks(
 \arguments{
 \item{expr.mat}{differential gene expression matrix or data frame in (genes, samples) format}
 
-\item{palette.length}{integer setting the length of the colour palette}
+\item{scale.fl}{character indicating if values should be centred and scaled in either
+the row direction or the column direction, or none (values %in%
+("row","column","none"), default = none)}
+
+\item{palette.length}{integer setting the desired length of the colour palette to be used in the heatmap}
 
 \item{quantile.breaks.fl}{boolean values determining if quantile breaks are used to change
 the colors of the heatmap, otherwise min-max breaks are used by default}

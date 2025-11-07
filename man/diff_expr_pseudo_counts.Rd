@@ -7,21 +7,23 @@
 diff_expr_pseudo_counts(
   d,
   design,
-  pairs,
+  pairs = "pairs",
   disp = "tagwise.dispersion",
   do.cpm = TRUE
 )
 }
 \arguments{
-\item{d}{Passed to \code{edgeR} functions: matrix of counts, or a DGEList object, or a SummarizedExperiment object.}
+\item{d}{Passed to \code{edgeR} functions: matrix of counts or a DGEList object.}
 
 \item{design}{numeric design matrix}
 
-\item{pairs}{Factor of identifiers specifying paired samples for paired or other block designs, or batch effects.}
+\item{pairs}{\code{character}. Name of column with identifiers specifying paired samples for paired or other block designs, or batch effects.
+Defaults to "pairs" as this is the prefix added by 'diff_expr_make_design()'. When used outside the package's scope the user
+must supply the correct prefix.}
 
-\item{disp}{Character; one of "tagwise.dispersion", "trended.dispersion", "bin.dispersion"}
+\item{disp}{\code{character}. one of "tagwise.dispersion", "trended.dispersion", "bin.dispersion"}
 
-\item{do.cpm}{Logical; should the pseudo counts be transformed to CPMs?}
+\item{do.cpm}{\code{logical}. should the pseudo counts be transformed to CPMs?}
 }
 \description{
 Function to calculate pseudo counts representing batch-corrected normalised but untransformed values

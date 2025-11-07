@@ -4,10 +4,19 @@
 \alias{diff_expr_make_contrasts}
 \title{Function to make contrast matrix}
 \usage{
-diff_expr_make_contrasts(design, pairs = NULL, block = FALSE, contrasts = NULL)
+diff_expr_make_contrasts(
+  design,
+  groups,
+  pairs = NULL,
+  block = FALSE,
+  contrasts = NULL,
+  user_design = FALSE
+)
 }
 \arguments{
 \item{design}{Numeric design matrix.}
+
+\item{groups}{\code{character}. Vector of group names.}
 
 \item{pairs}{\code{character}. Name of the column in 'samp.info' containing paired sample information.}
 
@@ -15,6 +24,8 @@ diff_expr_make_contrasts(design, pairs = NULL, block = FALSE, contrasts = NULL)
 
 \item{contrasts}{Character vector specifying group name pairs to be compared in the format expected by
 \code{makeContrasts()}, i.e., "group2-group1".}
+
+\item{user_design}{\code{logical}. Has the user provided a design matrix? This impacts the choosing of column names used for automatic contrasting.}
 }
 \description{
 Function to make contrast matrix

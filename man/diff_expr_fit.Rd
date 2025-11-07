@@ -32,7 +32,7 @@ or a DGEList object.}
 
 \item{do.voom}{Logical; should data be "voomed"?}
 
-\item{voom.fun}{Voom function: one of "voom", "voomWithQualityWeights".}
+\item{voom.fun}{Voom function: one of "voom", "voomWithQualityWeights" or voomLmFit.}
 
 \item{norm.method}{Character; one of "quantile", "tmm".}
 

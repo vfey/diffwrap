@@ -14,6 +14,12 @@ pheatmap_plots(
   sample.plot.names,
   main = NULL,
   add.main = NULL,
+  color.blind.pal = "PuOr",
+  n.pal.cols = 11,
+  color.extremes = c("#3182BD", "#E6550D"),
+  palette.length = NULL,
+  anno.color = NULL,
+  anno.name = "Sample Class",
   p.thr = 0.05,
   fdr.thr = 0.05,
   logfc.thr = 1,
@@ -42,6 +48,22 @@ Need to be in the same order as sample column names!}
 labelling according to and FDR threshold.)}
 
 \item{add.main}{\code{character}. Additional information printed in the heatmap title.}
+
+\item{color.blind.pal}{string determining the RColorBrewer color blind palette (default = "PuOr");
+other option can be visualized with the following command: brewer.pal.info[brewer.pal.info$colorblind,]}
+
+\item{n.pal.cols}{desired length of the number of different colours in 'color.blind.pal'. Will also be used
+as length of the numeric vector of probabilities in 'quantile_breaks()' (see ?quantile); defaults to 11}
+
+\item{color.extremes}{character vector of length 2 giving the two extremes of a user-defined colour palette
+varying from the first hue to the second via white.}
+
+\item{palette.length}{integer setting the desired length of the colour palette to be used in the heatmap}
+
+\item{anno.color}{list of named character vectors giving the colours used in the heatmap annotation bars. See 'annotation_colors'
+in [pheatmap()]. Automatically generated if NULL (default).}
+
+\item{anno.name}{character string used as the column annotation legend title. If 'anno.color' is not NULL and of length 1 the slot name will be used if existing.}
 
 \item{p.thr}{\code{numeric}. Plotted values with a P-Value below this threshold will be labelled in the P-Value plot.}
 

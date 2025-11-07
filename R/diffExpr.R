@@ -66,7 +66,7 @@
 #' if they meet the significance threshold (regardless of the actual significance)? Defaults to \code{FALSE}.
 #' @param color.blind.pal string determining the RColorBrewer color blind palette (default = "PuOr");
 #' other option can be visualized with the following command: brewer.pal.info[brewer.pal.info$colorblind,]
-#' @param n desired length of the number of different colours in 'color.blind.pal'. Will also be used
+#' @param n.pal.cols desired length of the number of different colours in 'color.blind.pal'. Will also be used
 #' as length of the numeric vector of probabilities in 'quantile_breaks()' (see ?quantile); defaults to 11
 #' @param color.extremes character vector of length 2 giving the two extremes of a user-defined colour palette
 #' varying from the first hue to the second via white.
@@ -161,7 +161,7 @@ diffExpr <-
            heatmap.topn = 100,
            heatmap.split.expr = FALSE,
            color.blind.pal = "PuOr",
-           n = 11,
+           n.pal.cols = 11,
            color.extremes = c("#3182BD", "#E6550D"),
            palette.length = NULL,
            anno.color = NULL,
@@ -610,7 +610,7 @@ diffExpr <-
                                              heatmap.topn = heatmap.topn,
                                              heatmap.split.expr = heatmap.split.expr,
                                              color.blind.pal = color.blind.pal,
-                                             n = n,
+                                             n.pal.cols = n.pal.cols,
                                              color.extremes = color.extremes,
                                              palette.length = palette.length,
                                              anno.color = anno.color,
@@ -656,7 +656,7 @@ diffExpr <-
                                              heatmap.topn = heatmap.topn,
                                              heatmap.split.expr = heatmap.split.expr,
                                              color.blind.pal = color.blind.pal,
-                                             n = n,
+                                             n.pal.cols = n.pal.cols,
                                              color.extremes = color.extremes,
                                              palette.length = palette.length,
                                              anno.color = anno.color,
@@ -704,7 +704,7 @@ diffExpr <-
                                              heatmap.topn = heatmap.topn,
                                              heatmap.split.expr = heatmap.split.expr,
                                              color.blind.pal = color.blind.pal,
-                                             n = n,
+                                             n.pal.cols = n.pal.cols,
                                              color.extremes = color.extremes,
                                              palette.length = palette.length,
                                              anno.color = anno.color,
@@ -750,7 +750,7 @@ diffExpr <-
                                              heatmap.topn = heatmap.topn,
                                              heatmap.split.expr = heatmap.split.expr,
                                              color.blind.pal = color.blind.pal,
-                                             n = n,
+                                             n.pal.cols = n.pal.cols,
                                              color.extremes = color.extremes,
                                              palette.length = palette.length,
                                              anno.color = anno.color,

@@ -29,8 +29,11 @@
 #' @param add.main \code{character}. Additional information printed in the heatmap title.
 #' @param color.blind.pal string determining the RColorBrewer color blind palette (default = "PuOr");
 #' other option can be visualized with the following command: brewer.pal.info[brewer.pal.info$colorblind,]
+#' @param n.pal.cols desired length of the number of different colours in 'color.blind.pal'. Will also be used
+#' as length of the numeric vector of probabilities in 'quantile_breaks()' (see ?quantile); defaults to 11
 #' @param color.extremes character vector of length 2 giving the two extremes of a user-defined colour palette
 #' varying from the first hue to the second via white.
+#' @param palette.length integer setting the desired length of the colour palette to be used in the heatmap
 #' @param anno.color list of named character vectors giving the colours used in the heatmap annotation bars. See 'annotation_colors'
 #' in [pheatmap()]. Automatically generated if NULL (default).
 #' @param anno.name character string used as the column annotation legend title. If 'anno.color' is not NULL and of length 1 the slot name will be used if existing.
@@ -47,9 +50,9 @@
 pheatmap_plots <-
     function(d3, id, sym.col="gene_symbol", samp.info = samp.info, samples,
              groups, sample.plot.names, main=NULL, add.main=NULL,
-             color.blind.pal = "PuOr", color.extremes = c("#3182BD", "#E6550D"),
-             anno.color = NULL, anno.name = "Sample Class", p.thr=0.05, fdr.thr=0.05,
-             logfc.thr = 1, topn = 100, split.expr = FALSE)
+             color.blind.pal = "PuOr", n.pal.cols = 11, color.extremes = c("#3182BD", "#E6550D"),
+             palette.length = NULL, anno.color = NULL, anno.name = "Sample Class",
+             p.thr=0.05, fdr.thr=0.05, logfc.thr = 1, topn = 100, split.expr = FALSE)
     {
       # elim row with duplicate sym.col entries, set rownames to gene_symbol names
 
@@ -134,39 +137,51 @@ pheatmap_plots <-
         cat("done\n")
 
         fdr_hm_list[["row"]] = diffr_pheatmap(dat.sign.fdr, clinical.mat = samp.anno, scale.fl = "row",
-                                              color.blind.pal = color.blind.pal, color.extremes = color.extremes,
+                                              color.blind.pal = color.blind.pal, n.pal.cols = n.pal.cols,
+                                              color.extremes = color.extremes, palette.length = palette.length,
                                               anno.color = anno.color, main = main, add.main = add.main,
                                               filt.info = "FDR-filtered")
         if (split.expr) fdr_hm_list[["rowsplit"]] = diffr_pheatmap(dat.sign.fdr.split, clinical.mat = samp.anno,
                                                                    scale.fl = "row", color.blind.pal = color.blind.pal,
-                                                                   color.extremes = color.extremes, anno.color = anno.color,
-                                                                   main = main, add.main = add.main,
-                                                                   filt.info = paste("FDR-filtered, abs(logFC) >= 1,", topn %/% 2, "up- ,", topn-(topn %/% 2), "down-regulated genes"))
+                                                                   n.pal.cols = n.pal.cols, color.extremes = color.extremes,
+                                                                   palette.length = palette.length,
+                                                                   anno.color = anno.color, main = main, add.main = add.main,
+                                                                   filt.info = paste("FDR-filtered, abs(logFC) >= 1,",
+                                                                                     topn %/% 2, "up- ,", topn-(topn %/% 2), "down-regulated genes"))
         fdr_hm_list[["none"]] = diffr_pheatmap(dat.sign.fdr, clinical.mat = samp.anno, scale.fl = "none",
-                                               color.blind.pal = color.blind.pal, color.extremes = color.extremes,
-                                               anno.color = anno.color, main = main, add.main = add.main, filt.info = "FDR-filtered")
+                                               color.blind.pal = color.blind.pal, n.pal.cols = n.pal.cols,
+                                               color.extremes = color.extremes, palette.length = palette.length,
+                                               anno.color = anno.color, main = main, add.main = add.main,
+                                               filt.info = "FDR-filtered")
         if (split.expr) fdr_hm_list[["nonesplit"]] = diffr_pheatmap(dat.sign.fdr.split, clinical.mat = samp.anno,
-                                                                    scale.fl = "none", color.blind.pal = color.blind.pal,
-                                                                    color.extremes = color.extremes, anno.color = anno.color,
-                                                                    main = main, add.main = add.main,
-                                                                    filt.info = paste("FDR-filtered, abs(logFC) >= 1,", topn %/% 2, "up- ,", topn-(topn %/% 2), "down-regulated genes"))
+                                                                    scale.fl = "none", color.blind.pal = color.blind.pal, n.pal.cols = n.pal.cols,
+                                                                    color.extremes = color.extremes, palette.length = palette.length,
+                                                                    anno.color = anno.color, main = main, add.main = add.main,
+                                                                    filt.info = paste("FDR-filtered, abs(logFC) >= 1,",
+                                                                                      topn %/% 2, "up- ,", topn-(topn %/% 2), "down-regulated genes"))
         fdr_hm_list[["rowsmall"]] = diffr_pheatmap(dat.sign.fdr.small, clinical.mat = samp.anno,
-                                                   color.blind.pal = color.blind.pal, color.extremes = color.extremes,
-                                                   anno.color = anno.color, main = main, add.main = add.main, filt.info = "FDR-filtered")
+                                                   color.blind.pal = color.blind.pal, n.pal.cols = n.pal.cols,
+                                                   color.extremes = color.extremes, palette.length = palette.length,
+                                                   anno.color = anno.color, main = main, add.main = add.main,
+                                                   filt.info = "FDR-filtered")
         if (split.expr) fdr_hm_list[["rowsmallsplit"]] = diffr_pheatmap(dat.sign.fdr.small.split, clinical.mat = samp.anno,
-                                                                        color.blind.pal = color.blind.pal,
-                                                                        color.extremes = color.extremes, anno.color = anno.color,
-                                                                        main = main, add.main = add.main,
-                                                                        filt.info = paste("FDR-filtered, abs(logFC) >= 1,", topn %/% 2, "up- ,", topn-(topn %/% 2), "down-regulated genes"))
+                                                                        color.blind.pal = color.blind.pal, n.pal.cols = n.pal.cols,
+                                                                        color.extremes = color.extremes, palette.length = palette.length,
+                                                                        anno.color = anno.color, main = main, add.main = add.main,
+                                                                        filt.info = paste("FDR-filtered, abs(logFC) >= 1,",
+                                                                                          topn %/% 2, "up- ,", topn-(topn %/% 2), "down-regulated genes"))
         fdr_hm_list[["nonesmall"]] = diffr_pheatmap(dat.sign.fdr.small, clinical.mat = samp.anno,
-                                                    color.blind.pal = color.blind.pal, color.extremes = color.extremes,
-                                                    anno.color = anno.color, main = main, add.main = add.main, filt.info = "FDR-filtered")
+                                                    color.blind.pal = color.blind.pal, n.pal.cols = n.pal.cols,
+                                                    color.extremes = color.extremes, palette.length = palette.length,
+                                                    anno.color = anno.color, main = main, add.main = add.main,
+                                                    filt.info = "FDR-filtered")
         if (split.expr) fdr_hm_list[["nonesmallsplit"]] = diffr_pheatmap(dat.sign.fdr.small.split,
                                                                          clinical.mat = samp.anno,
-                                                                         color.blind.pal = color.blind.pal,
-                                                                         color.extremes = color.extremes, anno.color = anno.color,
-                                                                         main = main, add.main = add.main,
-                                                                         filt.info = paste("FDR-filtered, abs(logFC) >= 1,", topn %/% 2, "up- ,", topn-(topn %/% 2), "down-regulated genes"))
+                                                                         color.blind.pal = color.blind.pal, n.pal.cols = n.pal.cols,
+                                                                         color.extremes = color.extremes, palette.length = palette.length,
+                                                                         anno.color = anno.color, main = main, add.main = add.main,
+                                                                         filt.info = paste("FDR-filtered, abs(logFC) >= 1,",
+                                                                                           topn %/% 2, "up- ,", topn-(topn %/% 2), "down-regulated genes"))
         cat(" Pheatmap objects for FDR done\n")
       } else {
         print("There are 0 entries with significant adjusted P-values in the differential expression data frame")
@@ -183,37 +198,49 @@ pheatmap_plots <-
           cat("done\n")
 
           pv_hm_list[["row"]] = diffr_pheatmap(dat.sign.pv, clinical.mat = samp.anno, scale.fl = "row",
-                                               color.blind.pal = color.blind.pal, color.extremes = color.extremes,
-                                               anno.color = anno.color, main = main, add.main = add.main, filt.info = "P-value-filtered")
+                                               color.blind.pal = color.blind.pal, n.pal.cols = n.pal.cols,
+                                               color.extremes = color.extremes, palette.length = palette.length,
+                                               anno.color = anno.color, main = main, add.main = add.main,
+                                               filt.info = "P-value-filtered")
           if (split.expr) pv_hm_list[["rowsplit"]] = diffr_pheatmap(dat.sign.pv.split, clinical.mat = samp.anno,
                                                                     scale.fl = "row", color.blind.pal = color.blind.pal,
-                                                                    color.extremes = color.extremes, anno.color = anno.color,
+                                                                    n.pal.cols = n.pal.cols, color.extremes = color.extremes,
+                                                                    palette.length = palette.length, anno.color = anno.color,
                                                                     main = main, add.main = add.main,
-                                                                    filt.info = paste("P-value-filtered, abs(logFC) >= 1,", topn %/% 2, "up- ,", topn-(topn %/% 2), "down-regulated genes"))
+                                                                    filt.info = paste("P-value-filtered, abs(logFC) >= 1,",
+                                                                                      topn %/% 2, "up- ,", topn-(topn %/% 2), "down-regulated genes"))
           pv_hm_list[["none"]] = diffr_pheatmap(dat.sign.pv, clinical.mat = samp.anno, scale.fl = "none",
-                                                color.blind.pal = color.blind.pal, color.extremes = color.extremes,
-                                                anno.color = anno.color, main = main, add.main = add.main, filt.info = "P-value-filtered")
+                                                color.blind.pal = color.blind.pal, n.pal.cols = n.pal.cols,
+                                                color.extremes = color.extremes, palette.length = palette.length,
+                                                anno.color = anno.color, main = main, add.main = add.main,
+                                                filt.info = "P-value-filtered")
           if (split.expr) pv_hm_list[["nonesplit"]] = diffr_pheatmap(dat.sign.pv.split, clinical.mat = samp.anno,
                                                                      scale.fl = "none", color.blind.pal = color.blind.pal,
-                                                                     color.extremes = color.extremes, anno.color = anno.color,
+                                                                     n.pal.cols = n.pal.cols, color.extremes = color.extremes,
+                                                                     palette.length = palette.length, anno.color = anno.color,
                                                                      main = main, add.main = add.main,
-                                                                     filt.info = paste("P-value-filtered, abs(logFC) >= 1,", topn %/% 2, "up- ,", topn-(topn %/% 2), "down-regulated genes"))
+                                                                     filt.info = paste("P-value-filtered, abs(logFC) >= 1,",
+                                                                                       topn %/% 2, "up- ,", topn-(topn %/% 2), "down-regulated genes"))
           pv_hm_list[["rowsmall"]] = diffr_pheatmap(dat.sign.pv.small, clinical.mat = samp.anno, scale.fl = "row",
-                                                    color.blind.pal = color.blind.pal, color.extremes = color.extremes,
+                                                    color.blind.pal = color.blind.pal, n.pal.cols = n.pal.cols,
+                                                    color.extremes = color.extremes, palette.length = palette.length,
                                                     anno.color = anno.color, main = main, add.main = add.main,
                                                     filt.info = "P-value-filtered")
           if (split.expr) pv_hm_list[["rowsmallsplit"]] = diffr_pheatmap(dat.sign.pv.small.split, clinical.mat = samp.anno,
                                                                          scale.fl = "row", color.blind.pal = color.blind.pal,
-                                                                         color.extremes = color.extremes, anno.color = anno.color,
+                                                                         n.pal.cols = n.pal.cols, color.extremes = color.extremes,
+                                                                         palette.length = palette.length, anno.color = anno.color,
                                                                          main = main, add.main = add.main,
                                                                          filt.info = paste("P-value-filtered, abs(logFC) >= 1,", topn %/% 2, "up- ,", topn-(topn %/% 2), "down-regulated genes"))
           pv_hm_list[["nonesmall"]] = diffr_pheatmap(dat.sign.pv.small, clinical.mat = samp.anno, scale.fl = "none",
-                                                     color.blind.pal = color.blind.pal, color.extremes = color.extremes,
+                                                     color.blind.pal = color.blind.pal, n.pal.cols = n.pal.cols,
+                                                     color.extremes = color.extremes, palette.length = palette.length,
                                                      anno.color = anno.color, main = main, add.main = add.main,
                                                      filt.info = "P-value-filtered")
           if (split.expr) pv_hm_list[["nonesmallsplit"]] = diffr_pheatmap(dat.sign.pv.small.split, clinical.mat = samp.anno,
                                                                           scale.fl = "none", color.blind.pal = color.blind.pal,
-                                                                          color.extremes = color.extremes, anno.color = anno.color,
+                                                                          n.pal.cols = n.pal.cols, color.extremes = color.extremes,
+                                                                          palette.length = palette.length, anno.color = anno.color,
                                                                           main = main, add.main = add.main,
                                                                           filt.info = paste("P-value-filtered, abs(logFC) >= 1,", topn %/% 2, "up- ,", topn-(topn %/% 2), "down-regulated genes"))
           cat("done\n")

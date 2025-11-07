@@ -15,6 +15,8 @@ correlogram_pheatmap(
   cell.size = 8,
   font.size = 11,
   color.blind.pal = "PuOr",
+  color.extremes = c("#3182BD", "#E6550D"),
+  anno.color = NULL,
   main.correl = "Correlogram",
   sample.correl = FALSE
 )
@@ -44,6 +46,12 @@ the colors of the heatmap, otherwise min-max breaks are used by default}
 
 \item{color.blind.pal}{string determining the RColorBrewer color blind palette (default = "PuOr");
 other option can be visualized with the following command: brewer.pal.info[brewer.pal.info$colorblind,]}
+
+\item{color.extremes}{character vector of length 2 giving the two extremes of a user-defined colour palette
+varying from the first hue to the second via white.}
+
+\item{anno.color}{list of named character vectors giving the colours used in the heatmap annotation bars. See 'annotation_colors'
+in [pheatmap()]. Automatically generated if NULL (default).}
 
 \item{main.correl}{Character; main title of the Correlogram}
 

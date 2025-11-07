@@ -13,8 +13,7 @@ diff_expr_make_design(
 )
 }
 \arguments{
-\item{samp.info}{\code{data.frame}. samp.info object containing information of the project's sample sheet.
-vector of sample names.}
+\item{samp.info}{\code{data.frame}. samp.info object containing information of the project's sample sheet.}
 
 \item{groups}{\code{character}. Name of the column in 'samp.info' containing grouping information. If 'samp.info' is not supplied
 vector of groups.}

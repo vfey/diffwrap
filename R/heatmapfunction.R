@@ -61,7 +61,7 @@ get_hm_colors <- function(
     n.pal.cols = 11
 )
 {
-  if (!is.na(breaks)) {
+  if (all(!is.na(breaks))) {
     l <- length(breaks) - 1
   } else if (!is.null(palette.length)) {
     l <- palette.length

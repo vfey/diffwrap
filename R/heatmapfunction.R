@@ -328,9 +328,12 @@ correlogram_pheatmap = function(expr.mat, clinical.mat, scale.fl = "none", legen
 #' @param signif.stars.fl boolean determining whether significance stars of p-values are shown in the correlogram (default = FALSE)
 #' @param cell.size double determining the widh and height of the cell and the row/col font size (default = 8)
 #' @param font.size double determining the font size (default = 10)
-#' @param color.blind.pal string determining the RColorBrewer color blind palette (default = "PuOr");
+#' @param color.blind.pal string determining the color-blind-friendly palette; must be one of
+#' RColorBrewer's diverging palettes (default = "PuOr"); other option can be visualized with the following command:
+#' brewer.pal.info[brewer.pal.info$colorblind,]
 #' @param n.pal.cols desired length of the number of different colours in 'color.blind.pal'. Will also be used
-#' as length of the numeric vector of probabilities in 'quantile_breaks()' (see ?quantile); defaults to 11
+#' as length of the numeric vector of probabilities in 'quantile_breaks()' (see ?quantile); must be within 3:11;
+#' defaults to 11
 #' @param color.extremes character vector of length 2 giving the two extremes of a user-defined colour palette
 #' varying from the first hue to the second via white.
 #' @param palette.length integer setting the desired length of the colour palette to be used in the heatmap
@@ -354,7 +357,8 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
                           font.size = 10, color.blind.pal = "PuOr", n.pal.cols = 11,
                           color.extremes = c("#3182BD", "#E6550D"),
                           palette.length = NULL, anno.color = NULL,
-                          main = NULL, add.main = NULL, filt.info = NULL) {
+                          main = NULL, add.main = NULL, filt.info = NULL)
+  {
 
   # make additional information for main title
   if (!is.null(add.main) && is.null(filt.info)) {
@@ -367,6 +371,17 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
     main.plus <- NULL
   }
 
+  # the colour-blind-friendly palette must be one of the RColorBrewer diverging palettes; this is enforced using the
+  # function default
+  if (!(color.blind.pal %in% c("BrBG", "PiYG", "PRGn", "PuOr", "RdBu", "RdYlBu"))) {
+    color.blind.pal <- "PuOr"
+  }
+  # if the number of desired different colours in the palette is not within the available range defined in the RColorBrewer
+  # package the largest possible value is set, which is 11
+  if (!(n.pal.cols %in% 3:11)) {
+    n.pal.cols <- 11
+  }
+
   mat.breaks <- get_hm_breaks(expr.mat, palette.length = palette.length, quantile.breaks.fl = quantile.breaks.fl, n = n.pal.cols)
   colour <- get_hm_colors(palette.length = palette.length, breaks = mat.breaks, color.blind.pal = color.blind.pal, n.pal.cols = n.pal.cols)
   breaks.hm <- mat.breaks
@@ -374,6 +389,10 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
   # above mat.breaks are only calculated to set the heatmap colours
   if (is.null(palette.length) && !quantile.breaks.fl) {
     breaks.hm <- NA
+  }
+  # if quantile breaks are computed scaling is disabled as breaks are computed based on the unscaled expression matrix
+  if (quantile.breaks.fl) {
+    scale.fl <- "none"
   }
   #for the non-scaled case, use of computed breaks is enforced
   if (scale.fl == "none") {
@@ -393,8 +412,7 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
                            fontsize_row = cell.size, fontsize_col = cell.size, silent = TRUE,
                            main = main)
 
-  }
-  else {
+  } else {
     if (is.null(anno.color)) {
       anno.color = make_pheatmap_anno_color(clinical.mat = clinical.mat)
     }
@@ -430,8 +448,7 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
                              fontsize_row = cell.size, fontsize_col = cell.size, silent = TRUE,
                              main = ifelse(is.null(main), paste("Heatmap of genes over samples", main.plus), main))
 
-    }
-    else {
+    } else {
 
       p = pheatmap::pheatmap(expr.mat,
                              show_colnames = T, show_rownames = T,

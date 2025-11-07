@@ -49,11 +49,12 @@ labelling according to and FDR threshold.)}
 
 \item{add.main}{\code{character}. Additional information printed in the heatmap title.}
 
-\item{color.blind.pal}{string determining the RColorBrewer color blind palette (default = "PuOr");
-other option can be visualized with the following command: brewer.pal.info[brewer.pal.info$colorblind,]}
+\item{color.blind.pal}{string determining the color-blind-friendly palette; must be one of
+RColorBrewer's diverging palettes (default = "PuOr"); other option can be visualized with the following command:
+brewer.pal.info[brewer.pal.info$colorblind,]}
 
 \item{n.pal.cols}{desired length of the number of different colours in 'color.blind.pal'. Will also be used
-as length of the numeric vector of probabilities in 'quantile_breaks()' (see ?quantile); defaults to 11}
+as length of the numeric vector of probabilities in 'quantile_breaks()' (see ?quantile); must be within 3:11; defaults to 11}
 
 \item{color.extremes}{character vector of length 2 giving the two extremes of a user-defined colour palette
 varying from the first hue to the second via white.}

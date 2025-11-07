@@ -238,8 +238,11 @@ diffr_expr_generate_cleaned_de_table_output <-
 #' if they meet the significance threshold (regardless of the actual significance)? Defaults to \code{FALSE}.
 #' @param color.blind.pal string determining the RColorBrewer color blind palette (default = "PuOr");
 #' other option can be visualized with the following command: brewer.pal.info[brewer.pal.info$colorblind,]
+#' @param n desired length of the number of different colours in 'color.blind.pal'. Will also be used
+#' as length of the numeric vector of probabilities in 'quantile_breaks()' (see ?quantile); defaults to 11
 #' @param color.extremes character vector of length 2 giving the two extremes of a user-defined colour palette
 #' varying from the first hue to the second via white.
+#' @param palette.length integer setting the desired length of the colour palette to be used in the heatmap
 #' @param anno.color list of named character vectors giving the colours used in the heatmap annotation bars. See 'annotation_colors'
 #' in [pheatmap()]. Automatically generated if NULL (default).
 #' @param anno.name character string used as the column annotation legend title. If 'anno.color' is not NULL and of length 1 the slot name will be used if existing.
@@ -261,7 +264,7 @@ diff_expr_extract_contrasts <-
            host="https://www.ensembl.org", biom.filter="ensembl_gene_id", biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"),
            biom.force.ensg = FALSE, biom.cache = NULL, use.cache = FALSE, sym.col="hgnc_symbol",
            rm.dups=FALSE, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE, heatmap.topn = 100,
-           heatmap.split.expr = FALSE, color.blind.pal = "PuOr", color.extremes = c("#3182BD", "#E6550D"),
+           heatmap.split.expr = FALSE, color.blind.pal = "PuOr", n = 11, color.extremes = c("#3182BD", "#E6550D"), palette.length = NULL,
            anno.color = NULL, anno.name = "Sample Class", heatmap.main = NULL, font.size=5, plots=TRUE, lists=TRUE, filtered.lists = TRUE,
            samp.info = NULL, samples = NULL, groups = NULL, sample.plot.names = NULL)
   {
@@ -406,7 +409,9 @@ diff_expr_extract_contrasts <-
                                                         groups = groups,
                                                         sample.plot.names = sample.plot.names,
                                                         color.blind.pal = color.blind.pal,
+                                                        n = n,
                                                         color.extremes = color.extremes,
+                                                        palette.length = palette.length,
                                                         anno.color = anno.color,
                                                         anno.name = anno.name,
                                                         main=NULL,
@@ -427,7 +432,9 @@ diff_expr_extract_contrasts <-
                                                         groups = groups,
                                                         sample.plot.names = sample.plot.names,
                                                         color.blind.pal = color.blind.pal,
+                                                        n = n,
                                                         color.extremes = color.extremes,
+                                                        palette.length = palette.length,
                                                         anno.color = anno.color,
                                                         anno.name = anno.name,
                                                         main=NULL,

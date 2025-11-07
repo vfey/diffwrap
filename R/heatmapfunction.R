@@ -1,3 +1,78 @@
+#' Function to define breaks to be used for changing the palette of the heatmap.
+#' @param expr.mat differential gene expression matrix or data frame in (genes, samples) format
+#' @param palette.length integer setting the desired length of the colour palette to be used in the heatmap
+#' @param palette.length integer setting the length of the colour palette
+#' @param quantile.breaks.fl boolean values determining if quantile breaks are used to change
+#' the colors of the heatmap, otherwise min-max breaks are used by default
+#' @param n desired length of the numeric vector of probabilities (see ?quantile); defaults to
+#' the number of different colours in the palette
+#' @return a numeric vector containing the breaks to be used in the heatmap (see 'breaks' in [pheatmap()]).
+#'
+#' @seealso [quantile()]
+get_hm_breaks <- function(
+    expr.mat,
+    palette.length = 100,
+    quantile.breaks.fl = FALSE,
+    n = 11)
+{
+  # make sure expr.mat is a matrix
+  if (is.data.frame(expr.mat)) {
+    expr.mat <- as.matrix(expr.mat)
+  }
+
+  #change the colours of the matrix based on quantile breaks
+  if (quantile.breaks.fl) {
+    breaks = quantile_breaks(expr.mat, n = n)
+  } else {
+    #calculate min-max breaks
+    if (!is.null(palette.length)) {
+      # # length(breaks) == palette.length + 1
+      # # use floor and ceiling to deal with even/odd pallette lengths
+      breaks <- c(seq(min(expr.mat), 0, length.out=ceiling(palette.length/2) + 1),
+                      seq(max(expr.mat)/palette.length, max(expr.mat), length.out=floor(palette.length/2)))
+    } else {
+      # calculate fine-grained breaks without using the palette length
+      breaks <- seq(min(expr.mat), max(expr.mat), by = 0.05)
+    }
+  }
+  return(breaks)
+}
+
+#' Function to compute colour palettes to be used in the heatmap.
+#' @param palette.length integer setting the desired length of the colour palette to be used in the heatmap
+#' @param breaks numeric vector of breaks to be used for compute the colour palette;
+#' defaults to NA which means no breaks are used and later computed by 'pheatmap()'.
+#' @param quantile.breaks.fl boolean value determining if quantile breaks are used to change
+#' the colours of the heatmap, otherwise min-max breaks are used by default
+#' @param color.blind.pal string determining the RColorBrewer color blind palette (default = "PuOr");
+#' other option can be visualized with the following command: 'brewer.pal.info[brewer.pal.info$colorblind,]'
+#' @param n integer giving the number of different colours in 'color.blind.pal'.
+#' @return a character vector containing the colour codes to be used in the heatmap.
+#'
+#' @seealso [colorRampPalette()]
+get_hm_colors <- function(
+    palette.length = 100,
+    breaks = NA,
+    quantile.breaks.fl = FALSE,
+    color.blind.pal = NULL,
+    n = 11
+)
+{
+  if (!is.na(breaks)) {
+    l <- length(breaks) - 1
+  } else if (!is.null(palette.length)) {
+    l <- palette.length
+  } else {
+    l <- n
+  }
+  if (!is.null(color.blind.pal)) {
+    colour = colorRampPalette(rev(brewer.pal(n = n, name = color.blind.pal)))( l )
+  } else {
+    colour = colorRampPalette(c(color.extremes[1], "white", color.extremes[2]))( l )
+  }
+  return(colour)
+}
+
 #' Function to define quantile breaks to be used for changing the palette of the heatmap.
 #' @note Function by: Kamil Slowikowski, https://github.com/slowkow/slowkow.com/blob/master/_rmd/2017-02-16-heatmap-tutorial.R,
 #' @param xs numeric vector to calculate quantiles for
@@ -251,8 +326,11 @@ correlogram_pheatmap = function(expr.mat, clinical.mat, scale.fl = "none", legen
 #' @param cell.size double determining the widh and height of the cell and the row/col font size (default = 8)
 #' @param font.size double determining the font size (default = 10)
 #' @param color.blind.pal string determining the RColorBrewer color blind palette (default = "PuOr");
+#' @param n desired length of the number of different colours in 'color.blind.pal'. Will also be used
+#' as length of the numeric vector of probabilities in 'quantile_breaks()' (see ?quantile); defaults to 11
 #' @param color.extremes character vector of length 2 giving the two extremes of a user-defined colour palette
 #' varying from the first hue to the second via white.
+#' @param palette.length integer setting the desired length of the colour palette to be used in the heatmap
 #' @param anno.color list of named character vectors giving the colours used in the heatmap annotation bars. See 'annotation_colors'
 #' in [pheatmap()]. Automatically generated if NULL (default).
 #' @param main \code{character}. Main plot title.
@@ -270,9 +348,9 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
                           row.clust = TRUE, col.clust = TRUE,
                           biserial.fl = FALSE, quantile.breaks.fl = FALSE,
                           signif.stars.fl = FALSE, cell.size =8,
-                          font.size = 10, color.blind.pal = "PuOr",
+                          font.size = 10, color.blind.pal = "PuOr", n = 11,
                           color.extremes = c("#3182BD", "#E6550D"),
-                          anno.color = NULL,
+                          palette.length = NULL, anno.color = NULL,
                           main = NULL, add.main = NULL, filt.info = NULL) {
 
   # make additional information for main title
@@ -286,40 +364,10 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
     main.plus <- NULL
   }
 
-  #initially the breaks parameter is set to NA
-  breaks.hm = NA
+  mat.breaks <- get_hm_breaks(expr.mat, palette.length = palette.length, quantile.breaks.fl = quantile.breaks.fl, n = 11)
+  colour <- get_hm_colors(palette.length = palette.length, breaks = mat.breaks, quantile.breaks.fl = quantile.breaks.fl, color.blind.pal = color.blind.pal, n = 11)
 
-  #calculate min-max breaks
-  palette.length <- 100
-  if (!is.null(color.blind.pal)) {
-    colour = colorRampPalette(rev(brewer.pal(n = 11, name = color.blind.pal)))( palette.length )
-  } else {
-    colour = colorRampPalette(c(color.extremes[1], "white", color.extremes[2]))( palette.length )
-  }
-  # # length(breaks) == length(paletteLength) + 1
-  # # use floor and ceiling to deal with even/odd length pallettelengths
-  mat.breaks <- c(seq(min(expr.mat), 0, length.out=ceiling(palette.length/2) + 1),
-                  seq(max(expr.mat)/palette.length, max(expr.mat), length.out=floor(palette.length/2)))
-
-  mat.breaks <- seq(min(expr.mat), max(expr.mat), by = 0.05)
-
-  #colour = colorRampPalette(rev(brewer.pal(n = 11, name = color.blind.pal)))(length(mat.breaks) - 1)
-
-  #change the colours of the matrix based on quantile breaks, the default is above
-  if (quantile.breaks.fl) {
-    mat.breaks = quantile_breaks(as.matrix(expr.mat), n = 11)
-    if (!is.null(color.blind.pal)) {
-      colour = colorRampPalette(rev(brewer.pal(n = 11, name = color.blind.pal)))( length(mat.breaks) - 1 )
-    } else {
-      colour = colorRampPalette(c(color.extremes[1], "white", color.extremes[2]))( length(mat.breaks) - 1 )
-    }
-  }
-  #cat("mat.breaks")
-  #print(mat.breaks)
-  #cat("colour")
-  #print(colour)
-
-  #for the non-scaled case, if "use.breaks" is mentioned, then use breaks to create the heatmap, by default it only use breaks for colours and allows heatmap to do the breaks automatically
+  #for the non-scaled case, if "use.breaks" is mentioned, then use breaks to create the heatmap; by default, it only uses breaks for colours and allows pheatmap to do the breaks automatically
   if (scale.fl == "none") {
     breaks.hm = mat.breaks
   }

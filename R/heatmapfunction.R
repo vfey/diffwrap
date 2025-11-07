@@ -45,8 +45,6 @@ get_hm_breaks <- function(
 #' varying from the first hue to the second via white.
 #' @param breaks numeric vector of breaks to be used for compute the colour palette;
 #' defaults to NA which means no breaks are used and later computed by 'pheatmap()'.
-#' @param quantile.breaks.fl boolean value determining if quantile breaks are used to change
-#' the colours of the heatmap, otherwise min-max breaks are used by default
 #' @param color.blind.pal string determining the RColorBrewer color blind palette (default = "PuOr");
 #' other option can be visualized with the following command: 'brewer.pal.info[brewer.pal.info$colorblind,]'
 #' @param n.pal.cols integer giving the number of different colours in 'color.blind.pal'.
@@ -57,7 +55,6 @@ get_hm_colors <- function(
     palette.length = 100,
     color.extremes = c("#3182BD", "#E6550D"),
     breaks = NA,
-    quantile.breaks.fl = FALSE,
     color.blind.pal = NULL,
     n.pal.cols = 11
 )
@@ -371,7 +368,7 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
   }
 
   mat.breaks <- get_hm_breaks(expr.mat, palette.length = palette.length, quantile.breaks.fl = quantile.breaks.fl, n = n.pal.cols)
-  colour <- get_hm_colors(palette.length = palette.length, breaks = mat.breaks, quantile.breaks.fl = quantile.breaks.fl, color.blind.pal = color.blind.pal, n.pal.cols = n.pal.cols)
+  colour <- get_hm_colors(palette.length = palette.length, breaks = mat.breaks, color.blind.pal = color.blind.pal, n.pal.cols = n.pal.cols)
   breaks.hm <- mat.breaks
   # by default, with palette.length==NULL and quantile.breaks.fl==FALSE, breaks are meant to be set by pheatmap(), so are set to NA
   # above mat.breaks are only calculated to set the heatmap colours

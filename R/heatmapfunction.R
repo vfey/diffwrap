@@ -373,7 +373,7 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
 
   # the colour-blind-friendly palette must be one of the RColorBrewer diverging palettes; this is enforced using the
   # function default
-  if (!(color.blind.pal %in% c("BrBG", "PiYG", "PRGn", "PuOr", "RdBu", "RdYlBu"))) {
+  if (!is.null(color.blind.pal) && !(color.blind.pal %in% c("BrBG", "PiYG", "PRGn", "PuOr", "RdBu", "RdYlBu"))) {
     color.blind.pal <- "PuOr"
   }
   # if the number of desired different colours in the palette is not within the available range defined in the RColorBrewer

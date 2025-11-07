@@ -27,11 +27,12 @@ get_hm_breaks <- function(
     #calculate min-max breaks
     if (!is.null(palette.length)) {
       # # length(breaks) == palette.length + 1
-      # # use floor and ceiling to deal with even/odd pallette lengths
+      # # use floor and ceiling to deal with even/odd palette lengths
       breaks <- c(seq(min(expr.mat), 0, length.out=ceiling(palette.length/2) + 1),
                       seq(max(expr.mat)/palette.length, max(expr.mat), length.out=floor(palette.length/2)))
     } else {
-      # calculate fine-grained breaks without using the palette length
+      # calculate fine-grained breaks without using the palette length (this is the default when called in diffr_pheatmap()
+      # and corresponds to breaks=NA in get_hm_colors())
       breaks <- seq(min(expr.mat), max(expr.mat), by = 0.05)
     }
   }
@@ -61,8 +62,10 @@ get_hm_colors <- function(
     n.pal.cols = 11
 )
 {
-  if (all(!is.na(breaks))) {
+  if (all(!is.na(breaks)) && !is.null(palette.length)) {
     l <- length(breaks) - 1
+  } else if (all(!is.na(breaks)) && is.null(palette.length)) {
+    l <- length(breaks)
   } else if (!is.null(palette.length)) {
     l <- palette.length
   } else {
@@ -369,8 +372,13 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
 
   mat.breaks <- get_hm_breaks(expr.mat, palette.length = palette.length, quantile.breaks.fl = quantile.breaks.fl, n = n.pal.cols)
   colour <- get_hm_colors(palette.length = palette.length, breaks = mat.breaks, quantile.breaks.fl = quantile.breaks.fl, color.blind.pal = color.blind.pal, n.pal.cols = n.pal.cols)
-
-  #for the non-scaled case, if "use.breaks" is mentioned, then use breaks to create the heatmap; by default, it only uses breaks for colours and allows pheatmap to do the breaks automatically
+  breaks.hm <- mat.breaks
+  # by default, with palette.length==NULL and quantile.breaks.fl==FALSE, breaks are meant to be set by pheatmap(), so are set to NA
+  # above mat.breaks are only calculated to set the heatmap colours
+  if (is.null(palette.length) && !quantile.breaks.fl) {
+    breaks.hm <- NA
+  }
+  #for the non-scaled case, use of computed breaks is enforced
   if (scale.fl == "none") {
     breaks.hm = mat.breaks
   }

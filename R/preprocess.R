@@ -49,7 +49,6 @@ diff_expr_get_samp_info <-
 
 #' Function to create design matrix
 #' @param samp.info \code{data.frame}. samp.info object containing information of the project's sample sheet.
-#'     vector of sample names.
 #' @param groups \code{character}. Name of the column in 'samp.info' containing grouping information. If 'samp.info' is not supplied
 #'     vector of groups.
 #' @param pairs \code{character}. Name of the column in 'samp.info' containing paired sample information.
@@ -95,22 +94,28 @@ diff_expr_make_design <-
 #' @param block \code{logical}. Are the samples not independent? See Details section.
 #' @param contrasts Character vector specifying group name pairs to be compared in the format expected by
 #'   \code{makeContrasts()}, i.e., "group2-group1".
+#' @param user_design \code{logical}. Has the user provided a design matrix? This impacts the choosing of column names used for automatic contrasting.
 #' @details
 #' The 'block' argument is used to specify whether the comparisons are to be made within AND between subjects or in the case of
 #' technical replicates, i.e., if the samples are not independent, in other words, correlated.
 #'   @seealso [makeContrasts()]
 #' @export
 diff_expr_make_contrasts <-
-		function(design, groups, pairs=NULL, block=FALSE, contrasts=NULL)
+		function(design, groups, pairs=NULL, block=FALSE, contrasts=NULL, user_design=FALSE)
 {
 	if (is.null(contrasts)) {
 		cat("Comparing all groups vs. all...\n")
 		if (block || is.null(pairs)) {
 			cat("  Using all levels...\n")
 			n <- colnames(design)
-		} else if (!is.null(pairs)) {
-			cat("  Extracting 'groups' levels...\n")
-			n <- grep("^groups.+", colnames(design), value=TRUE)
+		} else if (!is.null(pairs) || user_design) {
+		  cat("  Extracting 'groups' levels...\n")
+		  n <- grep("^groups.+", colnames(design), value=TRUE)
+		  ic <- length(grep("Intercept", colnames(design)))
+		  if (ic) {
+browser()
+		    cat("Intercept detected; ")
+		  }
 		}
 		if (length(n)==1L || length(grep("__", n))) {
 			cat("  ! Skipping contrast matrix creation !\n")
@@ -130,7 +135,7 @@ diff_expr_make_contrasts <-
 	    # Column names in the design matrix starting with "groups" represent comparisons to the baseline which is the grand mean
 	    # of the first level of the groups factor and, in the context of this package, always the control, e.g., "normal",
 	    # and represented by the "Intercept". In order to grep all existing comparisons, i.e., those inherent to the design,
-	    # the name if the control, so, e.g., "groupsnormal", needs to be added in place of the Intercept.
+	    # the name of the control, so, e.g., "groupsnormal", needs to be added in place of the Intercept.
 	    n <- grep("^groups.+", colnames(design), value=TRUE)
 	    n <- c(paste0("groups", levels(groups)[1]), n)
 	    cat("done\n")

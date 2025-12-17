@@ -421,6 +421,8 @@ diffExpr <-
                                       block = block,
                                       use_weights = use_weights)
     } else {
+      # in order to match the search pattern in the grep part in the contrasts function the columns
+      # of the design matrix reflecting the sample groups are renamed to start with "groups"
       grp.col <- grep(paste0("^", grp.nam), colnames(design))
       if (length(grp.col)) {
         colnames(design)[grp.col] <- sub(paste0("^", grp.nam), "groups", colnames(design)[grp.col])
@@ -431,14 +433,14 @@ diffExpr <-
       cat("  Checking design column names...\n")
       colnames(design) <- gsub(":", "__", colnames(design))
     }
-
+browser()
     ## set contrasts
     contrasts <- diff_expr_make_contrasts(design = design,
                                           groups = groups,
                                           pairs = pairs,
                                           block = block,
-                                          contrasts = contrasts)
-                                          # user_design = user_design)
+                                          contrasts = contrasts,
+                                          user_design = user_design)
 
     ## set dispersion method
     disp <- match.arg(disp)

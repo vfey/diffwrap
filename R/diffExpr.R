@@ -433,7 +433,7 @@ diffExpr <-
       cat("  Checking design column names...\n")
       colnames(design) <- gsub(":", "__", colnames(design))
     }
-browser()
+
     ## set contrasts
     contrasts <- diff_expr_make_contrasts(design = design,
                                           groups = groups,

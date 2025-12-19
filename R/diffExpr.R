@@ -421,6 +421,8 @@ diffExpr <-
                                       block = block,
                                       use_weights = use_weights)
     } else {
+      # test if design matrix is of full rank
+      if (!limma::is.fullrank(design)) stop("Design matrix is not of full rank. Check your group vectors.")
       # in order to match the search pattern in the grep part in the contrasts function the columns
       # of the design matrix reflecting the sample groups are renamed to start with "groups"
       grp.col <- grep(paste0("^", grp.nam), colnames(design))

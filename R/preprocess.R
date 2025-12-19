@@ -104,8 +104,7 @@ diff_expr_make_contrasts <-
 		function(design, groups, pairs=NULL, block=FALSE, contrasts=NULL, user_design=FALSE)
 {
 	if (is.null(contrasts)) {
-	  browser()
-		cat("Comparing all groups vs. all...\n")
+	  cat("Comparing all groups vs. all...\n")
 		if (block || is.null(pairs)) {
 			cat("  Using all levels...\n")
 			n <- colnames(design)
@@ -114,7 +113,7 @@ diff_expr_make_contrasts <-
 		  n <- grep("^groups.+", colnames(design), value=TRUE)
 		  ic <- length(grep("Intercept", colnames(design)))
 		  if (ic) {
-		    cat("Intercept detected;", length(n), "comparison(s) found which are inherent to the design")
+		    cat("Intercept detected;", length(n), "comparison(s) found (inherent to the design)")
 		    if (length(n)>1L) cat("  ", length(n)*(length(n)-1)/2, "comparisons to be made additionally")
 		  } else {
 		    cat("Non-intercept design;", length(n)*(length(n)-1)/2, "comparison(s) to be made")
@@ -131,8 +130,14 @@ diff_expr_make_contrasts <-
 						}))
 		cat("  ", contrasts, "\n")
 	} else {
+	  browser()
 	  cat("  Comparing selected groups", contrasts, "\n")
+	  if (user_design) {
+
+	  }
 	  if (!is.null(pairs)) {
+	    # the pairs argument being non-NULL means the design matrix has in an intercept, but only in the context
+	    # of this package; if a custom design matrix is provided that may not be the case
 	    cat("  Extracting existing contrasts of interest from design matrix...\n")
 	    cat("  - Complementing 'existing groups' vector...")
 	    # Column names in the design matrix starting with "groups" represent comparisons to the baseline which is the grand mean

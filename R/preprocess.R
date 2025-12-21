@@ -130,13 +130,13 @@ diff_expr_make_contrasts <-
 						}))
 		cat("  ", contrasts, "\n")
 	} else {
-	  browser()
 	  cat("  Comparing selected groups", contrasts, "\n")
 	  if (user_design) {
+	    browser()
 
 	  }
 	  if (!is.null(pairs)) {
-	    # the pairs argument being non-NULL means the design matrix has in an intercept, but only in the context
+	    # the pairs argument being non-NULL means the design matrix has an intercept, but only in the context
 	    # of this package; if a custom design matrix is provided that may not be the case
 	    cat("  Extracting existing contrasts of interest from design matrix...\n")
 	    cat("  - Complementing 'existing groups' vector...")

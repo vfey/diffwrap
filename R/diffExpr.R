@@ -7,7 +7,7 @@
 #' @param expr.dat \code{character} or \code{list}. String or vector or list of input file paths, or matrix of count values
 #' @param samp.info \code{data.frame}. samp.info object containing information of the project's sample sheet
 #' @param control \code{character}. Name of the control group
-#' @param design \code{matrix}. design matrix
+#' @param design \code{character} that can be coerced to a formula to use for creating the design matrix.
 #' @param samples \code{character}. Name of the column in 'samp.info' containing sample names. If 'samp.info' is not supplied
 #'     vector of sample names.
 #' @param sample.plot.names \code{character}. Optional name of a column with "nice" sample names for plotting.
@@ -334,6 +334,13 @@ diffExpr <-
     #### save Groups name and ellipse mapping groups name first
     ellipse.grp.nam <- ellipse.mapping.groups
     grp.nam <- groups
+    # TODO finish or remove if not needed:
+    # if (!is.null(design)) {
+    #   # extract name of grouping vector column from design matrix (this is needed as the 'groups' argument is not used for
+    #   # generating the matrix but both must match)
+    #   grp.nam <- grep(control, colnames(design))
+    #   grp.nam <- sub(paste0("(^[[:print:]])", control), "\\1", )
+    # }
     #### reformat samp.info data frame to meet down-stream conditions
     samp.info <- diff_expr_get_samp_info(samp.info, samples, groups, ellipse.mapping.groups)
 
@@ -421,6 +428,9 @@ diffExpr <-
                                       block = block,
                                       use_weights = use_weights)
     } else {
+      # design is a formula
+      browser()
+      ## find groups column in sample info
       # test if design matrix is of full rank
       if (!limma::is.fullrank(design)) stop("Design matrix is not of full rank. Check your group vectors.")
       # in order to match the search pattern in the grep part in the contrasts function the columns

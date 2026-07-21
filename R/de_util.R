@@ -58,33 +58,33 @@ diff_expr_fit <-
       }
 
       if (block && !is.null(pairs) && !is.factor(pairs)) {
-        cat("  Attempting to coerce the pairs vector to a factor...")
+        dw_log("  Attempting to coerce the pairs vector to a factor...", "\n")
         pairs <- try(as.factor(pairs))
         if (is(pairs, "try-error")) stop("For block designs 'pairs' needs to be a factor.")
       }
 
       vf <- voom.fun
       if (length(grep("Weights", vf))) {
-        cat ("  'voomWithQualityWeights' is set as voom function; using settings for sample weights...\n")
+        dw_log("  'voomWithQualityWeights' is set as voom function; using settings for sample weights...\n")
         use_weights <- TRUE
         voom.fun <- limma::voomWithQualityWeights
       } else if (vf == "voom") {
-        cat("  Using standard voom...\n")
+        dw_log("  Using standard voom...\n")
         voom.fun <- limma::voom
       } else if (vf == "voomLmFit") {
-        cat("  Using voom wrapper 'voomLmFit'\n")
+        dw_log("  Using voom wrapper 'voomLmFit'\n")
         voom.fun <- edgeR::voomLmFit
       }
 
       if (vf == "voomLmFit") {
         if (block && !is.null(pairs)) {
-          cat("  Samples are not independent. Using column", sQuote(pairs_col), "as block variable...\n")
-          cat("    ", levels(pairs), "\n")
+          dw_log("  Samples are not independent. Using column", sQuote(pairs_col), "as block variable...\n")
+          dw_log("    ", levels(pairs), "\n")
         } else {
-          cat("  Performing standard linear model fit...\n")
+          dw_log("  Performing standard linear model fit...\n")
           pairs <- NULL
         }
-        if (use_weights) cat("    Empirical sample quality weights will be estimated...\n")
+        if (use_weights) dw_log("    Empirical sample quality weights will be estimated...\n")
         fit <- voomLmFit(cts,
                        design = design,
                        plot = FALSE,
@@ -98,14 +98,14 @@ diff_expr_fit <-
 
         # For block designs (here, the pairs column has the blocking information):
         if (block && !is.null(pairs)) {
-          cat("  Samples are not independent. Using column", sQuote(pairs_col), "as block variable...\n")
-          cat("    ", levels(pairs), "\n")
-          cat("  Calculating consensus correlation...\n")
+          dw_log("  Samples are not independent. Using column", sQuote(pairs_col), "as block variable...\n")
+          dw_log("    ", levels(pairs), "\n")
+          dw_log("  Calculating consensus correlation...\n")
           corfit <- limma::duplicateCorrelation(v$E , design, block=pairs)
-          cat("  Fitting linear model using consensus correlation...\n")
+          dw_log("  Fitting linear model using consensus correlation...\n")
           fit <- limma::lmFit(v, design, block=pairs, correlation=corfit$consensus)
         } else {
-          cat("  Fitting linear model...\n")
+          dw_log("  Fitting linear model...\n")
           fit <- limma::lmFit(v, design)
         }
       }
@@ -115,25 +115,25 @@ diff_expr_fit <-
         if (length(grep("^Intercept$", rownames(contrasts)))) {
           rownames(contrasts)[grep("^Intercept$", rownames(contrasts))] <- "(Intercept)"
         }
-        cat("  Fitting contrasts...\n")
+        dw_log("  Fitting contrasts...\n")
         fit2 <- limma::contrasts.fit(fit, contrasts)
-        cat("  eBayes fit...\n")
+        dw_log("  eBayes fit...\n")
         fit2 <- limma::eBayes(fit2, trend = bayes.trend, robust = bayes.robust)
       } else {
         # Contrasts are "included" in the design, i.e., pair-wise comparisons have already been calculated in the lmFit() call.
         # Here, only the Bayes fit will be added.
-        cat("  eBayes fit...\n")
+        dw_log("  eBayes fit...\n")
         fit2 <- limma::eBayes(fit, trend = bayes.trend, robust = bayes.robust)
       }
       return(list(v=v, fit=fit, fit2=fit2))
     } else {
       ## Estimate dispersion values, relative to the design matrix, using the Cox-Reid (CR)-adjusted likelihood
       # Note, that batch effects or paired or blocked designs are taken into account in the design matrix and will be considered in the respective model.
-      cat("  Estimating dispersion values...\n")
+      dw_log("  Estimating dispersion values...\n")
       d2 <- edgeR::estimateDisp(d, design)
       # Given the design matrix and dispersion estimates, fit a GLM to each feature.
       # If quasi-likelihood methods are used, estimate the gene-wise quasi-dispersions with empirical Bayes moderation.
-      cat("  Fitting linear model...\n")
+      dw_log("  Fitting linear model...\n")
       if (quasi.likelihood) {
         fit <- edgeR::glmQLFit(d2, design, dispersion=d2[[disp]], robust=bayes.robust, abundance.trend=bayes.trend)
       } else {
@@ -160,7 +160,7 @@ diff_expr_fit <-
 diffr_expr_generate_cleaned_de_table_output <-
   function(contrast, annotated.normcnt, out.dir=".", samp.name.and.group.key, analysis.name=NULL, filtered.lists = TRUE,  fdr.thr=0.05, logfc.thr=1 )
   {
-    cat("Generating a cleaned version of expression table...\n")
+    dw_log("Generating a cleaned version of expression table...\n")
     DE.out <- paste(analysis.name, contrast, "differential_expression_clean.tsv", sep="_")
 
     group1 <- unlist(strsplit(contrast, split="-",fixed = TRUE))[1]
@@ -174,10 +174,10 @@ diffr_expr_generate_cleaned_de_table_output <-
     cleaned.colnames <- gsub("ReadsPerGene.out", "", colnames(annotated.normcnt))
     #print(cleaned.colnames)
     colnames(annotated.normcnt) <- cleaned.colnames
-    cat("   Samples outside the contrast were removed...\n")
+    dw_log("   Samples outside the contrast were removed...\n")
 
     if (filtered.lists) {
-      cat("     Filtering the DE list to be saved by fdr <", fdr.thr, "and logfc >= ", logfc.thr , "...\n")
+      dw_log("     Filtering the DE list to be saved by fdr <", fdr.thr, "and logfc >= ", logfc.thr , "...\n")
       fdr.col <- names(annotated.normcnt)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(annotated.normcnt)))]
       fc.col <- names(annotated.normcnt)[grep("^logfc$|fold$", tolower(names(annotated.normcnt)))]
 
@@ -190,14 +190,14 @@ diffr_expr_generate_cleaned_de_table_output <-
                                                 abs(annotated.normcnt[[fc.col]]) >= logfc.thr),]
 
       nrow.removed <- nrow.before.filtering - nrow(annotated.normcnt)
-      cat("       ", nrow.removed, "unsignifcant genes were filtered out...\n")
-      cat("        The dimensions of the table to be saved:", dim(annotated.normcnt), "...\n")
+      dw_log("       ", nrow.removed, "unsignifcant genes were filtered out...\n")
+      dw_log("        The dimensions of the table to be saved:", dim(annotated.normcnt), "...\n")
 
 
       DE.out <- paste("filtered", DE.out, sep="_")
     }
 
-    cat("   Saving cleanded DE-list to", DE.out, "...\n")
+    dw_log("   Saving cleanded DE-list to", DE.out, "...\n")
     write.table(annotated.normcnt, file.path(out.dir, DE.out), sep="\t", quote=FALSE, row.names=FALSE)
 
   }
@@ -274,7 +274,7 @@ diff_expr_extract_contrasts <-
     if (is.null(groups)) stop("Need name of column in sample sheet containing grouping information!")
     if (is.null(analysis.name)) {
       analysis.name <- paste0(paste(levels(groups)[1:2], collapse="_"), "_")
-      cat("Using default settings for the 'analysis name':", sQuote(analysis.name), "\n")
+      dw_log("Using default settings for the 'analysis name':", sQuote(analysis.name), "\n")
       warning("A unique and descriptive name for the analysis should always be provided!")
     }
 
@@ -282,7 +282,7 @@ diff_expr_extract_contrasts <-
       out.l$contrasts <- list()
     }
     if (is.null(contrasts)) {
-      cat("  Extracting 'groups' levels from design...\n")
+      dw_log("  Extracting 'groups' levels from design...\n")
       cn <- grep("^groups.+", colnames(fit$design), value=TRUE)
     } else if (is.matrix(contrasts) && !is.null(colnames(contrasts))) {
       # if do.voom=TRUE contrasts have been calculated already in the fit wrapper function above and only need to be extracted
@@ -300,20 +300,20 @@ diff_expr_extract_contrasts <-
     out.l$MAplots <- list()
     out.l$volcanoPlots <- list()
     for (contr in cn) {
-      cat("Calculating differential expression for", contr, "\n")
+      dw_log("Calculating differential expression for", contr, "\n")
       dir.create(file.path(out.dir, contr))
       contr.out.dir  <- dir(out.dir, pattern = paste0("^",contr), full.names = TRUE)
-      cat("Storing all results under", contr.out.dir, "\n")
+      dw_log("Storing all results under", contr.out.dir, "\n")
 
       if (do.voom) {
         if (is.null(fit2)) stop("Need 'fit2' object!")
-        cat("Generating output table of differentially expressed features...\n")
+        dw_log("Generating output table of differentially expressed features...\n")
         tt <- limma::topTable(fit2, coef=contr, number=nrow(fit2), sort.by="P")
       } else {
         test.fun <- ifelse(quasi.likelihood, edgeR::glmQLFTest, edgeR::glmLRT)
         # Perform a likelihood ratio test or a quasi-likelihood F-Test, specifying the contrast of interest.
         # Needs to be done per-contrast as otherwise it will perform the LR test of all contrasts together while we want this done individually.
-        cat("Performing likelihood ratio test on this contrast...\n")
+        dw_log("Performing likelihood ratio test on this contrast...\n")
         if (is.matrix(contrasts)) {
           # calculating the contrast
           de <- test.fun(fit, contrast = contrasts[, contr])
@@ -323,7 +323,7 @@ diff_expr_extract_contrasts <-
         }
         # Use the topTags function to present a tabular summary of the differential expression statistics (note that topTags
         # operates on the output of exactTest or glmLRT, but only the latter is shown here)
-        cat("Generating tablular summary of differential expression statistics ('top table')\n")
+        dw_log("Generating tablular summary of differential expression statistics ('top table')\n")
         tt <- edgeR::topTags(de, n = nrow(de))
         #			} else {
         #				stop("Need contrast matrix as input.")
@@ -344,10 +344,10 @@ diff_expr_extract_contrasts <-
         addinfo <- normcnt
       }
       d3 <- merge(addinfo, tt, by="row.names", sort=FALSE)
-      cat("Renaming ID column...\n")
+      dw_log("Renaming ID column...\n")
       names(d3)[1] <- "ID"
       if (biomart) {
-        cat(" --> Retrieving additional annotation from biomart...\n")
+        dw_log(" --> Retrieving additional annotation from biomart...\n")
         d3 <- diff_expr_biomart(d3, biom.data.set, biom.mart, host, biom.filter, biom.attributes, biom.cache, use.cache, sym.col, rm.dups, force.ensg = biom.force.ensg)
         id.col <- names(d3)[names(d3) %in% biom.filter]
       } else {
@@ -355,19 +355,19 @@ diff_expr_extract_contrasts <-
         syms <- data.frame(ID=names(syms), gene_symbol=as.character(syms), stringsAsFactors=FALSE)
         d3 <- merge(syms, d3, by="ID", all.y=TRUE, all.x=FALSE, sort=TRUE)
         if (any(d3$gene_symbol=="") || any(is.na(d3$gene_symbol))) {
-          cat("  Replacing", length(which(d3$gene_symbol=="" | is.na(d3$gene_symbol))), "missing Gene Symbols by Ensembl IDs...\n")
+          dw_log("  Replacing", length(which(d3$gene_symbol=="" | is.na(d3$gene_symbol))), "missing Gene Symbols by Ensembl IDs...\n")
           d3$gene_symbol[d3$gene_symbol=="" | is.na(d3$gene_symbol)] <- as.character(d3$ID[d3$gene_symbol=="" | is.na(d3$gene_symbol)])
         }
         id.col <- "ID"
       }
-      cat("Setting unique row names...\n")
+      dw_log("Setting unique row names...\n")
       rownames(d3) <- make.unique(as.character(d3[[id.col]]))
       out.l$contrasts[[contr]] <- d3
       if (lists) {
         DE.out <- paste(analysis.name, contr, "differential_expression.tsv", sep="_")
-        cat("Saving list to", DE.out, "...\n")
+        dw_log("Saving list to", DE.out, "...\n")
         pv.col <- names(d3)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
-        cat("The result table is ordered in increasing order by column ", pv.col, "...\n")
+        dw_log("The result table is ordered in increasing order by column ", pv.col, "...\n")
         d3 = d3[order(d3[[pv.col]]),]
         write.table(d3, file.path(contr.out.dir, DE.out), sep="\t", quote=FALSE, row.names=FALSE)
 
@@ -378,14 +378,14 @@ diff_expr_extract_contrasts <-
       # Create a graphical summary, such as an M (log-fold change) versus A (log-average expression) plot, here showing the
       # genes selected as differentially expressed (with a 5% false discovery rate)
       if (plots) {
-        cat("Plotting...\n")
+        dw_log("Plotting...\n")
         pdf(file.path(contr.out.dir, paste(analysis.name, contr, "_plots.pdf", sep="_")), width = 15, height = 15)
         par(mar = c(6,6,5,3))
-        cat(" MA-plot...\n")
+        dw_log(" MA-plot...\n")
         out.l$MAplots[[contr]] <- diff_expr_ma_plot(d3, contr, id.col, sym.col, p.thr, fdr.thr, logfc.thr, numlab, out.dir=contr.out.dir, analysis.name, point.lab, biom.attributes, font.size, lists)
 
         ## Volcano plot
-        cat(" Volcano plot...\n")
+        dw_log(" Volcano plot...\n")
         #The following three lines would probably be wise to do using regular expression
         volcano.name = gsub(".", " ", contr, fixed=TRUE)
         volcano.name = gsub("_", " ", volcano.name, fixed=TRUE)
@@ -394,13 +394,13 @@ diff_expr_extract_contrasts <-
 
         #png(paste(out.dir,"/",analysis.name,".Pvalue_distribution.png",sep=""),width=1280,height=960,res=150)
         ## Histogram of P-value distribution
-        cat(" Dendrogram plot...\n")
+        dw_log(" Dendrogram plot...\n")
         diff_expr_pval_hist_plot(d3)
 
         if (heatmap.topn > 100) {
           dev.off()
           pdf(file.path(contr.out.dir, paste(analysis.name, contr, "_heatmaps.pdf", sep="_")), width = 25, height = 35)
-          cat("Heatmap plots...\n")
+          dw_log("Heatmap plots...\n")
           out.l$heatmapPlots[[contr]] <- pheatmap_plots(d3 = d3,
                                                         id = id,
                                                         sym.col="gene_symbol",
@@ -423,7 +423,7 @@ diff_expr_extract_contrasts <-
                                                         split.expr = heatmap.split.expr)
           dev.off()
         } else {
-          cat("Heatmap plots...\n")
+          dw_log("Heatmap plots...\n")
           out.l$heatmapPlots[[contr]] <- pheatmap_plots(d3 = d3,
                                                         id = id,
                                                         sym.col="gene_symbol",
@@ -448,8 +448,8 @@ diff_expr_extract_contrasts <-
         }
       }
     }
-    cat("=============================================================================\n")
-    cat("Venn sections list\n")
+    dw_log("=============================================================================\n")
+    dw_log("Venn sections list\n")
     cols.interest.de.table = c("ensembl","symbol|hgnc","description","entrez","^average$|^ave[a-r]{0,4}expr[e-s]{0,6}$","^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$","^p\\.{0,1}val[e-u]{0,2}$")
     pv.col = names(out.l$contrasts[[1]])[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(out.l$contrasts[[1]])))]
     fdr.col = names(out.l$contrasts[[1]])[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(out.l$contrasts[[1]])))]
@@ -474,20 +474,18 @@ diff_expr_extract_contrasts <-
     #print(class(v))
 
     if (plots && !is(v[["venn.diagram"]], "try-error")) {
-      cat(">>> Plotting Venn diagram...")
+      dw_log(">>> Plotting Venn diagram...", "\n")
       pdf(file.path(out.dir,"Venn_Diagram.pdf"), width = 15, height= 15)
       grid::grid.draw(v[["venn.diagram"]])
       dev.off()
-      cat("done\n")
     }
 
     ifelse(!dir.exists(file.path(out.dir, "Venn sections")), dir.create(file.path(out.dir, "Venn sections")), FALSE)
     for(j in 1:length(v[["venn.sections"]])){
-      print(names(v[["venn.sections"]])[j])
+      dw_log_obj(names(v[["venn.sections"]])[j])
       openxlsx::write.xlsx(v[["venn.sections"]][[j]], file = file.path(out.dir, "Venn sections", paste0(names(v[["venn.sections"]])[j],".xlsx")))
     }
-    print("Venn sections list end")
-    cat("done\n")
+    dw_log("Venn sections list end", "\n")
     return(out.l)
   }
 
@@ -525,22 +523,22 @@ diff_expr_biomart <-
       biom.attributes <- c(biom.attributes, biom.filter)
     }
     if (force.ensg) {
-      cat(" Enforcing standard Ensembl Gene IDs...\n")
+      dw_log(" Enforcing standard Ensembl Gene IDs...\n")
       if (length(grep("\\.[[:digit:]]{1,}$", d3$ID, perl = T))) {
         d3$ID <- sub("\\.[[:digit:]]{1,}$", "", d3$ID)
       } else {
-        cat("  -> Nothing to do\n")
+        dw_log("  -> Nothing to do\n")
       }
     }
     gene.lab <- convertid::convert.bm(d3, "ID", biom.data.set, biom.mart, host, biom.filter, biom.attributes, biom.cache, use.cache, sym.col, rm.dups)
     names(gene.lab)[names(gene.lab)==sym.col] <- "gene_symbol"
-    cat("  Extended annotation:\n")
+    dw_log("  Extended annotation:\n")
     biom.attributes[biom.attributes==sym.col] <- "gene_symbol"
     if (length(d3$ID)>8) {
-      print(gene.lab[1:8, biom.attributes])
-      cat("_truncated_ (", length(d3$ID), "features)\n")
+      dw_log_obj(gene.lab[1:8, biom.attributes])
+      dw_log("_truncated_ (", length(d3$ID), "features)\n")
     } else {
-      print(gene.lab[, biom.attributes])
+      dw_log_obj(gene.lab[, biom.attributes])
     }
     return(gene.lab)
   }

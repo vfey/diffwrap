@@ -51,9 +51,9 @@ diff_expr_ma_plot <-
 	dat$`Average Expression` <- dat[[A]]
 	# list to collect ggplot2 objects for output
 	g.l <- list()
-	cat("  M-A plot...\n")
+	dw_log("  M-A plot...\n")
 	if (length(degFDR)>0) {
-		cat(" FDR filtered values...\n")
+		dw_log(" FDR filtered values...\n")
 
 		## ggplot2 M-A plot
 		g <- ggplot(data=dat, aes(x=`Average Expression`, y=logFC))
@@ -61,18 +61,18 @@ diff_expr_ma_plot <-
 		g <- g + scale_colour_gradient2(low="#00106B", high="#A4B1FF", mid="#F3F5FF", midpoint=0.2)
 		if (point.lab) {
 			gene.lab <- dat[rn %in% degFDR, ]
-			cat("    ", nrow(gene.lab), "point(s) labelled...\n")
+			dw_log("    ", nrow(gene.lab), "point(s) labelled...\n")
 			if (nrow(gene.lab)>numlab) {
-				cat("     Restricting to", numlab, "...\n")
+				dw_log("     Restricting to", numlab, "...\n")
 				ix <- sort(gene.lab$`adj. P-Value`, index=T)$ix
 				gene.lab <- gene.lab[ix[1:numlab], ][order(ix[1:numlab]), ]
 			}
-			cat("   Highlighted features:\n")
+			dw_log("   Highlighted features:\n")
 			if (length(degFDR)>8) {
-				print(gene.lab[1:8, 1:2])
-				cat("_truncated_ (", length(degFDR), "features)\n")
+				dw_log_obj(gene.lab[1:8, 1:2])
+				dw_log("_truncated_ (", length(degFDR), "features)\n")
 			} else {
-				print(gene.lab[1:8, 1:2])
+				dw_log_obj(gene.lab[1:8, 1:2])
 			}
 			g <- g + ggtitle(paste0("M-A plot for ", contr, " (highl.: FDR < ", fdr.thr, "; FC >= ", 2^logfc.thr, "-fold)"))
 			g <- g + ggrepel::geom_text_repel(data = gene.lab, aes(label = label_id), size = font.size, box.padding = unit(0.35, "lines"), point.padding = unit(0.3, "lines"), max.overlaps = 15, show.legend = F)
@@ -86,7 +86,7 @@ diff_expr_ma_plot <-
 		g.l[["FDR"]] <- g
 	}
 	if (length(degPval)>0) {
-		cat("    for P-value filtered values...\n")
+		dw_log("    for P-value filtered values...\n")
 
 		## ggplot implemetation of MA plot
 		g <- ggplot(data=dat, aes(x=`Average Expression`, y=logFC))
@@ -94,18 +94,18 @@ diff_expr_ma_plot <-
 		g <- g + scale_colour_gradient2(low="#00106B", high="#A4B1FF", mid="#F3F5FF", midpoint=0.2)
 		if (point.lab) {
 			gene.lab <- dat[rn %in% degPval, ]
-			cat("    ", nrow(gene.lab), "point(s) labelled...\n")
+			dw_log("    ", nrow(gene.lab), "point(s) labelled...\n")
 			if (nrow(gene.lab)>numlab) {
-				cat("     Restricting to", numlab, "...\n")
+				dw_log("     Restricting to", numlab, "...\n")
 				ix <- sort(gene.lab$`P-Value`, index=T)$ix
 				gene.lab <- gene.lab[ix[1:numlab], ][order(ix[1:numlab]), ]
 			}
-			cat("   Highlighted features:\n")
+			dw_log("   Highlighted features:\n")
 			if (length(degPval)>8) {
-				print(gene.lab[1:8, 1:2])
-				cat(paste0("   _truncated_ (", length(degPval), " features)\n"))
+				dw_log_obj(gene.lab[1:8, 1:2])
+				dw_log(paste0("   _truncated_ (", length(degPval), " features)\n"))
 			} else {
-				print(gene.lab[1:8, 1:2])
+				dw_log_obj(gene.lab[1:8, 1:2])
 			}
 			g <- g + ggtitle(paste0("M-A plot for ", contr, " (highl.: P-value < ", p.thr, "; FC >= ", 2^logfc.thr, "-fold)"))
 			g <- g + ggrepel::geom_text_repel(data = gene.lab, aes(label = label_id), size = font.size, box.padding = unit(0.35, "lines"), point.padding = unit(0.3, "lines"), max.overlaps = 15, show.legend = F)
@@ -175,9 +175,9 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot = c("fdr"
 
 	# Filtering data.df to label points
 	filtdat <- data.df[data.df[[property.to.plot]] < property.thr & abs(data.df$logFC) > logfc.thr, ]
-	cat("    ", nrow(filtdat), "point(s) labelled...\n")
+	dw_log("    ", nrow(filtdat), "point(s) labelled...\n")
 	if (nrow(filtdat) > numlab) {
-		cat("     Restricting to", numlab, "...\n")
+		dw_log("     Restricting to", numlab, "...\n")
 		ix <- sort(filtdat[,property.to.plot], index=T)$ix
 		filtdat <- filtdat[ix[1:numlab], ][order(ix[1:numlab]), ]
 	}
@@ -328,7 +328,7 @@ diff_expr_volcano_plot <-
 diff_expr_pval_hist_plot <-
 		function(d3)
 {
-	cat("   Histogram of P-value distribution...\n")
+	dw_log("   Histogram of P-value distribution...\n")
 	pv.col <- names(d3)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
 	hist(d3[[pv.col]],breaks=20, xlab="P Value", ylab="Frequency", main="P-value distribution")
 }

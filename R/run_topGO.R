@@ -58,8 +58,8 @@ run.topGO <- function(background, foreground, ontologies = c("BP"), organism, ID
   # genes.of.interest = data.frame(readxl::read_excel(foreground, skip = 1))
   # gene.of.interest.names = genes.of.interest$Ensembl.ID
   #
-  print(paste0("pAdjustMethod: ", pAdjustMethod))
-  print(paste0("ID_type: ",ID_type))
+  dw_log(paste0("pAdjustMethod: ", pAdjustMethod), "\n")
+  dw_log(paste0("ID_type: ",ID_type), "\n")
 
   gene.full.names = background
   gene.of.interest.names = foreground
@@ -74,30 +74,29 @@ run.topGO <- function(background, foreground, ontologies = c("BP"), organism, ID
   result.topGO.classic <- NULL
   result.topGO.weight01 <- NULL
   for (i in 1:length(table.go)) {
-    cat(" @", sQuote(table.go[[i]]), "\n")
+    dw_log(" @", sQuote(table.go[[i]]), "\n")
     ## prepare data
-    cat("   Generating new object of class", sQuote("topGOdata"), "...\n")
-    cat("   > Splitting GOTERM envrionment...\n")
+    dw_log("   Generating new object of class", sQuote("topGOdata"), "...\n")
+    dw_log("   > Splitting GOTERM envrionment...\n")
     topGO::groupGOTerms()
     GOdata <- methods::new("topGOdata", ontology = ontologies[i], allGenes = gene.list, nodeSize = 10,
                    annot = topGO::annFUN.org, mapping = organism, ID = ID_type)
-    cat("done\n")
 
     ## run tests
-    cat("    topGO.elim...\n")
+    dw_log("    topGO.elim...\n")
     result.topGO.elim <- topGO::runTest(GOdata, algorithm = "elim", statistic = "Fisher", cutOff = 0.05)
-    cat("    topGO.classic...\n")
+    dw_log("    topGO.classic...\n")
     result.topGO.classic <- topGO::runTest(GOdata, algorithm = "classic", statistic = "Fisher", cutOff = 0.05)
-    cat("    topGO.weight01...\n")
+    dw_log("    topGO.weight01...\n")
     result.topGO.weight01 <- topGO::runTest(GOdata, algorithm = "weight01", statistic = "Fisher", cutOff = 0.05)
     #resultTopGO.elim
 
     ## look at results
-    cat("    weight01 summary...\n")
+    dw_log("    weight01 summary...\n")
     weight01.summary <- summary(attributes(result.topGO.weight01)$score <= 0.05)
     numsignif <- as.integer(weight01.summary[[3]])
 
-    cat("    topGO GenTable...\n")
+    dw_log("    topGO GenTable...\n")
     table.go[[i]] <- topGO::GenTable( GOdata, Fisher.elim = result.topGO.elim,
                                Fisher.classic = result.topGO.classic, Fisher.weight01 = result.topGO.weight01,
                                orderBy = "Fisher.weight01", topNodes = numsignif)
@@ -109,17 +108,17 @@ run.topGO <- function(background, foreground, ontologies = c("BP"), organism, ID
 
 
   # list containing genes annotated to significant GO terms
-  cat("    Extracting gene IDs annotated to GO terms...\n")
+  dw_log("    Extracting gene IDs annotated to GO terms...\n")
   annotated.genes <- lapply(topGO.results$GO.ID, function(x) as.character(unlist(topGO::genesInTerm(object = GOdata, whichGO = x))))
 
 
   ## Selecting only the genes that are among foreground set:
-  cat("    Selecting genes in foreground set...\n")
+  dw_log("    Selecting genes in foreground set...\n")
   significant.genes <- lapply(annotated.genes, function(x) intersect(x, gene.of.interest.names))
 
 
   #performing BH correction on the weight01 p-values
-  cat("    Performing BH correction...\n")
+  dw_log("    Performing BH correction...\n")
   p.adj.weight01 <- round(p.adjust(topGO.results$Fisher.weight01, method = pAdjustMethod), digits = 5)
 
   #bind new p.adj.wieght01 col

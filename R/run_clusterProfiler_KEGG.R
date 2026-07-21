@@ -46,7 +46,7 @@ run_clusterProfiler_KEGG <- function(input_genes,
 
 
   if (ordered_query) {
-    print("Running gene set enrichment analysis...")
+    dw_log("Running gene set enrichment analysis...", "\n")
     set.seed(123)
     GSE.results <- try(clusterProfiler::gseKEGG(geneList = input_genes,
                                             organism = organism,
@@ -58,7 +58,7 @@ run_clusterProfiler_KEGG <- function(input_genes,
                                             pAdjustMethod = "BH",
                                             seed = T))
     if (is(GSE.results, "try-error")) {
-      cat(" ~~ NOTE: KEGG GSE analysis failed ~~\n")
+      dw_log(" ~~ NOTE: KEGG GSE analysis failed ~~\n")
       return(NULL)
     }
 
@@ -80,7 +80,7 @@ run_clusterProfiler_KEGG <- function(input_genes,
 
   if (!ordered_query) {
 
-    print("Running over-representation analysis...")
+    dw_log("Running over-representation analysis...", "\n")
     ORA.results <- try(clusterProfiler::enrichKEGG(gene = input_genes,
                                               universe = background_genes,
                                               organism = organism,
@@ -91,7 +91,7 @@ run_clusterProfiler_KEGG <- function(input_genes,
                                               minGSSize = min_set_size,
                                               maxGSSize = max_set_size))
     if (is(ORA.results, "try-error")) {
-      cat(" ~~ NOTE: KEGG ORA failed ~~\n")
+      dw_log(" ~~ NOTE: KEGG ORA failed ~~\n")
       return(NULL)
     }
 

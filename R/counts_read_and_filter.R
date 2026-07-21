@@ -23,7 +23,7 @@ diff_expr_read_counts <-
     if (is.character(expr.dat)) {
       if (length(unlist(expr.dat)) > 1) {
         ## check sample names
-        cat("Checking expression file names...\n")
+        dw_log("Checking expression file names...\n")
         if (is.null(names(expr.dat))) {
           names(expr.dat) <- sub("\\.[a-z]{1,5}$", "", basename(expr.dat))
         }
@@ -38,7 +38,7 @@ diff_expr_read_counts <-
             stop("Input vector of count file names must be identical to all or a subset of sample names provided in 'samp.info', i.e., it must be the same names in the same order!")
           } else {
             if (nrow(samp.info) < length(expr.dat)) {
-              cat("  Importing subset of samples...\n")
+              dw_log("  Importing subset of samples...\n")
             }
             expr.dat <- expr.dat[as.character(samp.info$SampleNames)]
           }
@@ -46,12 +46,12 @@ diff_expr_read_counts <-
           stop("Sample names not found in input files")
         }
         # import individual count files
-        cat("Reading count files for samples:\n")
-        print(samp.info$SampleNames)
+        dw_log("Reading count files for samples:\n")
+        dw_log_obj(samp.info$SampleNames)
         counts <- edgeR::readDGE(expr.dat)$counts
       } else if (miRSEQ) {
         # reading output from CAP-miRSEQ summary script
-        cat("Reading output from CAP-miRSEQ summary script...\n")
+        dw_log("Reading output from CAP-miRSEQ summary script...\n")
         counts <- read.table(expr.dat, sep="\t", header=T, stringsAsFactors=F)
         # assign unique mature_precursor id to each row
         row.names(counts) <- expression.raw$Mature.miRNA
@@ -60,7 +60,7 @@ diff_expr_read_counts <-
         counts <- counts[, samples]
       } else {
         # reading counts matrix with rows corresponding to genes and columns to samples
-        cat("Reading counts matrix...\n")
+        dw_log("Reading counts matrix...\n")
         counts <- read.delim(expr.dat, row.names = 1, check.names = F)
         # here potentially get columns that are not sample names (future functionality)
         if (any(names(counts) %in% samp.info$SampleNames)) {
@@ -69,10 +69,10 @@ diff_expr_read_counts <-
             stop("Input vector of count file names must be identical to all or a subset of sample names provided in 'samp.info', i.e., it must be the same names in the same order!")
           } else {
             if (nrow(samp.info) < ncol(counts)) {
-              cat("  Importing subset of samples...\n")
+              dw_log("  Importing subset of samples...\n")
             }
-            cat("Reading count files for samples:\n")
-            print(samp.info$SampleNames)
+            dw_log("Reading count files for samples:\n")
+            dw_log_obj(samp.info$SampleNames)
             counts <- counts[, as.character(samp.info$SampleNames)]
           }
         } else {
@@ -88,14 +88,14 @@ diff_expr_read_counts <-
           stop("Column names of input matrix must be identical to all or a subset of sample names provided in 'samp.info', i.e., it must be the same names in the same order!")
         } else {
           if (nrow(samp.info) < ncol(expr.dat)) {
-            cat("  Importing subset of samples...\n")
+            dw_log("  Importing subset of samples...\n")
           }
           expr.dat <- expr.dat[, as.character(samp.info$SampleNames)]
         }
       } else {
         stop("Sample names not found in input column names")
       }
-      cat("Geting counts from count matrix...\n")
+      dw_log("Geting counts from count matrix...\n")
       counts <- edgeR::getCounts(edgeR::DGEList(expr.dat))
     }
     # in case of untypical gene identifiers change those
@@ -129,7 +129,7 @@ diff_expr_filter_counts <-
     # TODO: add edgeR filter function as in McElreavey project
     cpms <- edgeR::cpm(counts)
     if (strict) {
-      cat("  Using 'strict' filtering...\n")
+      dw_log("  Using 'strict' filtering...\n")
       keep <- rowSums(cpms > 5) >= ceiling(ncol(counts)/2) & !noint
     } else {
       if(is.null(min.samp)) {
@@ -137,7 +137,7 @@ diff_expr_filter_counts <-
       }
       keep <- rowSums(cpms > 1) >= min.samp & !noint
     }
-    cat("  Removing", length(which(!keep)), "and keeping", length(which(keep)), "rows...\n")
+    dw_log("  Removing", length(which(!keep)), "and keeping", length(which(keep)), "rows...\n")
     counts <- counts[keep, ]
     ## Visualize and inspect the count table
     colnames(counts) <- basename(colnames(counts))

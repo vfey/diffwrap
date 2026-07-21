@@ -76,13 +76,12 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
   adjPvalColumn = names(DE.table)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(DE.table)))]
   termColumn = names(enrichment.table)[grep("description|^term_name", tolower(names(enrichment.table)))]
   DEGcolumn =   names(enrichment.table)[grep("^degs|^genes|^intersection$", tolower(names(enrichment.table)))]
-  cat("         Detected following columns in data inputted for network visualisation: \n")
-  cat("         DE (log) fold changes: ", logFoldChangeColumn,  "\n")
-  cat("         FDR: ",adjPvalColumn, "\n")
-  cat("         Genes associated with the term: ", DEGcolumn, "\n")
-  cat("         Term descriptions used in nodes: ", termColumn, "\n", "\n")
-  cat("         Filtering the the genes (fdr < ", fdr.thr, "and abs. logFC >=", logfc.thr, ") and", "\n",
-                "by the existence of symbolic names...\n")
+  dw_log("         Detected following columns in data inputted for network visualisation: \n")
+  dw_log("         DE (log) fold changes: ", logFoldChangeColumn,  "\n")
+  dw_log("         FDR: ",adjPvalColumn, "\n")
+  dw_log("         Genes associated with the term: ", DEGcolumn, "\n")
+  dw_log("         Term descriptions used in nodes: ", termColumn, "\n", "\n")
+  dw_log("         Filtering the the genes (fdr < ", fdr.thr, "and abs. logFC >=", logfc.thr, ") and", "by the existence of symbolic names...\n")
 
   # Take only n enriched terms
   enrichment.table <- enrichment.table[1:show.terms,]
@@ -121,7 +120,7 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
   upper_limit = quantile(positives,3/4) + 3*IQR(positives)
 
   outliers = all.foldchanges[all.foldchanges > upper_limit | all.foldchanges < lower_limit]
-  cat("         ", length(outliers), "  outliers (r-boxplot method) found... \n")
+  dw_log("         ", length(outliers), "  outliers (r-boxplot method) found... \n")
 
   if (length(outliers) > 0) {
     to_be_saturated = all.foldchanges %in% outliers
@@ -144,11 +143,11 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
   edges <- c()
   genes = c()
   for (i in 1:length(enrichment.table[[termColumn]])) {
-    cat("\n")
+    dw_log("\n")
     x <- strsplit(as.character(enrichment.table[i, DEGcolumn]), split = ",")[[1]]
-    cat("         Genes associated with the term '", enrichment.table[i, termColumn], "': ", length(x), "\n")
+    dw_log("         Genes associated with the term '", enrichment.table[i, termColumn], "': ", length(x), "\n")
     x <- x[x %in% DE.table[[geneSymbolColumn]]] # Remove genes that are not in DE table
-    cat("         Genes associated with the term after removing those not found in filtered DE-table: ", length(x), "\n")
+    dw_log("         Genes associated with the term after removing those not found in filtered DE-table: ", length(x), "\n")
     y <- rep(as.character(enrichment.table[i, termColumn]), times =  length(x))
     edge <- as.vector(rbind(y,x))
     edges <- append(edges, edge)
@@ -383,8 +382,8 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
 
 
   contrast.names <- names(diffr.wrapper.output$contrasts)
-  cat("Performing enrichment analyses for ", length(contrast.names), " comparisons: \n")
-  cat("  ", contrast.names, " \n")
+  dw_log("Performing enrichment analyses for ", length(contrast.names), " comparisons: \n")
+  dw_log("  ", contrast.names, " \n")
 
   dat <- diffr.wrapper.output$contrasts[[1]] ## extracting appropriate colnames using the first contrast
   pv.col <- names(dat)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(dat)))]
@@ -398,36 +397,35 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
     # background.genes <- rownames(dat) ## THIS should be used after filtering is corrected. Until that, two extra elements need to be skipped:
     background.genes <-
       rownames(dat)[rownames(dat) != "N_multimapping" | rownames(dat) != "N_noFeature"]
-    cat("The genes of full expression table (", length(background.genes), ") is used as the background (expect in GSEA-analyses, where no background is used)... \n")
+    dw_log("The genes of full expression table (", length(background.genes), ") is used as the background (expect in GSEA-analyses, where no background is used)... \n")
   }
 
   for (contrast in contrast.names) {
 
     contr.out.dir  <- dir(out.dir, pattern = paste0("^", contrast, "$"), full.names = TRUE)
     #Creating sub-folders
-    cat("  Creating per-enrichment sub-folders...")
+    dw_log("  Creating per-enrichment sub-folders...", "\n")
     lapply(enrichment.methods, function(method) dir.create(file.path(contr.out.dir, method), showWarnings = F))
-    cat("done\n")
 
-    cat("***", contrast, "*** \n")
+    dw_log("***", contrast, "*** \n")
     de_table <- diffr.wrapper.output$contrasts[[contrast]]
 
-    cat("   Filtering the DE genes (fdr < ", fdr.thr, "and abs. logFC >=", logfc.thr, ")...\n")
+    dw_log("   Filtering the DE genes (fdr < ", fdr.thr, "and abs. logFC >=", logfc.thr, ")...\n")
     filtered_de_table <- de_table[de_table[[fdr.col]] < fdr.thr & abs(de_table[[fc.col]]) >= logfc.thr,]
 
     #if there are no entries with significant fdr, then filter by p.value
     if (!(nrow(filtered_de_table) > 0) & use.pval.in.DE.filtering.if.no.sign.fdrs) {
-      cat("      No entries with significant fdr. P-values used instead...\n")
+      dw_log("      No entries with significant fdr. P-values used instead...\n")
       filtered_de_table <- de_table[de_table[[pv.col]] < p.thr & abs(de_table[[fc.col]]) >= logfc.thr,]
     }
 
     input.genes <- rownames(filtered_de_table)
     if (length(input.genes) == 0) {
-      cat("  ", length(input.genes), " genes considered significant for the analysis in contrast", contrast,". Skipping the contrast...\n")
+      dw_log("  ", length(input.genes), " genes considered significant for the analysis in contrast", contrast,". Skipping the contrast...\n")
       next
     }
 
-    cat("  ", length(input.genes), " genes used as input (expect in GSEA-analyses, where all measured genes is used) \n")
+    dw_log("  ", length(input.genes), " genes used as input (expect in GSEA-analyses, where all measured genes is used) \n")
 
     for (method in enrichment.methods) {
 
@@ -439,9 +437,9 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
        missing.params <- default.params[names(default.params)[!(names(default.params) %in% names(clusterProfilerGO.params))]]
        clusterProfilerGO.params <- c(clusterProfilerGO.params, missing.params)
 
-       cat("   Performing GO BP enrichment with clusterProfiler... \n")
-       cat("   ")
-       print(unlist(clusterProfilerGO.params))
+       dw_log("   Performing GO BP enrichment with clusterProfiler... \n")
+       dw_log("   ", "\n")
+       dw_log_obj(unlist(clusterProfilerGO.params))
        org.db <- as.character(enrich.resource.terms[species, method])
 
        if (clusterProfilerGO.params$analysis.approach == "ORA") {
@@ -464,7 +462,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
          genes <- geneList
 
        }
-       cat("  Running tests...\n")
+       dw_log("  Running tests...\n")
        result <- run_clusterProfiler_GO(input_genes = genes,
                                         background_genes = background.genes,
                                         ordered_query = ordered.query,
@@ -476,7 +474,6 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                                         min_overlap = clusterProfilerGO.params$min.overlap,
                                         pAdjustMethod = clusterProfilerGO.params$p.adjust.method,
                                         similarity_filtering = clusterProfilerGO.params$do.similarity.filtering)
-       cat("done\n")
 
        #Saving the table, if relevant
        method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE)
@@ -486,13 +483,13 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                             clusterProfilerGO.params$analysis.approach, ".",
                             clusterProfilerGO.params$ontology,".xls" )
          full.filename <- file.path(method.dir, filename)
-         cat("      Saving ", method, " result table into ",  full.filename, "...\n")
+         dw_log("      Saving ", method, " result table into ",  full.filename, "...\n")
          WriteXLS::WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
 
          #Making the graph visualisation
          if (do.plot) {
            graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)
-           cat("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
+           dw_log("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
            plot_enrichment_network(enrichment.result = result, DE.result = de_table,
                                    plot.filename = graph.name, show.terms = plot.num.terms,
                                    logfc.thr = plot.logfc.thr, fdr.thr = plot.fdr.thr)
@@ -516,13 +513,13 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
         clusterProfilerKEGG.params <- c(clusterProfilerKEGG.params, missing.params)
 
 
-        cat("   Performing KEGG enrichment with clusterProfiler... \n")
-        cat("   ")
-        print(unlist(clusterProfilerKEGG.params))
+        dw_log("   Performing KEGG enrichment with clusterProfiler... \n")
+        dw_log("   ", "\n")
+        dw_log_obj(unlist(clusterProfilerKEGG.params))
         org <- as.character(enrich.resource.terms[species, method])
 
         if (length(entrez.col) == 0) {
-          cat("      No entrez IDs found  from the data. skipping KEGG-enrichment...\n")
+          dw_log("      No entrez IDs found  from the data. skipping KEGG-enrichment...\n")
           break
         }
 
@@ -531,15 +528,15 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
 
           if (length(background.genes)  > 1) {
             background.gene.entrez <- as.character(de_table[[entrez.col]][!is.na(de_table[[entrez.col]])])
-            cat("      ",length(background.gene.entrez), "/", length(background.genes), " of the all measured genes having corresponding entrez id used as background...\n")
+            dw_log("      ",length(background.gene.entrez), "/", length(background.genes), " of the all measured genes having corresponding entrez id used as background...\n")
 
           }
           else{
-            cat("      Using default background in KEGG-enrichment...\n")
+            dw_log("      Using default background in KEGG-enrichment...\n")
           }
 
           input.gene.entrez <- as.character(filtered_de_table[[entrez.col]][!is.na(filtered_de_table[[entrez.col]])])
-          cat("      ",length(input.gene.entrez), "/", length(input.genes), " of the input genes having corresponding entrez id used for the analysis...\n")
+          dw_log("      ",length(input.gene.entrez), "/", length(input.genes), " of the input genes having corresponding entrez id used for the analysis...\n")
 
 
           ordered.query <- FALSE
@@ -564,7 +561,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
 
         }
 
-        cat("  Running tests...\n")
+        dw_log("  Running tests...\n")
         result <- run_clusterProfiler_KEGG(input_genes = genes,
                                               background_genes = background.gene.entrez,
                                               ordered_query = ordered.query,
@@ -574,7 +571,6 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                                               max_set_size = clusterProfilerKEGG.params$max.gene.set.size,
                                               min_overlap = clusterProfilerKEGG.params$min.overlap,
                                               pAdjustMethod = clusterProfilerKEGG.params$p.adjust.method)
-        cat("done\n")
 
         #Saving the table, if relevant
         method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE)
@@ -600,13 +596,13 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                              clusterProfilerKEGG.params$analysis.approach, ".",
                              clusterProfilerKEGG.params$ontology,".xls" )
           full.filename <- file.path(method.dir, filename)
-          cat("      Saving ", method, " result table into ",  full.filename, "...\n")
+          dw_log("      Saving ", method, " result table into ",  full.filename, "...\n")
           WriteXLS::WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
 
           #Making the graph visualisation
           if (do.plot) {
             graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)
-            cat("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
+            dw_log("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
             plot_enrichment_network(enrichment.result = result, DE.result = de_table,
                                     plot.filename = graph.name, show.terms = plot.num.terms,
                                     logfc.thr = plot.logfc.thr, fdr.thr = plot.fdr.thr)
@@ -620,12 +616,12 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
 
       if (method == "gProfileR") {
 
-        cat("   Performing GO BP enrichment with gProfileR... \n")
+        dw_log("   Performing GO BP enrichment with gProfileR... \n")
         org <- as.character(enrich.resource.terms[species, method])
-        print(paste0("Organism: ",org))
-        print(paste0("Data sources: ",gProfileR.params$data.sources))
+        dw_log(paste0("Organism: ",org), "\n")
+        dw_log(paste0("Data sources: ",gProfileR.params$data.sources), "\n")
 
-        cat("  Running tests...\n")
+        dw_log("  Running tests...\n")
         results <- run_gprofiler(input.genes, background.genes,
                                 organism = org,
                                 data_sources = gProfileR.params$data.sources,
@@ -634,7 +630,6 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                                 evidence_codes = gProfileR.params$evidence_codes,
                                 domain_scope = gProfileR.params$domain_scope,
                                 highlight = gProfileR.params$highlight)
-        cat("done\n")
 
         # Formatting and saving the table, if relevant
         method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE) # detecting output directory
@@ -647,13 +642,13 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
 
           filename <- paste0(analysis.name, ".", contrast,".", method, ".", gProfileR.params$data.sources,".xls" )
           full.filename <- file.path(method.dir, filename)
-          cat("      Saving ", method, " result table into ",  full.filename, "...\n")
+          dw_log("      Saving ", method, " result table into ",  full.filename, "...\n")
           WriteXLS::WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
 
           #Making the graph visualisation
           if (do.plot) {
             graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)
-            cat("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
+            dw_log("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
             plot_enrichment_network(enrichment.result = result, DE.result = de_table,
                                     plot.filename = graph.name, show.terms = plot.num.terms,
                                     logfc.thr = plot.logfc.thr, fdr.thr = plot.fdr.thr)
@@ -671,14 +666,13 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
 
         method.dir <- dir(contr.out.dir, pattern = paste0("^",method), full.names = TRUE)
 
-        cat("Performing topGO.... \n")
-        print(paste0("Ontologies used: ", topGO.params$ontologies.used))
-        print(paste0("Organism: ", topGO.params$org))
+        dw_log("Performing topGO.... \n")
+        dw_log(paste0("Ontologies used: ", topGO.params$ontologies.used), "\n")
+        dw_log(paste0("Organism: ", topGO.params$org), "\n")
 
         org.db <- as.character(enrich.resource.terms[species, method])
-        cat("  Running tests...\n")
+        dw_log("  Running tests...\n")
         result <- run.topGO(background = background.genes, foreground = input.genes,ontologies =  topGO.params$ontologies.used, organism = org.db)
-        cat("...done\n")
 
         #Formatting and saving the table, if relevant
         if (length(result) > 0 && is.data.frame(result) && nrow(result) > 0) {
@@ -688,13 +682,13 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
 
           filename <- paste0(analysis.name, ".", contrast,".", method, ".", topGO.params$ontologies.used,".xls" )
           full.filename <- file.path(method.dir, filename)
-          cat("      Saving ", method, " result table into ",  full.filename, "...\n")
+          dw_log("      Saving ", method, " result table into ",  full.filename, "...\n")
           WriteXLS::WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
 
           #Making the graph visualisation
           if (do.plot) {
             graph.name = gsub(".xls", ".network", full.filename, fixed = TRUE)
-            cat("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
+            dw_log("      Saving ", method, " network with the name ", graph.name, ".pdf", "...\n")
             plot_enrichment_network(enrichment.result = result, DE.result = de_table,
                                     plot.filename = graph.name, show.terms = plot.num.terms,
                                     logfc.thr = plot.logfc.thr, fdr.thr = plot.fdr.thr)

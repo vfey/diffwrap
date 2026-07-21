@@ -76,13 +76,13 @@ diffr_venn <- function(list.comp.tables, join.vec, .log = FALSE) {
     }
     #if all entries are 1 then join them all based on the join.vec
     else if (all(venn.tt[j,] == 1)) {
-      print(rownames(venn.tt)[j])
+      dw_log(rownames(venn.tt)[j], "\n")
       inters.all <- list.comp.tables %>% purrr::reduce(dplyr::inner_join, by = join.vec)
       hgnc.col <- names(inters.all)[grep("symbol|hgnc", tolower(names(inters.all)))]
       inters.all <- inters.all[inters.all[hgnc.col] != "",]
       list.venn.tables[[rownames(venn.tt)[j]]] <- inters.all
 
-      print(paste0(rownames(venn.tt)[j],"-",nrow(inters.all[unique(inters.all[[hgnc.col]]),])))
+      dw_log(paste0(rownames(venn.tt)[j],"-",nrow(inters.all[unique(inters.all[[hgnc.col]]),])), "\n")
     }
     #otherwise calculate the intersection for the ones that have index 1 and the union for those who have 0 and extract those entries which are in the intersection and not in the union
     #this gives the intersection table for the Venn sections seen in the Venn diagram
@@ -95,7 +95,7 @@ diffr_venn <- function(list.comp.tables, join.vec, .log = FALSE) {
       hgnc.col <- names(res.join)[grep("symbol|hgnc", tolower(names(res.join)))]
       res.join <- res.join[res.join[[hgnc.col]] != "",]
       list.venn.tables[[rownames(venn.tt)[j]]] <- res.join
-      print(paste0("Venn sections summary - ",rownames(venn.tt)[j],"--",nrow(res.join[unique(res.join[[hgnc.col]]),])))
+      dw_log(paste0("Venn sections summary - ",rownames(venn.tt)[j],"--",nrow(res.join[unique(res.join[[hgnc.col]]),])), "\n")
     }
 
   }

@@ -115,11 +115,11 @@ ggbiplot.n <- function (pcobj, choices = 1:2, scale = 1, pc.biplot = TRUE,
 	g <- ggplot(data = df.u, aes(x = xvar, y = yvar)) + xlab(u.axis.labs[1]) +
 			ylab(u.axis.labs[2])
 	if (fix.aspect) {
-		cat("\n     Note: Fixing aspect ratio of axes.\n    ")
+		dw_log("\n     Note: Fixing aspect ratio of axes.\n    ", "\n")
 		g <- g + coord_equal()
 	}
 	if (tweak) {
-		cat(" Note: Tweaking size of text elements.\n    ")
+		dw_log(" Note: Tweaking size of text elements.\n    ", "\n")
 		g <- g + theme(axis.title.x=element_text(size=rel(axes.title.size)), axis.title.y=element_text(size=rel(axes.title.size)), legend.text=element_text(size=rel(legend.text.size)),
 				legend.title=element_text(size=rel(legend.title.size)))
 	}

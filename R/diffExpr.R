@@ -7,7 +7,7 @@
 #' @param expr.dat \code{character} or \code{list}. String or vector or list of input file paths, or matrix of count values
 #' @param samp.info \code{data.frame}. samp.info object containing information of the project's sample sheet
 #' @param control \code{character}. Name of the control group
-#' @param design \code{character} that can be coerced to a formular for producing a design matrix
+#' @param design \code{matrix}. design matrix
 #' @param samples \code{character}. Name of the column in 'samp.info' containing sample names. If 'samp.info' is not supplied
 #'     vector of sample names.
 #' @param sample.plot.names \code{character}. Optional name of a column with "nice" sample names for plotting.
@@ -220,7 +220,7 @@ diffExpr <-
     ## initial checks
     dw_step("@ -- STARTUP CHECKS --\n\n")
     # test if needed packages are installed
-    cat("  Checking if needed packages are installed...")
+    dw_log("  Checking if needed packages are installed...", "\n")
     if (do.enrichment && biom.data.set == "hsapiens_gene_ensembl" && !requireNamespace("org.Hs.eg.db", quietly = TRUE)) {
       stop(
         paste("Package", sQuote("org.Hs.eg.db"), "must be installed to perform enrichment analysis.
@@ -241,11 +241,10 @@ diffExpr <-
         call. = FALSE
       )
     }
-    cat("done\n")
     if (use.cache && is.null(biom.cache)) {
       biom.cache <- rappdirs::user_cache_dir("biomaRt")
     }
-    cat("  Checking for necessary user input...")
+    dw_log("  Checking for necessary user input...", "\n")
     if (missing(expr.dat) || !is.character(unlist(expr.dat))) {
       stop("Need input file with raw expression values (read counts)!")
     }
@@ -277,7 +276,7 @@ diffExpr <-
       }
     }
     if (length(grep("Weights", voom.fun))) {
-      cat ("  'voomWithQualityWeights' is set as voom function; using settings for sample weights...\n")
+      dw_log("  'voomWithQualityWeights' is set as voom function; using settings for sample weights...\n")
       use_weights <- TRUE
     }
 
@@ -295,43 +294,43 @@ diffExpr <-
         biom.attributes <- c(biom.attributes, "entrezgene_id")
       }
     }
-    cat("done\n\n")
+    dw_log("\n")
 
-    cat("@ -- PREPARING RUN ENVIRONMENT --\n\n")
+    dw_step("@ -- PREPARING RUN ENVIRONMENT --\n\n")
     # setting standard output folder
     if (is.null(out.dir)) {
-      cat("No output folder set. Using default\n")
+      dw_log("No output folder set. Using default\n")
       out.dir <- file.path(normalizePath(project.dir), "differential_expression")
     }
     # checking for content in existing output folder
     if (file.exists(out.dir)) {
       if (length(dir(out.dir))) {
-        cat("  Output directory exists and is not empty! Found:\n")
+        dw_log("  Output directory exists and is not empty! Found:\n")
         found <- dir(out.dir, include.dirs = TRUE)
-        print(found)
+        dw_log_obj(found)
         out.dir <- paste(normalizePath(out.dir), "new",
                          gsub("-", "", unlist(strsplit(as.character(Sys.time()), " "))[1]),
                          gsub(":", "", unlist(strsplit(as.character(Sys.time()), " "))[2]),
                          sep = "_")
-        cat("  Creating new output folder", sQuote(out.dir), "...")
+        dw_log("  Creating new output folder", sQuote(out.dir), "...", "\n")
       } else {
-        cat("  Output folder exists and is empty.\n")
+        dw_log("  Output folder exists and is empty.\n")
       }
     }
     # creating output folder if not existing
     if (!file.exists(out.dir)) {
-      cat("  Output directory does not exist. Creating...\n")
+      dw_log("  Output directory does not exist. Creating...\n")
       if (!dry.run) {
         dir.create(out.dir)
       } else {
-        cat(" ~~DRY RUN~~\n")
+        dw_log(" ~~DRY RUN~~\n")
       }
     }
-    cat("  Saving output to", out.dir, "\n")
+    dw_log("  Saving output to", out.dir, "\n")
 
     if (block) {
       do.voom <- TRUE
-      cat("*** Using 'blocked' design (i.e., samples are measured _in blocks_). Enforcing 'voom'! ***\n")
+      dw_log("*** Using 'blocked' design (i.e., samples are measured _in blocks_). Enforcing 'voom'! ***\n")
     }
 
     ## switch off plotting device on exit in case a plot fails
@@ -355,7 +354,7 @@ diffExpr <-
     samp.info <- diff_expr_get_samp_info(samp.info, samples, groups, ellipse.mapping.groups)
 
     ## make control group first levels to ensure it becomes the '(Intercept)'
-    cat("  Setting control group...\n")
+    dw_log("  Setting control group...\n")
     if (is.numeric(samp.info$Groups)) {
       control <- paste0("group_", control)
     }
@@ -391,12 +390,12 @@ diffExpr <-
       dw_step("  Writing run log to", sQuote(log.file), "\n")
     }
 
-    cat("\n@ -- PREPROCESSING --\n\n")
+    dw_step("\n@ -- PREPROCESSING --\n\n")
     ## read counts
     counts <- diff_expr_read_counts(expr.dat, samp.info)
 
     ## Filter weakly expressed and non-informative (e.g., non-aligned) features
-    cat(" Filtering counts...\n")
+    dw_log(" Filtering counts...\n")
     counts <- diff_expr_filter_counts(counts, samp.info, strict, min.samp)
 
     ## Create a DGEList object (edgeR’s container for RNA-seq count data)
@@ -405,7 +404,7 @@ diffExpr <-
     d <- edgeR::calcNormFactors(d)
     ## Inspect the relationships between samples using a multidimensional scaling (MDS) plot
     if (plots) {
-      cat(" MDS plot...\n")
+      dw_log(" MDS plot...\n")
       if (!is.null(sample.plot.names)) {
         spn <- samp.info[, c("SampleNames", sample.plot.names)]
         spn <- spn[match(colnames(d), spn$SampleNames), ]
@@ -422,9 +421,9 @@ diffExpr <-
         } else {
           spr <- paste0(paste(sQuote(sample.plot.names), collapse=", "), "(, truncated...)\n")
         }
-        cat("  Using pretty labels for MDS plot:", spr)
+        dw_log("  Using pretty labels for MDS plot:", spr, "\n")
       } else {
-        cat("  NOTE: Sanity check for pretty names failed. Falling back to column names...\n")
+        dw_log("  NOTE: Sanity check for pretty names failed. Falling back to column names...\n")
         sample.plot.names <- as.character(colnames(d)) ## check!
       }
       names(sample.plot.names) <- colnames(d)
@@ -448,8 +447,6 @@ diffExpr <-
                                       block = block,
                                       use_weights = use_weights)
     } else {
-      # in order to match the search pattern in the grep part in the contrasts function the columns
-      # of the design matrix reflecting the sample groups are renamed to start with "groups"
       grp.col <- grep(paste0("^", grp.nam), colnames(design))
       if (length(grp.col)) {
         colnames(design)[grp.col] <- sub(paste0("^", grp.nam), "groups", colnames(design)[grp.col])
@@ -457,7 +454,7 @@ diffExpr <-
       user_design <- TRUE
     }
     if (length(grep(":", colnames(design)))) {
-      cat("  Checking design column names...\n")
+      dw_log("  Checking design column names...\n")
       colnames(design) <- gsub(":", "__", colnames(design))
     }
 
@@ -479,12 +476,12 @@ diffExpr <-
       pairs <- samp.info[[pairs]]
     }
 
-    cat("@ -- LINEAR MODELLING --\n\n")
+    dw_step("@ -- LINEAR MODELLING --\n\n")
     ## voom
     if (do.voom) {
-      cat("Running 'voom'...\n")
+      dw_log("Running 'voom'...\n")
       norm.method <- match.arg(norm.method)
-      cat("  Running", sQuote(voom.fun), "with", norm.method, "normalisation...\n")
+      dw_log("  Running", sQuote(voom.fun), "with", norm.method, "normalisation...\n")
       ## compute linear model fit and optionally apply voom beforehand
       #### NOTE: voom generates log2-cpms
 
@@ -505,7 +502,7 @@ diffExpr <-
 
       out.l <- list(v=fit.l$v, fit=fit.l$fit, fit2=fit.l$fit2)
       if (!block && !is.null(pairs)) {
-        cat("    Paired samples: additional eBayes on first fit object...\n")
+        dw_log("    Paired samples: additional eBayes on first fit object...\n")
         fit3 <- limma::eBayes(fit = fit.l$fit, trend = bayes.trend, robust = bayes.robust)
         out.l$fit3 <- fit.l$fit3
       }
@@ -522,19 +519,19 @@ diffExpr <-
       out.l <- list(d=fit.l$d, d2=fit.l$d2, fit=fit.l$fit)
       # normalized expression
       # Get the depth-adjusted reads per million
-      cat("Generating output table of differentially expressed features...\n")
+      dw_log("Generating output table of differentially expressed features...\n")
       normcnt <- edgeR::cpm(fit.l$d2, normalized.lib.sizes=TRUE, log=TRUE, prior.count=3)
     }
 
     type <- match.arg(type)
     if (type=="both") {
-      cat("Plotting both uncorrected and pseudo-corrected if applicable...\n")
+      dw_log("Plotting both uncorrected and pseudo-corrected if applicable...\n")
     }
     if (plots) {
       if (type %in% c("both", "uncorrected")) {
         ## quality control plots for uncorrected data
-        cat("Quality control plots...\n")
-        cat("  Uncorrected, normalised data...\n")
+        dw_log("Quality control plots...\n")
+        dw_log("  Uncorrected, normalised data...\n")
         if (do.voom) {
           type.plot <- "uncorrected, normalised voom output"
         } else {
@@ -568,14 +565,13 @@ diffExpr <-
 
       if (!block && !is.null(pairs) && (type %in% c("both", "pseudo-corrected"))) {
         ## quality control plots for pseudo-corrected data
-        cat("  Corrected, normalised pseudo-counts...\n")
+        dw_log("  Corrected, normalised pseudo-counts...\n")
         ## get pseudo counts for blocked designs (e.g., paired samples or batch factors)
-        cat("   Calculating pseudo-counts...\n")
+        dw_log("   Calculating pseudo-counts...\n")
         pseudo.counts <- try(diff_expr_pseudo_counts(design=design, d=d, pairs="pairs", disp=disp, do.cpm=TRUE))
         if (is(pseudo.counts, "try-error")) {
-          cat(" !NOTE! - Pseudo-count calculation failed. Omitting from output...\n")
+          dw_log(" !NOTE! - Pseudo-count calculation failed. Omitting from output...\n")
         } else {
-          cat("   done\n")
           out.l <- diff_expr_QC_plots(counts=pseudo.counts,
                                       samp.info=samp.info,
                                       control=control,
@@ -605,12 +601,12 @@ diffExpr <-
     }
 
 
-    cat("@ -- EXTRACTING CONTRASTS --\n\n")
+    dw_step("@ -- EXTRACTING CONTRASTS --\n\n")
     if (do.voom) {
       if (!block && !is.null(pairs)) {
-        cat("  ...for paired samples comparisons (voom)...\n")
+        dw_log("  ...for paired samples comparisons (voom)...\n")
         cont <- grep("^groups.+", colnames(fit3$coefficients), value=TRUE)
-        cat("  ", cont, "\n")
+        dw_log("  ", cont, "\n")
         out.l <- diff_expr_extract_contrasts(contrasts = cont,
                                              fit = fit.l$fit,
                                              fit2 = fit3,
@@ -656,7 +652,7 @@ diffExpr <-
       }
 
       if (!is.null(contrasts)) {
-        cat("  ...for all (remaining) comparisons (voom)...\n")
+        dw_log("  ...for all (remaining) comparisons (voom)...\n")
         out.l <- diff_expr_extract_contrasts(contrasts = contrasts,
                                              fit = fit.l$fit,
                                              fit2 = fit.l$fit2,
@@ -702,9 +698,9 @@ diffExpr <-
       }
     } else {
       if (!is.null(pairs)) {
-      cat("  ...for paired samples comparisons (GLM)...\n")
+      dw_log("  ...for paired samples comparisons (GLM)...\n")
         cont <- grep("^groups.+", colnames(fit.l$fit$coefficients), value=TRUE)
-        cat("  ", cont, "\n")
+        dw_log("  ", cont, "\n")
         out.l <- diff_expr_extract_contrasts(contrasts = cont,
                                              fit = fit.l$fit,
                                              fit2 = NULL,
@@ -750,7 +746,7 @@ diffExpr <-
       }
 
       if (!is.null(contrasts)) {
-        cat("  ...for all (remaining) comparisons (GLM)...\n")
+        dw_log("  ...for all (remaining) comparisons (GLM)...\n")
         out.l <- diff_expr_extract_contrasts(contrasts = contrasts,
                                              fit = fit.l$fit,
                                              fit2 = NULL,
@@ -797,7 +793,7 @@ diffExpr <-
     }
 
     if (do.enrichment) {
-      cat("@ -- ENRICHMENT ANALYSIS --\n\n")
+      dw_step("@ -- ENRICHMENT ANALYSIS --\n\n")
       enrich_spec <- switch(biom.data.set,
                             hsapiens_gene_ensembl = "human",
                             mmusculus_gene_ensembl = "mouse")

@@ -40,36 +40,34 @@ diff_expr_QC_plots <-
            geom.point.size=2, label.font.size = 5, plot.ellipse.legend=NA, circle=TRUE, varname.size=0, var.axes=FALSE,
            pairs=NULL, pairs.name=NULL, gene.selection="common", n=500, type=NULL, analysis.name=NULL, out.dir=".")
   {
-    cat("  Doing PCA...\n")
+    dw_log("  Doing PCA...\n")
     PCA <- diff_expr_PCA(counts=counts, n=n)
-    cat("  done\n")
     groups <- relevel(samp.info$Groups, ref=control)
     samp.name <- samp.info$SampleNames
     main <- paste(type, analysis.name, sep="_")
     main <- gsub("\\.{1,}", "_", make.names(main))
     if (!length(out.l$QCplots)) out.l$QCplots <- list()
-    cat("  Plotting...\n")
+    dw_log("  Plotting...\n")
     pdf_file <- file.path(out.dir, paste0(Sys.Date(), "_", main, "_QC_plots.pdf"))
-    cat("   Saving plot to", pdf_file, "...\n")
+    dw_log("   Saving plot to", pdf_file, "...\n")
     pdf(pdf_file, width=11, height=11)
     main <- paste(type, analysis.name)
-    cat("   MDS ggplot...\n")
+    dw_log("   MDS ggplot...\n")
     out.l$QCplots[[paste0(type, "_MDS")]] <- diff_expr_ggplot_mds(counts=counts, samp.name=samp.name, groups=groups, grp.nam=grp.nam, pairs=pairs,
                                                    pairs.name=pairs.name, gene.selection=gene.selection, dim.plot=PC[1:2], main=main)
-    cat("   done.\n   PCA ggbiplot...\n")
+    dw_log("   PCA ggbiplot...\n")
     out.l$QCplots[[paste0(type, "_PCAbiplot")]] <- diff_expr_PCA_ggbiplot(PCA=PCA, groups=groups, grp.nam=grp.nam, ellipse=ellipse, circle=circle,
                                                            varname.size=varname.size, var.axes=var.axes, main=main)
-    cat("   done.\n   PCA ggplot...\n")
+    dw_log("   PCA ggplot...\n")
     out.l$QCplots[[paste0(type, "_PCAlabelledPlot")]] <- diff_expr_PCA_ggplot(PCA=PCA, samp.name=sample.plot.names, groups=groups, grp.nam=grp.nam, PC=c(1,2),
                                                                main=main, ellipse=ellipse, ellipse.mapping.groups=ellipse.mapping.groups, ellipse.grp.nam=ellipse.grp.nam, label.samples=label.samples,
                                                                geom.point.size=geom.point.size, label.font.size = label.font.size, plot.ellipse.legend=plot.ellipse.legend)
-    cat("   done.\n   PCA 3d scatterplot...\n")
+    dw_log("   PCA 3d scatterplot...\n")
     diff_expr_3d_scatterplot(PCA=PCA, samp.name=sample.plot.names, groups=groups, grp.nam=grp.nam, PC=PC[1:3], main=main)
-    cat("   done.\n   PCA cluster dendrogram...\n")
+    dw_log("   PCA cluster dendrogram...\n")
     diff_expr_dendro_plot(counts=counts, groups=groups, grp.nam=grp.nam, main=main, col.grps=TRUE)
-    cat("   done.\n")
     dev.off()
-    cat("  Plotting finished.\n")
+    dw_log("  Plotting finished.\n")
     return(out.l)
   }
 
@@ -88,7 +86,7 @@ diff_expr_mds_plot <-
   function(d, groups, n=500, sample.plot.names=NULL, analysis.name=NULL, do.pdf=FALSE, out.dir=".")
   {
     if (!is.null(sample.plot.names)) {
-      cat("  *** Using custom sample labels: ***\n  ", head(sample.plot.names), "\n")
+      dw_log("  *** Using custom sample labels: ***\n  ", head(sample.plot.names), "\n")
     }
     if (do.pdf) {
       pdf(file.path(out.dir, paste0(analysis.name, "_MDS_plot.pdf")), width=11, height=11)
@@ -116,21 +114,21 @@ diff_expr_mds_plot <-
 diff_expr_ggplot_mds <-
   function(counts, samp.name, groups, grp.nam=NULL, pairs=NULL, pairs.name=NULL, gene.selection="common", dim.plot=c(1,2), main=NULL)
   {
-    cat("    Preparing data...")
+    dw_log("    Preparing data...", "\n")
     mds <- limma::plotMDS(counts, gene.selection=gene.selection, dim.plot=dim.plot, plot=FALSE)
     dat <- data.frame(SampleName=samp.name, Groups=groups, x=mds$x, y=mds$y)
-    cat("done\n    Plotting...")
+    dw_log("    Plotting...", "\n")
     g <- ggplot(dat, aes(x, y, colour=Groups))
     if (!is.null(pairs)) {
       dat <- data.frame(SampleName=samp.name, Groups=groups, Block=pairs, x=mds$x, y=mds$y)
       if (is.factor(dat$Block) && length(levels(dat$Block)) <= 6) {
-        cat("\n     Block design using a discrete variable. Shaping points by blocking variable...\n")
+        dw_log("\n     Block design using a discrete variable. Shaping points by blocking variable...\n")
         g <- ggplot(dat, aes(x, y, colour=Groups, shape=Block))
         if (!is.null(pairs.name)) {
           g <- g + scale_shape_discrete(name=pairs.name)
         }
       } else if (is.numeric(dat$Block)) {
-        cat("\n     Block design using a continuous variable. Sizing points by blocking variable...\n")
+        dw_log("\n     Block design using a continuous variable. Sizing points by blocking variable...\n")
         g <- ggplot(dat, aes(x, y, colour=Groups, size=Block))
         if (!is.null(pairs.name)) {
           g <- g + scale_size_continuous(name=pairs.name)
@@ -150,7 +148,6 @@ diff_expr_ggplot_mds <-
     }
     g <- g + ggtitle(paste0("Multi-dimensional scaling (", main, ")"))
     print(g)
-    cat("    done\n")
     return(g)
   }
 
@@ -173,10 +170,9 @@ diff_expr_PCA_ggbiplot <-
   function(PCA, groups, grp.nam=NULL, ellipse=TRUE, circle=TRUE, varname.size=0, var.axes=FALSE, main=NULL, fix.aspect=FALSE, tweak=FALSE, ...)
   {
     main <- paste("Biplot for PCA (", main, ")")
-    cat("    Plotting...")
+    dw_log("    Plotting...", "\n")
     g <- ggbiplot.n(PCA, var.scale = 1, obs.scale = 1, groups = groups, grp.nam=grp.nam, ellipse = ellipse, circle = circle, varname.size = varname.size, var.axes = var.axes, main=main, fix.aspect=fix.aspect, tweak=tweak, ...)
     print(g)
-    cat("done\n")
     return(g)
   }
 
@@ -203,7 +199,7 @@ diff_expr_PCA_ggplot <-
            label.samples = TRUE, geom.point.size = 2, label.font.size = 5, plot.ellipse.legend=NA, do.plot = TRUE)
   {
 
-    cat("    Preparing data...")
+    dw_log("    Preparing data...", "\n")
     if (is.null(samp.name)) {
       samp.n <- rownames(PCA$x)
     } else if (length(samp.name)==1 && is.na(samp.name)) {
@@ -236,7 +232,7 @@ diff_expr_PCA_ggplot <-
     ## determine minimum group size to generate feedback on potentially missing ellipses
     grp.size <- plyr::daply(dataGG, "Ellipse", nrow)
 
-    cat("done\n    Plotting...\n")
+    dw_log("    Plotting...\n")
     g <- ggplot(data=dataGG, aes(PCx, PCy, color=Condition))
     g <- g + geom_point(size = geom.point.size)
     g <- g + ggtitle(paste0("PCA (", main, ")"))
@@ -255,14 +251,14 @@ diff_expr_PCA_ggplot <-
 
     if ( ellipse ) {
       if (min(grp.size<4)) {
-        cat("    # NOTE: Too few samples in one or more groups. Some or all ellipses may not be plotted.\n")
+        dw_log("    # NOTE: Too few samples in one or more groups. Some or all ellipses may not be plotted.\n")
       }
-      cat("     Adding ellipse...\n     Using", sQuote(eg), "for ellipse mapping\n")
+      dw_log("     Adding ellipse...\n     Using", sQuote(eg), "for ellipse mapping\n")
       if (is.null(ellipse.mapping.groups)) {
-        cat("      Plotting ellipses around main sample groups...\n")
+        dw_log("      Plotting ellipses around main sample groups...\n")
         g <- g + stat_ellipse(type="t", show.legend=plot.ellipse.legend) #assumes a multivariate t-distribution
       } else {
-        cat("      Plotting ellipses around second factor groups...\n")
+        dw_log("      Plotting ellipses around second factor groups...\n")
         g <- g + stat_ellipse(mapping = aes(PCx, PCy, linetype=Ellipse), type = "t", inherit.aes = F, show.legend=plot.ellipse.legend)
       }
     }
@@ -280,7 +276,6 @@ diff_expr_PCA_ggplot <-
     if (do.plot) {
       print(g)
     }
-    cat("done\n")
     return(g)
   }
 
@@ -295,7 +290,7 @@ diff_expr_PCA_ggplot <-
 diff_expr_3d_scatterplot <-
   function(PCA, samp.name=NULL, groups, grp.nam=NULL, PC=c(1,2,3), main=NULL)
   {
-    cat("    Preparing data...")
+    dw_log("    Preparing data...", "\n")
     if (is.null(samp.name)) {
       samp.n <- rownames(PCA$x)
     } else if (length(samp.name)==1 && is.na(samp.name)) {
@@ -320,24 +315,23 @@ diff_expr_3d_scatterplot <-
     for (i in 2:length(cond)) {
       plcol[dat$Condition == cond[i]] <- cols[i]
     }
-    cat("done\n    Plotting...\n     scatterplot...\n")
+    dw_log("    Plotting...\n     scatterplot...\n")
     s3d <- scatterplot3d::scatterplot3d(dat[,1:3],        # x y and z axis
                                         color=plcol, pch=19,        # circle color indicates no. of cylinders
                                         type="h", lty.hplot=2,       # lines to the horizontal plane
                                         scale.y=.75,                 # scale y axis (reduce by 25%)
                                         main=paste0("3-D Scatterplot for PCA (", main, ")"))
-    cat("     point labels...\n")
+    dw_log("     point labels...\n")
     s3d.coords <- s3d$xyz.convert(dat[,1:3])
     text(s3d.coords$x, s3d.coords$y,     # x and y coordinates
          labels=samp.n,       # text to plot
          pos=4, cex=.5)                  # shrink text 50% and place to right of points)
     # add the legend
-    cat("     legend...\n")
+    dw_log("     legend...\n")
     legend("topleft", inset=.05,      # location and inset
            bty="n", cex=.5,              # suppress legend box, shrink text 50%
            title=grp.nam,
            legend=unique(names(plcol)), fill=unique(plcol))
-    cat("    done\n")
   }
 
 #' Function to generate dendrogram plots based on hierarchical clustering
@@ -359,10 +353,10 @@ diff_expr_dendro_plot <-
       )
     }
 
-    cat("    Hierarchical clustering...")
+    dw_log("    Hierarchical clustering...", "\n")
     hc <- hclust(dist(t(counts)))
     plot(hc, main=paste("Hierarchical Clustering (", main, ")"))
-    cat("done\n    Generating coloured dendrogram...")
+    dw_log("    Generating coloured dendrogram...", "\n")
     dend <- as.dendrogram(hc)
     main <- paste("Hierarchical Clustering (", main, ")")
     if (col.grps) {
@@ -371,7 +365,6 @@ diff_expr_dendro_plot <-
     }
     par(mar=c(8,6,6,4))
     plot(dend, main=main)
-    cat("done\n")
   }
 
 

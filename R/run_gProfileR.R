@@ -68,18 +68,18 @@ run_gprofiler <- function(input_genes,
                           data_sources = NULL,
                           highlight = FALSE)
 {
-  message("Set parameters:")
-  message(paste0(">> ordered_query: ",ordered_query))
-  message(paste0(">> multi_query: ",multi_query))
-  message(paste0(">> show_only_significant: ",show_only_significant))
-  message(paste0(">> evidence_codes: ",evidence_codes))
-  message(paste0(">> exclude_iea: ",exclude_iea))
-  message(paste0(">> measure_underrepresentation: ",measure_underrepresentation))
-  message(paste0(">> max_p_value: ",max_p_value))
-  message(paste0(">> correction_method: ", correction_method))
-  message(paste0(">> domain_scope: ", domain_scope))
-  message(paste0(">> data_sources: ",data_sources))
-  message(paste0(">> highlight: ", highlight))
+  dw_log("Set parameters:", "\n")
+  dw_log(paste0(">> ordered_query: ",ordered_query), "\n")
+  dw_log(paste0(">> multi_query: ",multi_query), "\n")
+  dw_log(paste0(">> show_only_significant: ",show_only_significant), "\n")
+  dw_log(paste0(">> evidence_codes: ",evidence_codes), "\n")
+  dw_log(paste0(">> exclude_iea: ",exclude_iea), "\n")
+  dw_log(paste0(">> measure_underrepresentation: ",measure_underrepresentation), "\n")
+  dw_log(paste0(">> max_p_value: ",max_p_value), "\n")
+  dw_log(paste0(">> correction_method: ", correction_method), "\n")
+  dw_log(paste0(">> domain_scope: ", domain_scope), "\n")
+  dw_log(paste0(">> data_sources: ",data_sources), "\n")
+  dw_log(paste0(">> highlight: ", highlight), "\n")
 
   results <- gprofiler2::gost(query = as.character(input_genes),
                               organism = organism,
@@ -97,7 +97,7 @@ run_gprofiler <- function(input_genes,
                               highlight = highlight)
 
   if (!is.null(file_name)) {
-    cat("         Saving result into ", paste0(file_name, ".xlsx"), "...\n")
+    dw_log("         Saving result into ", paste0(file_name, ".xlsx"), "...\n")
     WriteXLS::WriteXLS(results$result, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = T)
   }
   return(results)

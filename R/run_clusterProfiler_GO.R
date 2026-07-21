@@ -59,7 +59,7 @@ run_clusterProfiler_GO <- function(input_genes,
   }
 
   if (ordered_query) {
-    print("Running gene set enrichment analysis...")
+    dw_log("Running gene set enrichment analysis...", "\n")
     set.seed(123)
     GSE.results <- clusterProfiler::gseGO(geneList = input_genes,
                                           OrgDb = OrgDb,
@@ -98,7 +98,7 @@ run_clusterProfiler_GO <- function(input_genes,
 
   if (!ordered_query) {
 
-    print("Running over-representation analysis...")
+    dw_log("Running over-representation analysis...", "\n")
     ORA.results <- clusterProfiler::enrichGO(gene = input_genes,
                                             universe = background_genes,
                                             OrgDb = OrgDb,
@@ -113,7 +113,7 @@ run_clusterProfiler_GO <- function(input_genes,
     if (dim(ORA.results)[1] >= 1) {
 
       if (similarity_filtering) {
-        print("Simplifying results...")
+        dw_log("Simplifying results...", "\n")
         ORA.results <- clusterProfiler::simplify(ORA.results)
       }
 

@@ -14,15 +14,13 @@ diff_expr_PCA <-
 {
 	select <- 1:nrow(counts)
 	if (!is.null(n)) {
-		cat("    Getting row-wise variances...")
+		dw_log("    Getting row-wise variances...\n")
 		Pvars <- genefilter::rowVars(counts)
-		cat("done\n    Selecting", n, "rows with highest variances...")
+		dw_log("    Selecting", n, "rows with highest variances...\n")
 		select <- order(Pvars, decreasing = TRUE)[seq_len(min(n, length(Pvars)))]
-		cat("done\n")
 	}
-	cat("    Calculating principal components...")
+	dw_log("    Calculating principal components...\n")
 	PCA <- prcomp(t(counts[select, ]), scale.=scale.)
-	cat("done\n")
 	return(PCA)
 }
 
@@ -38,19 +36,19 @@ diff_expr_PCA <-
 diff_expr_pseudo_counts <-
 		function(d, design, pairs="pairs", disp="tagwise.dispersion", do.cpm=TRUE)
 {
-	cat("   --> Using pairs column identifier:", dQuote(pairs), "\n")
-	cat("    Estimating dispersion...")
+	dw_log("   --> Using pairs column identifier:", dQuote(pairs), "\n")
+	dw_log("    Estimating dispersion...\n")
 	disp.mat <- edgeR::estimateDisp(d, design)
-	cat("done\n    Fitting generalised linear model...")
+	dw_log("    Fitting generalised linear model...\n")
 	fit0 <- edgeR::glmFit(d, design, dispersion=disp.mat[[disp]])
 	old.fitted <- fit0$fitted.values
 	batch.coefs <- grep(pairs, colnames(design) )
 	new.coefs <- fit0$unshrunk.coefficients
-	cat("done\n    Set coefficients for blocking variable to 0...")
+	dw_log("    Setting coefficients for blocking variable to 0...\n")
 	new.coefs[, batch.coefs] <- 0
-	cat("done\n    Refit coefficients...")
+	dw_log("    Refitting coefficients...\n")
 	new.fitted <- exp(new.coefs %*% t(design) + as.vector(fit0$offset))
-	cat("done\n    Getting pseudo-counts...")
+	dw_log("    Getting pseudo-counts...\n")
 	if (is(d, "DGEList")) {
 	  dc <- d$counts
 	} else if (is.data.frame(d)) {
@@ -60,24 +58,21 @@ diff_expr_pseudo_counts <-
 	  dc <- d
 	}
 	pseudo.counts <- edgeR::q2qnbinom(dc, old.fitted, new.fitted, dispersion=disp.mat[[disp]])
-	cat("done\n")
 	if (any(pseudo.counts < 0)) {
-	  cat("    #! Negative pseudo-counts detected...\n")
+	  dw_log("    #! Negative pseudo-counts detected...\n")
 	  lpc <- length(which(pseudo.counts<0))/length(pseudo.counts)*100
 	  if (lpc < 1) {
-	    cat(paste0("     --> Less than 1% negative pseudo-counts (", lpc, "). Correcting...\n"))
-	    cat("         Setting negative pseudo-counts to 0.1...\n")
+	    dw_log(paste0("     --> Less than 1% negative pseudo-counts (", lpc, "). Correcting...\n"))
+	    dw_log("         Setting negative pseudo-counts to 0.1...\n")
 	    pseudo.counts[which(pseudo.counts<0)] <- 0.1
-	    cat("done\n")
 	  } else {
-	    cat("     --> More than 1% negative pseudo-counts. Skipping...\n")
+	    dw_log("     --> More than 1% negative pseudo-counts. Skipping...\n")
 	    stop("Too many negative pseudo-counts!")
 	  }
 	}
 	if (do.cpm) {
-		cat("    Getting CPMs...")
+		dw_log("    Getting CPMs...\n")
 		pseudo.counts <- edgeR::cpm(pseudo.counts, log=TRUE, prior.count=3)
-		cat("done\n")
 	}
 	return(pseudo.counts)
 }

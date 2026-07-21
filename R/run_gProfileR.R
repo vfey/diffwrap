@@ -18,7 +18,8 @@
 #' @param background_genes A character vector of background gene IDs. If not specified, by default uses all human genes
 #' annotated to term domain.
 #' @param file_name A character string used as a file name without file extension. If not NULL output will be saved
-#' to an Excel file. Currently not in use.
+#' to an Excel file. Should be given as a full path, since a bare name would write to the current working
+#' directory. Defaults to NULL, in which case no file is written. Currently not in use.
 #' @param ordered_query If set to TRUE, computes GSEA-style p-values for an input ranked gene list.
 #' @param multi_query In case of multiple gene lists, returns comparison table of these lists.
 #' If enabled, the result data frame has columns named 'p_values', 'gconvert_sizes', 'intersection_sizes' with
@@ -98,7 +99,7 @@ run_gprofiler <- function(input_genes,
 
   if (!is.null(file_name)) {
     dw_log("         Saving result into ", paste0(file_name, ".xlsx"), "...\n")
-    WriteXLS::WriteXLS(results$result, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = T)
+    WriteXLS::WriteXLS(results$result, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = TRUE)
   }
   return(results)
 }

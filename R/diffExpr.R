@@ -50,8 +50,10 @@
 #'   \code{dry.run=TRUE}.
 #' @param dry.run \code{logical}. If \code{TRUE}, the function will not create any output files or directories.
 #' @param ... \code{ANY}. Additional arguments passed to functions.
-#' @param out.dir \code{character}. Path to the output directory. If not provided, a new directory will be created in the project directory.
-#' @param project.dir \code{character}. Path to the project directory. Defaults to the current working directory.
+#' @param out.dir \code{character}. Path to the output directory. This argument is required: all
+#'   result tables, plots and the run log are written below it. There is deliberately no default,
+#'   so that no files are ever created in the working directory unintentionally. Use, e.g.,
+#'   \code{out.dir = tempdir()} to try the pipeline out without keeping the results.
 #' @param analysis.name \code{character}. Name of the analysis. If not provided, a default name will be generated.
 #' @param biomart \code{logical}. Should the biomart be used for gene annotation? Defaults to \code{FALSE}.
 #' @param biom.data.set \code{character}. The biomart dataset to be used. Defaults to "hsapiens_gene_ensembl".
@@ -148,7 +150,6 @@ diffExpr <-
            block = FALSE,
            contrasts = NULL,
            out.dir = NULL,
-           project.dir = ".",
            analysis.name = NULL,
            biomart = FALSE,
            biom.data.set = "hsapiens_gene_ensembl",
@@ -297,10 +298,18 @@ diffExpr <-
     dw_log("\n")
 
     dw_step("@ -- PREPARING RUN ENVIRONMENT --\n\n")
-    # setting standard output folder
+    # setting output folder
+    ## NOTE: there is deliberately no default output location. Writing results into the
+    ## working directory (or anywhere else in the user's home filespace) without the user
+    ## explicitly asking for it is not permitted by CRAN policy, so 'out.dir' is required.
     if (is.null(out.dir)) {
-      dw_log("No output folder set. Using default\n")
-      out.dir <- file.path(normalizePath(project.dir), "differential_expression")
+      stop("'out.dir' is required: please supply the directory the results should be written to.\n",
+           "  No default is used so that no files are created in the working directory unintentionally.\n",
+           "  To try the pipeline without keeping the output, use e.g. out.dir = tempdir().",
+           call. = FALSE)
+    }
+    if (!is.character(out.dir) || length(out.dir) != 1L) {
+      stop("'out.dir' must be a single path.", call. = FALSE)
     }
     # checking for content in existing output folder
     if (file.exists(out.dir)) {

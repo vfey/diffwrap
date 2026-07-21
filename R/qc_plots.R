@@ -32,13 +32,13 @@ utils::globalVariables(c("PCx", "PCy", "Condition", "Sample", "Ellipse", "x", "y
 #'   "uncorrected" will plot the input counts matrix while "pseudo-corrected" will plot pseudo counts for
 #'   blocked designs (e.g., paired samples or batch factors).
 #' @param analysis.name Character used in the plot title and the output file name if the plot is saved to a PDF
-#' @param out.dir Character; path where to save PDF.
+#' @param out.dir Character; path where to save PDF. Required; no default is used so that nothing is written to the working directory unintentionally.
 #' @export
 diff_expr_QC_plots <-
   function(counts, samp.info, control, out.l, grp.nam=NULL, PC=c(1,2,3), sample.plot.names=NULL,
            ellipse=TRUE, ellipse.mapping.groups=NULL, ellipse.grp.nam=NULL, label.samples=TRUE,
            geom.point.size=2, label.font.size = 5, plot.ellipse.legend=NA, circle=TRUE, varname.size=0, var.axes=FALSE,
-           pairs=NULL, pairs.name=NULL, gene.selection="common", n=500, type=NULL, analysis.name=NULL, out.dir=".")
+           pairs=NULL, pairs.name=NULL, gene.selection="common", n=500, type=NULL, analysis.name=NULL, out.dir)
   {
     dw_log("  Doing PCA...\n")
     PCA <- diff_expr_PCA(counts=counts, n=n)
@@ -79,15 +79,17 @@ diff_expr_QC_plots <-
 #' @param sample.plot.names Passed to \code{plotMDS()} (\code{labels}): character vector of sample names or labels. Defaults to colnames(d).
 #' @param analysis.name Character used in the plot title and the output file name if the plot is saved to a PDF
 #' @param do.pdf Logical indicating whether a PDF should be produced.
-#' @param out.dir Character; path where to save PDF.
+#' @param out.dir Character; path where to save PDF. Required; no default is used so that nothing is written to the working directory unintentionally.
 #' @seealso [plotMDS()]
 #' @export
 diff_expr_mds_plot <-
-  function(d, groups, n=500, sample.plot.names=NULL, analysis.name=NULL, do.pdf=FALSE, out.dir=".")
+  function(d, groups, n=500, sample.plot.names=NULL, analysis.name=NULL, do.pdf=FALSE, out.dir)
   {
     if (!is.null(sample.plot.names)) {
       dw_log("  *** Using custom sample labels: ***\n  ", head(sample.plot.names), "\n")
     }
+    oldpar <- par(no.readonly = TRUE)
+    on.exit(par(oldpar), add = TRUE)
     if (do.pdf) {
       pdf(file.path(out.dir, paste0(analysis.name, "_MDS_plot.pdf")), width=11, height=11)
     }
@@ -259,7 +261,7 @@ diff_expr_PCA_ggplot <-
         g <- g + stat_ellipse(type="t", show.legend=plot.ellipse.legend) #assumes a multivariate t-distribution
       } else {
         dw_log("      Plotting ellipses around second factor groups...\n")
-        g <- g + stat_ellipse(mapping = aes(PCx, PCy, linetype=Ellipse), type = "t", inherit.aes = F, show.legend=plot.ellipse.legend)
+        g <- g + stat_ellipse(mapping = aes(PCx, PCy, linetype=Ellipse), type = "t", inherit.aes = FALSE, show.legend=plot.ellipse.legend)
       }
     }
 
@@ -270,7 +272,7 @@ diff_expr_PCA_ggplot <-
                                           size = label.font.size,
                                           box.padding = unit(0.35, "lines"),
                                           point.padding = unit(0.3, "lines"),
-                                          show.legend = F)
+                                          show.legend = FALSE)
       }
     }
     if (do.plot) {
@@ -363,6 +365,8 @@ diff_expr_dendro_plot <-
       dendextend::labels_colors(dend) <- as.numeric(groups)[hc$order]
       main <- paste0("Hierarchical Clustering (", main, ")\n[coloured by ", grp.nam, "]")
     }
+    oldpar <- par(no.readonly = TRUE)
+    on.exit(par(oldpar), add = TRUE)
     par(mar=c(8,6,6,4))
     plot(dend, main=main)
   }

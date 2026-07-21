@@ -27,6 +27,11 @@
 #'                    smaller intersections are excluded. By default uses 2.
 #' @param pAdjustMethod The algorithm used for multiple testing correction, one of
 #'                      "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none". By default uses "BH".
+#' @param rng.seed Optional integer. If supplied, \code{set.seed()} is called with this value before
+#'   the permutation-based gene set enrichment analysis, making the result reproducible. Defaults to
+#'   \code{NULL}, i.e. the random number generator is left untouched, so that the function does not
+#'   alter the state of the user's session. Note that this is distinct from the \code{seed} argument
+#'   of \code{clusterProfiler::gseGO()}/\code{gseKEGG()}, which controls that package's own internal seeding.
 #' @return A table listing statistically significant enrichment results according to threshold set in pvalueCutoff
 #'         The table is also saved in xlsx format with user-specified name.
 #' @export
@@ -42,12 +47,13 @@ run_clusterProfiler_KEGG <- function(input_genes,
                                      min_set_size = 10,
                                      max_set_size = 1000,
                                      min_overlap = 2,
-                                     pAdjustMethod = "BH") {
+                                     pAdjustMethod = "BH",
+                                     rng.seed = NULL) {
 
 
   if (ordered_query) {
     dw_log("Running gene set enrichment analysis...", "\n")
-    set.seed(123)
+    if (!is.null(rng.seed)) set.seed(rng.seed)
     GSE.results <- try(clusterProfiler::gseKEGG(geneList = input_genes,
                                             organism = organism,
                                             keyType = id_type,
@@ -56,7 +62,7 @@ run_clusterProfiler_KEGG <- function(input_genes,
                                             maxGSSize = max_set_size,
                                             pvalueCutoff = pvalueCutoff,
                                             pAdjustMethod = "BH",
-                                            seed = T))
+                                            seed = TRUE))
     if (is(GSE.results, "try-error")) {
       dw_log(" ~~ NOTE: KEGG GSE analysis failed ~~\n")
       return(NULL)

@@ -186,10 +186,10 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
 
 
   # Making symmetric range for fold changes
-  if (max(foldchanges, na.rm = T) > abs(min(foldchanges, na.rm = T))) {
-    foldchanges <- append(foldchanges, -max(foldchanges, na.rm = T))
+  if (max(foldchanges, na.rm = TRUE) > abs(min(foldchanges, na.rm = TRUE))) {
+    foldchanges <- append(foldchanges, -max(foldchanges, na.rm = TRUE))
   } else {
-    foldchanges <- append(foldchanges, -min(foldchanges, na.rm = T))
+    foldchanges <- append(foldchanges, -min(foldchanges, na.rm = TRUE))
   }
   #print(foldchanges)
   centered_pal <- palette(length(foldchanges) + 1)[as.numeric(cut(foldchanges,breaks = length(foldchanges)))]
@@ -244,7 +244,7 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
   legend_image <- as.raster(matrix(rev(palette(100)), ncol = 1))
 
   # Add legend title
-  plot(c(0,0.5), c(0,1), type = 'n', axes = F, xlab = '', ylab = '', main = "Log2 foldchange", cex.main = legend.cex.main)
+  plot(c(0,0.5), c(0,1), type = 'n', axes = FALSE, xlab = '', ylab = '', main = "Log2 foldchange", cex.main = legend.cex.main)
 
   # Add legend labels
   legend.element = prepare_scale_for_legend(min(foldchanges), max(foldchanges))
@@ -296,6 +296,7 @@ format_ensembl_ids_annotated_to_term <- function(result, species, which.split = 
 #' @param use.pval.in.DE.filtering.if.no.sign.fdrs \code{logical} Sometimes no DE genes with significant adjusted p-value is found.
 #' In such cases, should uncorrected p-values be used in order to get at least some results
 #' @param out.dir \code{character}. Root directory for the resulting subdirectories. Must contain subfolders for contrasts.
+#'   Required; no default is used so that nothing is written to the working directory unintentionally.
 #' @param species \code{character}. Currently valid options are "human" or "mouse".
 #' @param p.thr \code{numeric}. Threshold for un-adjusted p-values (applied in both filtering of DE-genes and in enrichment results,
 #'  when relevant (i.e. no significant fdr-entries are found)). Default 0.05
@@ -321,13 +322,13 @@ format_ensembl_ids_annotated_to_term <- function(result, species, which.split = 
 #' @export
 runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichment",
                                   use.background.from.diffr.output=TRUE, use.pval.in.DE.filtering.if.no.sign.fdrs=FALSE,
-                                  out.dir=NULL,
+                                  out.dir,
                                   species="human",
                                   p.thr=0.05, fdr.thr=0.05, logfc.thr=1,
                                   do.plot=FALSE, plot.fdr.thr=fdr.thr, plot.logfc.thr=logfc.thr, plot.num.terms=5,
                                   enrichment.methods=c("clusterProfilerGO", "clusterProfilerKEGG", "gProfileR", "topGO"),
                                   clusterProfilerGO.params=list(analysis.approach = "ORA",
-                                                                  do.similarity.filtering = F,
+                                                                  do.similarity.filtering = FALSE,
                                                                   min.gene.set.size = 10,
                                                                   max.gene.set.size = 1000,
                                                                   ontology = "BP",
@@ -405,7 +406,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
     contr.out.dir  <- dir(out.dir, pattern = paste0("^", contrast, "$"), full.names = TRUE)
     #Creating sub-folders
     dw_log("  Creating per-enrichment sub-folders...", "\n")
-    lapply(enrichment.methods, function(method) dir.create(file.path(contr.out.dir, method), showWarnings = F))
+    lapply(enrichment.methods, function(method) dir.create(file.path(contr.out.dir, method), showWarnings = FALSE))
 
     dw_log("***", contrast, "*** \n")
     de_table <- diffr.wrapper.output$contrasts[[contrast]]
@@ -432,7 +433,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
      if (method == "clusterProfilerGO") {
 
        ## Replacing missing parameters
-       default.params <- list(analysis.approach = "ORA", do.similarity.filtering = F, min.gene.set.size = 10,
+       default.params <- list(analysis.approach = "ORA", do.similarity.filtering = FALSE, min.gene.set.size = 10,
                              max.gene.set.size = 1000, ontology = "BP", min.overlap = 2, p.adjust.method = "BH")
        missing.params <- default.params[names(default.params)[!(names(default.params) %in% names(clusterProfilerGO.params))]]
        clusterProfilerGO.params <- c(clusterProfilerGO.params, missing.params)
@@ -484,7 +485,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                             clusterProfilerGO.params$ontology,".xls" )
          full.filename <- file.path(method.dir, filename)
          dw_log("      Saving ", method, " result table into ",  full.filename, "...\n")
-         WriteXLS::WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
+         WriteXLS::WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = TRUE)
 
          #Making the graph visualisation
          if (do.plot) {
@@ -597,7 +598,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                              clusterProfilerKEGG.params$ontology,".xls" )
           full.filename <- file.path(method.dir, filename)
           dw_log("      Saving ", method, " result table into ",  full.filename, "...\n")
-          WriteXLS::WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
+          WriteXLS::WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = TRUE)
 
           #Making the graph visualisation
           if (do.plot) {
@@ -643,7 +644,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
           filename <- paste0(analysis.name, ".", contrast,".", method, ".", gProfileR.params$data.sources,".xls" )
           full.filename <- file.path(method.dir, filename)
           dw_log("      Saving ", method, " result table into ",  full.filename, "...\n")
-          WriteXLS::WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
+          WriteXLS::WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = TRUE)
 
           #Making the graph visualisation
           if (do.plot) {
@@ -683,7 +684,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
           filename <- paste0(analysis.name, ".", contrast,".", method, ".", topGO.params$ontologies.used,".xls" )
           full.filename <- file.path(method.dir, filename)
           dw_log("      Saving ", method, " result table into ",  full.filename, "...\n")
-          WriteXLS::WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = T)
+          WriteXLS::WriteXLS(result, ExcelFileName = full.filename, SheetNames = NULL, BoldHeaderRow = TRUE)
 
           #Making the graph visualisation
           if (do.plot) {

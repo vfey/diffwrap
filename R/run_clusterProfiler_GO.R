@@ -30,6 +30,11 @@
 #' @param pAdjustMethod The algorithm used for multiple testing correction, one of
 #'                      "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none". By default uses "BH".
 #' @param similarity_filtering Similarity filtering method, either FALSE (default) or TRUE (uses simplify function).
+#' @param rng.seed Optional integer. If supplied, \code{set.seed()} is called with this value before
+#'   the permutation-based gene set enrichment analysis, making the result reproducible. Defaults to
+#'   \code{NULL}, i.e. the random number generator is left untouched, so that the function does not
+#'   alter the state of the user's session. Note that this is distinct from the \code{seed} argument
+#'   of \code{clusterProfiler::gseGO()}/\code{gseKEGG()}, which controls that package's own internal seeding.
 #' @return A table listing statistically significant enrichment results according to threshold set in pvalueCutoff
 #'        The table is also saved in xlsx format with user-specified name.
 #' @export
@@ -48,7 +53,8 @@ run_clusterProfiler_GO <- function(input_genes,
                                    max_set_size = 1000,
                                    min_overlap = 2,
                                    pAdjustMethod = "BH",
-                                   similarity_filtering = FALSE) {
+                                   similarity_filtering = FALSE,
+                                   rng.seed = NULL) {
 
   # test if data packages are installed
   if (!requireNamespace(OrgDb, quietly = TRUE)) {
@@ -60,7 +66,7 @@ run_clusterProfiler_GO <- function(input_genes,
 
   if (ordered_query) {
     dw_log("Running gene set enrichment analysis...", "\n")
-    set.seed(123)
+    if (!is.null(rng.seed)) set.seed(rng.seed)
     GSE.results <- clusterProfiler::gseGO(geneList = input_genes,
                                           OrgDb = OrgDb,
                                           ont = ontology,
@@ -70,7 +76,7 @@ run_clusterProfiler_GO <- function(input_genes,
                                           maxGSSize = max_set_size,
                                           pvalueCutoff = pvalueCutoff,
                                           pAdjustMethod = "BH",
-                                          seed = T)
+                                          seed = TRUE)
 
     if (dim(GSE.results)[1] >= 1) {
 

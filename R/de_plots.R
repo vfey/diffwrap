@@ -16,7 +16,7 @@ utils::globalVariables(c("Average Expression", "logFC", "log2 Fold-Change", "adj
 #' @param fdr.thr Numeric; FDR threshold for filtering gene labels (see \code{p.thr}).
 #' @param logfc.thr Numeric; FC threshold on the log2-scale for filtering gene labels.
 #' @param numlab \code{numeric}. Maximum number of labels per plot. Overrides numbers calculated based on `p.thr` and `fdr.thr`.
-#' @param out.dir Character; output directory for final tables.
+#' @param out.dir Character; output directory for final tables. Required; no default is used so that nothing is written to the working directory unintentionally.
 #' @param analysis.name Character used in the output file name.
 #' @param point.lab \code{logical}. Should points be labelled, at all?
 #' @param biom.attributes \code{character}. Vector of column names to be retrieved from biomart.
@@ -25,7 +25,7 @@ utils::globalVariables(c("Average Expression", "logFC", "log2 Fold-Change", "adj
 #' @export
 diff_expr_ma_plot <-
 		function(dat, contr, id=NULL, sym.col="gene_symbol", p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15,
-		         out.dir=".", analysis.name=NULL, point.lab=TRUE, biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"),
+		         out.dir, analysis.name=NULL, point.lab=TRUE, biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"),
 		         font.size=5, lists=TRUE)
 {
 	if (is.null(id) && !sym.col %in% names(dat)) {
@@ -64,7 +64,7 @@ diff_expr_ma_plot <-
 			dw_log("    ", nrow(gene.lab), "point(s) labelled...\n")
 			if (nrow(gene.lab)>numlab) {
 				dw_log("     Restricting to", numlab, "...\n")
-				ix <- sort(gene.lab$`adj. P-Value`, index=T)$ix
+				ix <- sort(gene.lab$`adj. P-Value`, index=TRUE)$ix
 				gene.lab <- gene.lab[ix[1:numlab], ][order(ix[1:numlab]), ]
 			}
 			dw_log("   Highlighted features:\n")
@@ -75,7 +75,7 @@ diff_expr_ma_plot <-
 				dw_log_obj(gene.lab[1:8, 1:2])
 			}
 			g <- g + ggtitle(paste0("M-A plot for ", contr, " (highl.: FDR < ", fdr.thr, "; FC >= ", 2^logfc.thr, "-fold)"))
-			g <- g + ggrepel::geom_text_repel(data = gene.lab, aes(label = label_id), size = font.size, box.padding = unit(0.35, "lines"), point.padding = unit(0.3, "lines"), max.overlaps = 15, show.legend = F)
+			g <- g + ggrepel::geom_text_repel(data = gene.lab, aes(label = label_id), size = font.size, box.padding = unit(0.35, "lines"), point.padding = unit(0.3, "lines"), max.overlaps = 15, show.legend = FALSE)
 			if (lists) {
 				write.table(gene.lab, file.path(out.dir, paste(analysis.name, contr, "labelledPointsSmearPlot.tsv", sep="_")), sep="\t", quote=FALSE, row.names=FALSE)
 			}
@@ -97,7 +97,7 @@ diff_expr_ma_plot <-
 			dw_log("    ", nrow(gene.lab), "point(s) labelled...\n")
 			if (nrow(gene.lab)>numlab) {
 				dw_log("     Restricting to", numlab, "...\n")
-				ix <- sort(gene.lab$`P-Value`, index=T)$ix
+				ix <- sort(gene.lab$`P-Value`, index=TRUE)$ix
 				gene.lab <- gene.lab[ix[1:numlab], ][order(ix[1:numlab]), ]
 			}
 			dw_log("   Highlighted features:\n")
@@ -108,7 +108,7 @@ diff_expr_ma_plot <-
 				dw_log_obj(gene.lab[1:8, 1:2])
 			}
 			g <- g + ggtitle(paste0("M-A plot for ", contr, " (highl.: P-value < ", p.thr, "; FC >= ", 2^logfc.thr, "-fold)"))
-			g <- g + ggrepel::geom_text_repel(data = gene.lab, aes(label = label_id), size = font.size, box.padding = unit(0.35, "lines"), point.padding = unit(0.3, "lines"), max.overlaps = 15, show.legend = F)
+			g <- g + ggrepel::geom_text_repel(data = gene.lab, aes(label = label_id), size = font.size, box.padding = unit(0.35, "lines"), point.padding = unit(0.3, "lines"), max.overlaps = 15, show.legend = FALSE)
 			if (lists) {
 				write.table(gene.lab, file.path(out.dir, paste(analysis.name, contr, "labelledPointsSmearPlot.tsv", sep="_")), sep="\t", quote=FALSE, row.names=FALSE)
 			}
@@ -178,7 +178,7 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot = c("fdr"
 	dw_log("    ", nrow(filtdat), "point(s) labelled...\n")
 	if (nrow(filtdat) > numlab) {
 		dw_log("     Restricting to", numlab, "...\n")
-		ix <- sort(filtdat[,property.to.plot], index=T)$ix
+		ix <- sort(filtdat[,property.to.plot], index=TRUE)$ix
 		filtdat <- filtdat[ix[1:numlab], ][order(ix[1:numlab]), ]
 	}
 	if (nrow(filtdat) & length(which(filtdat$logFC < 0)) < (numlab %/% 2.5) || nrow(filtdat) & length(which(filtdat$logFC > 0)) < (numlab %/% 2.5)) {
@@ -190,7 +190,7 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot = c("fdr"
 	    filtdat1 <- rbind(filtdat, data.df[data.df[[property.to.plot]] < property.thr & data.df$logFC > logfc.thr, ])
 	    filtdat1 <- filtdat1[!duplicated(filtdat1$ensembl_gene_id), ]
 	  }
-	  filtdat1 <- filtdat1[order(abs(filtdat1$logFC), decreasing = T), ]
+	  filtdat1 <- filtdat1[order(abs(filtdat1$logFC), decreasing = TRUE), ]
 	  filtdat <- filtdat1[1:min(nrow(filtdat1), numlab), ]
 
 	  if (nrow(filtdat) & length(which(filtdat$logFC < 0)) < (numlab %/% 2.5) || nrow(filtdat) & length(which(filtdat$logFC > 0)) < (numlab %/% 2.5)) {
@@ -200,18 +200,18 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot = c("fdr"
 	    } else {
 	      filtdat.d <- data.df[which(data.df$logFC < 0), ]
 	    }
-	    filtdat.d <- filtdat.d[order(abs(filtdat.d$logFC), decreasing = T), ][1:min(nrow(filtdat.d), numlab), ]
+	    filtdat.d <- filtdat.d[order(abs(filtdat.d$logFC), decreasing = TRUE), ][1:min(nrow(filtdat.d), numlab), ]
 	    if (nrow(filtdat) & length(which(filtdat$logFC > 0)) < (numlab %/% 2.5)) {
 	      filtdat.u <- data.df[data.df[[property.to.plot]] < property.thr & data.df$logFC > logfc.thr, ]
 	      filtdat.u <- filtdat.u[!duplicated(filtdat.u$ensembl_gene_id), ]
 	    } else {
 	      filtdat.u <- data.df[which(data.df$logFC > 0), ]
 	    }
-	    filtdat.u <- filtdat.u[order(abs(filtdat.u$logFC), decreasing = T), ][1:min(nrow(filtdat.u), numlab), ]
+	    filtdat.u <- filtdat.u[order(abs(filtdat.u$logFC), decreasing = TRUE), ][1:min(nrow(filtdat.u), numlab), ]
 
 	    filtdat1 <- rbind(filtdat.d, filtdat.u)
 	    filtdat1 <- filtdat1[abs(filtdat1$logFC) > logfc.thr, ]
-	    filtdat1 <- filtdat1[order(abs(filtdat1$logFC), decreasing = T), ]
+	    filtdat1 <- filtdat1[order(abs(filtdat1$logFC), decreasing = TRUE), ]
 	    filtdat <- filtdat1[1:min(nrow(filtdat1), numlab), ]
 	  }
 	}
@@ -255,7 +255,7 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot = c("fdr"
 				max.overlaps = 15,
 				box.padding = unit(0.35, "lines"),
 				point.padding = unit(0.3, "lines"),
-				show.legend = F
+				show.legend = FALSE
 		)
 
 	}

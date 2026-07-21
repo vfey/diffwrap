@@ -222,8 +222,8 @@ correlogram_pheatmap = function(expr.mat, clinical.mat, scale.fl = "none", legen
     sign.stars <- ifelse(is.na(sign.stars),"",sign.stars)
     #build the correlogram using pheatmap
     p.cor = pheatmap::pheatmap(cor.mat,
-                               show_colnames = T, show_rownames = T,
-                               cluster_rows = T, cluster_cols = T,
+                               show_colnames = TRUE, show_rownames = TRUE,
+                               cluster_rows = TRUE, cluster_cols = TRUE,
                                legend = legend.fl, border_color = "white",
                                scale = scale.fl, color = colour.correl,
                                clustering_distance_rows = dist.clust, clustering_distance_cols = dist.clust,
@@ -242,8 +242,8 @@ correlogram_pheatmap = function(expr.mat, clinical.mat, scale.fl = "none", legen
     if(sample.correl) {
 
       p.cor = pheatmap::pheatmap(cor.mat,
-                                 show_colnames = T, show_rownames = T,
-                                 cluster_rows = T, cluster_cols = T,
+                                 show_colnames = TRUE, show_rownames = TRUE,
+                                 cluster_rows = TRUE, cluster_cols = TRUE,
                                  legend = legend.fl, border_color = "white",
                                  scale = scale.fl, color = colour.correl,
                                  clustering_distance_rows = dist.clust, clustering_distance_cols = dist.clust,
@@ -255,8 +255,8 @@ correlogram_pheatmap = function(expr.mat, clinical.mat, scale.fl = "none", legen
 
     } else{
       p.cor = pheatmap::pheatmap(cor.mat,
-                                 show_colnames = T, show_rownames = T,
-                                 cluster_rows = T, cluster_cols = T,
+                                 show_colnames = TRUE, show_rownames = TRUE,
+                                 cluster_rows = TRUE, cluster_cols = TRUE,
                                  legend = legend.fl, border_color = "white",
                                  scale = scale.fl, color = colour.correl,
                                  clustering_distance_rows = dist.clust, clustering_distance_cols = dist.clust,
@@ -410,7 +410,7 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
   if (missing(clinical.mat)) {
 
     p = pheatmap::pheatmap(expr.mat,
-                           show_colnames = T, show_rownames = T,
+                           show_colnames = TRUE, show_rownames = TRUE,
                            cluster_rows = row.clust, cluster_cols = col.clust,
                            legend = legend.fl, border_color = "white",
                            scale = scale.fl, color = colour, breaks = breaks.hm,
@@ -445,7 +445,7 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
     if (!biserial.fl) {
 
       p = pheatmap::pheatmap(expr.mat,
-                             show_colnames = T, show_rownames = T,
+                             show_colnames = TRUE, show_rownames = TRUE,
                              cluster_rows = row.clust, cluster_cols = col.clust,
                              legend = legend.fl, border_color = "white",
                              scale = scale.fl, color = colour, annotation_color = anno.color,
@@ -457,7 +457,7 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
     } else {
 
       p = pheatmap::pheatmap(expr.mat,
-                             show_colnames = T, show_rownames = T,
+                             show_colnames = TRUE, show_rownames = TRUE,
                              cluster_rows = row.clust, cluster_cols = col.clust,
                              legend = legend.fl, border_color = "white",
                              scale = scale.fl, color = colour, annotation_color = anno.color,
@@ -490,7 +490,7 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
 
       #build the heatmap with biserial correlation annotation
       p.biserial = pheatmap::pheatmap(expr.mat,
-                                      show_colnames = T, show_rownames = T,
+                                      show_colnames = TRUE, show_rownames = TRUE,
                                       cluster_rows = row.clust, cluster_cols = col.clust,
                                       legend = legend.fl, border_color = "white",
                                       scale = scale.fl, color = colour, breaks = breaks.hm, annotation_color = anno.color,

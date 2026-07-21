@@ -52,7 +52,7 @@ diff_expr_read_counts <-
       } else if (miRSEQ) {
         # reading output from CAP-miRSEQ summary script
         dw_log("Reading output from CAP-miRSEQ summary script...\n")
-        counts <- read.table(expr.dat, sep="\t", header=T, stringsAsFactors=F)
+        counts <- read.table(expr.dat, sep="\t", header=TRUE, stringsAsFactors=FALSE)
         # assign unique mature_precursor id to each row
         row.names(counts) <- expression.raw$Mature.miRNA
         # extract samples used in this comparison
@@ -61,7 +61,7 @@ diff_expr_read_counts <-
       } else {
         # reading counts matrix with rows corresponding to genes and columns to samples
         dw_log("Reading counts matrix...\n")
-        counts <- read.delim(expr.dat, row.names = 1, check.names = F)
+        counts <- read.delim(expr.dat, row.names = 1, check.names = FALSE)
         # here potentially get columns that are not sample names (future functionality)
         if (any(names(counts) %in% samp.info$SampleNames)) {
           snam <- which(names(counts) %in% samp.info$SampleNames)

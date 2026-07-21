@@ -168,7 +168,7 @@ ggbiplot.n <- function (pcobj, choices = 1:2, scale = 1, pc.biplot = TRUE,
 					size = labels.size,
 					box.padding = unit(0.35, "lines"),
 					point.padding = unit(0.3, "lines"),
-					show.legend = F
+					show.legend = FALSE
 			)
 
 #			g <- g + geom_text(aes(label = labels, color = groups),
@@ -184,7 +184,7 @@ ggbiplot.n <- function (pcobj, choices = 1:2, scale = 1, pc.biplot = TRUE,
 					size = labels.size,
 					box.padding = unit(0.35, "lines"),
 					point.padding = unit(0.3, "lines"),
-					show.legend = F
+					show.legend = FALSE
 			)
 #			g <- g + geom_text(aes(label = labels), size = labels.size)
 		}

@@ -7,7 +7,7 @@
 #' @param expr.dat \code{character} or \code{list}. String or vector or list of input file paths, or matrix of count values
 #' @param samp.info \code{data.frame}. samp.info object containing information of the project's sample sheet
 #' @param control \code{character}. Name of the control group
-#' @param design \code{character} that can be coerced to a formula to use for creating the design matrix.
+#' @param design \code{character} that can be coerced to a formular for producing a design matrix
 #' @param samples \code{character}. Name of the column in 'samp.info' containing sample names. If 'samp.info' is not supplied
 #'     vector of sample names.
 #' @param sample.plot.names \code{character}. Optional name of a column with "nice" sample names for plotting.
@@ -40,6 +40,14 @@
 #' @param enrichment.plot.logfc.thr \code{numeric}. FC threshold on the log2-scale used in the enrichment plot. Defaults to 1.
 #' @param enrichment.plot.num.terms \code{integer}. Number of terms shown in the plot. Defaults to 5.
 #' @param enrichment.methods \code{character}. One or more of the following: c("clusterProfilerGO", "clusterProfilerKEGG", "gProfileR", "topGO"). By default, uses them all.
+#' @param verbose \code{logical} or \code{character}. Controls console output. \code{TRUE} (default) prints
+#'   major workflow steps, \code{FALSE} prints nothing, and \code{"all"} mirrors the full detail of the log
+#'   file to the console. Console output is written via \code{message()} and can therefore also be silenced
+#'   with \code{suppressMessages()}. Irrespective of this setting, the complete log is always written to
+#'   \option{log.file}.
+#' @param log.file \code{character}. Path to the run log file. If \code{NULL} (default), a log file named
+#'   \emph{<analysis.name>_diffwrap.log} is created in \option{out.dir}. No log file is written if
+#'   \code{dry.run=TRUE}.
 #' @param dry.run \code{logical}. If \code{TRUE}, the function will not create any output files or directories.
 #' @param ... \code{ANY}. Additional arguments passed to functions.
 #' @param out.dir \code{character}. Path to the output directory. If not provided, a new directory will be created in the project directory.
@@ -199,10 +207,18 @@ diffExpr <-
            enrichment.plot.num.terms = 5,
            enrichment.methods = c("clusterProfilerGO", "clusterProfilerKEGG", "gProfileR", "topGO"),
            ...,
+           verbose = TRUE,
+           log.file = NULL,
            dry.run=FALSE)
   {
+    ## start logging
+    ## the log file itself is opened further below, once 'out.dir' is known; until then
+    ## log lines are buffered in memory so that nothing from the startup checks is lost
+    dw_log_start(verbose)
+    on.exit(dw_log_end(), add = TRUE)
+
     ## initial checks
-    cat("@ -- STARTUP CHECKS --\n\n")
+    dw_step("@ -- STARTUP CHECKS --\n\n")
     # test if needed packages are installed
     cat("  Checking if needed packages are installed...")
     if (do.enrichment && biom.data.set == "hsapiens_gene_ensembl" && !requireNamespace("org.Hs.eg.db", quietly = TRUE)) {
@@ -320,7 +336,8 @@ diffExpr <-
 
     ## switch off plotting device on exit in case a plot fails
     ## the resulting file will be empty but not broken
-    on.exit({plyr::l_ply(dev.list(), dev.off)})
+    ## NOTE: 'add=TRUE' is essential here, otherwise this would replace the logging exit handler
+    on.exit({plyr::l_ply(dev.list(), dev.off)}, add = TRUE)
 
     ## enforce voom for paired samples
     #	if (!is.null(pairs)) {
@@ -334,13 +351,6 @@ diffExpr <-
     #### save Groups name and ellipse mapping groups name first
     ellipse.grp.nam <- ellipse.mapping.groups
     grp.nam <- groups
-    # TODO finish or remove if not needed:
-    # if (!is.null(design)) {
-    #   # extract name of grouping vector column from design matrix (this is needed as the 'groups' argument is not used for
-    #   # generating the matrix but both must match)
-    #   grp.nam <- grep(control, colnames(design))
-    #   grp.nam <- sub(paste0("(^[[:print:]])", control), "\\1", )
-    # }
     #### reformat samp.info data frame to meet down-stream conditions
     samp.info <- diff_expr_get_samp_info(samp.info, samples, groups, ellipse.mapping.groups)
 
@@ -367,8 +377,18 @@ diffExpr <-
 
     if (is.null(analysis.name)) {
       analysis.name <- paste0(paste(levels(groups)[1:2], collapse="_"), "_")
-      cat("Using default settings for the 'analysis name':", sQuote(analysis.name), "\n")
+      dw_log("Using default settings for the 'analysis name':", sQuote(analysis.name), "\n")
       warning("A unique and descriptive name for the analysis should always be provided!")
+    }
+
+    ## open the log file now that both 'out.dir' and 'analysis.name' are known
+    ## everything logged so far is buffered and gets flushed into the file here
+    if (!dry.run) {
+      if (is.null(log.file)) {
+        log.file <- file.path(out.dir, paste(analysis.name, "diffwrap.log", sep = "_"))
+      }
+      dw_log_file(log.file)
+      dw_step("  Writing run log to", sQuote(log.file), "\n")
     }
 
     cat("\n@ -- PREPROCESSING --\n\n")
@@ -428,11 +448,6 @@ diffExpr <-
                                       block = block,
                                       use_weights = use_weights)
     } else {
-      # design is a formula
-      browser()
-      ## find groups column in sample info
-      # test if design matrix is of full rank
-      if (!limma::is.fullrank(design)) stop("Design matrix is not of full rank. Check your group vectors.")
       # in order to match the search pattern in the grep part in the contrasts function the columns
       # of the design matrix reflecting the sample groups are renamed to start with "groups"
       grp.col <- grep(paste0("^", grp.nam), colnames(design))
@@ -451,8 +466,8 @@ diffExpr <-
                                           groups = groups,
                                           pairs = pairs,
                                           block = block,
-                                          contrasts = contrasts,
-                                          user_design = user_design)
+                                          contrasts = contrasts)
+                                          # user_design = user_design)
 
     ## set dispersion method
     disp <- match.arg(disp)
@@ -799,6 +814,9 @@ diffExpr <-
                                                 plot.num.terms=enrichment.plot.num.terms
       )
     }
-    on.exit()
+    ## the run completed normally, so the device-cleanup handler is no longer needed.
+    ## NOTE: do NOT call bare on.exit() here - that would also cancel dw_log_end()
+    ## and leave the log file connection open.
+    on.exit(dw_log_end(), add = FALSE)
     return(out.l)
   }

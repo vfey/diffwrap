@@ -13,6 +13,12 @@ utils::globalVariables("expression.raw")
 #' If \code{miRSEQ=TRUE} this expects the output from CAP-miRSEQ summary script which is also a counts matrix.
 #' @param samp.info \code{data.frame}. samp.info object containing information of the project's sample sheet.
 #' @param miRSEQ \code{logical}. Is the input data the output from CAP-miRSEQ summary script?
+#' @return A \code{matrix} of raw counts with features in rows and samples in columns, restricted to the
+#'   samples listed in \option{samp.info} and ordered as they are there.
+#' @examples
+#' si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
+#' counts <- diff_expr_read_counts(diffwrap_counts, si)
+#' dim(counts)
 #' @export
 diff_expr_read_counts <-
   function(expr.dat, samp.info, miRSEQ = FALSE)
@@ -101,6 +107,19 @@ diff_expr_read_counts <-
     # in case of untypical gene identifiers change those
     ## for "gene:" in front of the Ensembl Gene ID
     rownames(counts) <- sub("^gene:", "", rownames(counts))
+    ## Ensure a consistent return type across all input modes.
+    ## 'readDGE()' and 'getCounts()' hand back a matrix, whereas 'read.delim()' and
+    ## 'read.table()' hand back a data.frame, so without this coercion the class of the
+    ## returned object would depend on how the counts happened to be supplied.
+    if (!is.matrix(counts)) {
+      not.num <- !vapply(counts, is.numeric, logical(1))
+      if (any(not.num)) {
+        stop("Non-numeric column(s) in the count data: ",
+             paste(sQuote(names(counts)[not.num]), collapse = ", "),
+             ". Counts must be numeric.", call. = FALSE)
+      }
+      counts <- as.matrix(counts)
+    }
     return(counts)
   }
 
@@ -114,6 +133,13 @@ diff_expr_read_counts <-
 #' In edgeR, it is recommended to remove features without at least 1 read per million in n of the
 #'   samples, where n is the size of the smallest group of replicates (determined from the 'groups' vector).
 #'
+#' @return A \code{matrix} of counts with weakly expressed features and the non-informative
+#'   \command{htseq-count} summary rows removed.
+#' @examples
+#' si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
+#' counts <- diff_expr_read_counts(diffwrap_counts, si)
+#' filtered <- diff_expr_filter_counts(counts, si, strict = TRUE)
+#' c(before = nrow(counts), after = nrow(filtered))
 #' @export
 diff_expr_filter_counts <-
   function(counts, samp.info, strict=TRUE, min.samp=NULL)

@@ -88,6 +88,7 @@ get_hm_colors <- function(
 #' @param n desired length of the numeric vector of probabilities (see ?quantile)
 #'
 #' @seealso [quantile()]
+#' @return A \code{numeric} vector of unique quantile break points, of length at most \option{n}.
 quantile_breaks <- function(xs, n = 20) {
   breaks <- quantile(xs, probs = seq(0, 1, length.out = n))
   breaks[!duplicated(breaks)]
@@ -99,6 +100,7 @@ quantile_breaks <- function(xs, n = 20) {
 #' @param df data frame to be processed
 #' @param column name of the column to be reordered
 #' @param desired_level_order vector of factor levels in the desired order
+#' @return The input \code{data.frame} with the levels of the specified factor column reordered.
 reorderFactors <- function(df, column = "my_column_name",
                            desired_level_order) {
 
@@ -119,6 +121,9 @@ reorderFactors <- function(df, column = "my_column_name",
 
 #' Function to create the annotation colour list used in the heatmap
 #' @param clinical.mat matrix with clinical annotation values in (clinical category, samples) format
+#' @return A named \code{list} of named character vectors of colours, one element per annotation
+#'   variable, in the form expected by the \code{annotation_colors} argument of
+#'   \code{\link[pheatmap]{pheatmap}}.
 make_pheatmap_anno_color = function(clinical.mat) {
   #create the annotation colour list
   anno.vars = list()
@@ -354,6 +359,14 @@ correlogram_pheatmap = function(expr.mat, clinical.mat, scale.fl = "none", legen
 #'
 #' @author Bogdan Iancu - Genevia Technologies Oy
 #' @return Returns a list of pheatmap plot objects used in the pheatmap_plots() function.
+#' @examples
+#' \donttest{
+#' si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
+#' counts <- diff_expr_filter_counts(diff_expr_read_counts(diffwrap_counts, si), si)
+#' expr <- edgeR::cpm(counts, log = TRUE)[1:30, ]
+#' clin <- data.frame(Group = si$Groups, row.names = si$SampleNames)
+#' diffr_pheatmap(expr, clin)
+#' }
 #' @export
 diffr_pheatmap = function(expr.mat, clinical.mat,
                           scale.fl = "none", legend.fl = TRUE,

@@ -34,8 +34,8 @@
 ##
 ############################################################################
 
-#' @keywords package
-#' "_PACKAGE"
+#' @keywords internal
+"_PACKAGE"
 #' @title Differential expression analysis of RNA-Seq data
 #' @name diffwrap
 #' @description This package provides functionality for differential expression analysis of read counts from mRNA sequencing data or miRNA expression values
@@ -86,19 +86,14 @@
 #' @importFrom ltm biserial.cor
 #' @importFrom ggrepel geom_text_repel geom_label_repel
 #' @importFrom grid grid.newpage grid.draw
-#' @import scatterplot3d
-#' @importFrom genefilter rowVars
-#' @importFrom clusterProfiler gseGO enrichGO simplify
-#' @importFrom gprofiler2 gost
-#' @importFrom WriteXLS WriteXLS
-#' @importFrom igraph make_undirected_graph V layout.graphopt
-#' @import readxl
 #' @importFrom openxlsx write.xlsx
 #' @importFrom purrr map2 reduce
 #' @importFrom dplyr select inner_join full_join anti_join
 #' @importFrom venn venn
 #' @importFrom VennDiagram venn.diagram
-#' @importFrom topGO runTest annFUN.org
+## Packages used only in optional features (enrichment, 3D and network plots) are in
+## 'Suggests' and accessed conditionally with requireNamespace() + pkg:: qualified calls:
+## clusterProfiler, gprofiler2, topGO, igraph, scatterplot3d, readxl, WriteXLS.
 ## usethis namespace: end
 NULL
 #'

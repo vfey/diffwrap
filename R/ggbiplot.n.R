@@ -38,6 +38,15 @@ utils::globalVariables(c("xvar", "yvar", "muted", "varname", "angle", "hjust"))
 #' @param tidy \code{logical}. If TRUE, \code{theme_minimal} will be applied.
 #' @param ... currently not in use
 #' @return The final plot object returned by ggplot.
+#' @examples
+#' \donttest{
+#' si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
+#' counts <- diff_expr_filter_counts(diff_expr_read_counts(diffwrap_counts, si), si)
+#' groups <- stats::relevel(si$Groups, ref = "control")
+#' pca <- diff_expr_PCA(edgeR::cpm(counts, log = TRUE), n = 100)
+#' g <- ggbiplot.n(pca, groups = groups)
+#' class(g)
+#' }
 #' @export
 ggbiplot.n <- function (pcobj, choices = 1:2, scale = 1, pc.biplot = TRUE,
 		obs.scale = 1 - scale, var.scale = scale, groups = NULL, grp.nam=NULL,
@@ -129,12 +138,12 @@ ggbiplot.n <- function (pcobj, choices = 1:2, scale = 1, pc.biplot = TRUE,
 							length = 50))
 			circle <- data.frame(xvar = r * cos(theta), yvar = r *
 							sin(theta))
-			g <- g + geom_path(data = circle, color = muted("white"),
-					size = 1/2, alpha = 1/3)
+			g <- g + geom_path(data = circle, color = scales::muted("white"),
+					linewidth = 1/2, alpha = 1/3)
 		}
 		g <- g + geom_segment(data = df.v, aes(x = 0, y = 0,
 						xend = xvar, yend = yvar), arrow = arrow(length = unit(1/2,
-								"picas")), color = muted("red"))
+								"picas")), color = scales::muted("red"))
 	}
 	if (!is.null(df.u$groups) && ellipse) {
 		theta <- c(seq(-pi, pi, length = 50), seq(pi, -pi, length = 50))
@@ -150,7 +159,7 @@ ggbiplot.n <- function (pcobj, choices = 1:2, scale = 1, pc.biplot = TRUE,
 									mu, FUN = "+"), groups = x$groups[1])
 				})
 		names(ell)[1:2] <- c("xvar", "yvar")
-		g <- g + geom_path(data = ell, aes(color = groups, group = groups), size=ellipse.lwd)
+		g <- g + geom_path(data = ell, aes(color = groups, group = groups), linewidth=ellipse.lwd)
 	}
 	if (var.axes) {
 		g <- g + geom_text(data = df.v, aes(label = varname,

@@ -33,6 +33,21 @@ utils::globalVariables(c("PCx", "PCy", "Condition", "Sample", "Ellipse", "x", "y
 #'   blocked designs (e.g., paired samples or batch factors).
 #' @param analysis.name Character used in the plot title and the output file name if the plot is saved to a PDF
 #' @param out.dir Character; path where to save PDF. Required; no default is used so that nothing is written to the working directory unintentionally.
+#' @return The input list \option{out.l}, with a \code{QCplots} element added (or extended) holding the
+#'   generated quality control plots as \code{ggplot} objects, named after the plot type and the value of
+#'   \option{type}.
+#' @examples
+#' \donttest{
+#' si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
+#' counts <- diff_expr_filter_counts(diff_expr_read_counts(diffwrap_counts, si), si)
+#' groups <- stats::relevel(si$Groups, ref = "control")
+#' lcpm <- edgeR::cpm(counts, log = TRUE)
+#' out.l <- diff_expr_QC_plots(counts = lcpm, samp.info = si, control = "control",
+#'                             out.l = list(), grp.nam = "Group",
+#'                             sample.plot.names = colnames(lcpm),
+#'                             analysis.name = "demo", out.dir = tempdir())
+#' names(out.l$QCplots)
+#' }
 #' @export
 diff_expr_QC_plots <-
   function(counts, samp.info, control, out.l, grp.nam=NULL, PC=c(1,2,3), sample.plot.names=NULL,
@@ -81,6 +96,16 @@ diff_expr_QC_plots <-
 #' @param do.pdf Logical indicating whether a PDF should be produced.
 #' @param out.dir Character; path where to save PDF. Required; no default is used so that nothing is written to the working directory unintentionally.
 #' @seealso [plotMDS()]
+#' @return No return value. Called for its side effect of drawing a multidimensional scaling plot,
+#'   optionally into a PDF file below \option{out.dir}.
+#' @examples
+#' \donttest{
+#' si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
+#' counts <- diff_expr_filter_counts(diff_expr_read_counts(diffwrap_counts, si), si)
+#' groups <- stats::relevel(si$Groups, ref = "control")
+#' d <- edgeR::calcNormFactors(edgeR::DGEList(counts, group = groups))
+#' diff_expr_mds_plot(d, groups = groups, do.pdf = FALSE, out.dir = tempdir())
+#' }
 #' @export
 diff_expr_mds_plot <-
   function(d, groups, n=500, sample.plot.names=NULL, analysis.name=NULL, do.pdf=FALSE, out.dir)
@@ -112,6 +137,14 @@ diff_expr_mds_plot <-
 #' @param dim.plot Integer vector of length two passed to \code{plotMDS()} specifying the principal components to be plotted.
 #' @param main Plot title.
 #' @seealso [plotMDS()]
+#' @return A \code{ggplot} object containing the multidimensional scaling plot.
+#' @examples
+#' si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
+#' counts <- diff_expr_filter_counts(diff_expr_read_counts(diffwrap_counts, si), si)
+#' groups <- stats::relevel(si$Groups, ref = "control")
+#' lcpm <- edgeR::cpm(counts, log = TRUE)
+#' g <- diff_expr_ggplot_mds(lcpm, samp.name = colnames(lcpm), groups = groups)
+#' class(g)
 #' @export
 diff_expr_ggplot_mds <-
   function(counts, samp.name, groups, grp.nam=NULL, pairs=NULL, pairs.name=NULL, gene.selection="common", dim.plot=c(1,2), main=NULL)
@@ -167,6 +200,15 @@ diff_expr_ggplot_mds <-
 #' @param tweak \code{logical}. Should the plot theme be tweaked? Will apply values set in axes.title.size, legend.text.size and legend.title.size. Defaults to TRUE.
 #' @param ... Arguments passed to \code{ggbiplot.n()}.
 #' @seealso [ggbiplot.n()]
+#' @return A \code{ggplot} object containing the PCA biplot. The plot is returned rather than drawn, so
+#'   it has to be printed to appear on a device.
+#' @examples
+#' si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
+#' counts <- diff_expr_filter_counts(diff_expr_read_counts(diffwrap_counts, si), si)
+#' groups <- stats::relevel(si$Groups, ref = "control")
+#' pca <- diff_expr_PCA(edgeR::cpm(counts, log = TRUE), n = 100)
+#' g <- diff_expr_PCA_ggbiplot(pca, groups = groups)
+#' class(g)
 #' @export
 diff_expr_PCA_ggbiplot <-
   function(PCA, groups, grp.nam=NULL, ellipse=TRUE, circle=TRUE, varname.size=0, var.axes=FALSE, main=NULL, fix.aspect=FALSE, tweak=FALSE, ...)
@@ -195,6 +237,14 @@ diff_expr_PCA_ggbiplot <-
 #' @param plot.ellipse.legend Logical; should the ellipse legend be plotted. \code{NA}, the default, will plot it if any aesthetics are mapped.
 #' @param do.plot Logical; should the plot be printed to the graphics device? Defaults to \code{TRUE}.
 #' @seealso [stat_ellipse()]
+#' @return A \code{ggplot} object containing the labelled PCA scatterplot.
+#' @examples
+#' si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
+#' counts <- diff_expr_filter_counts(diff_expr_read_counts(diffwrap_counts, si), si)
+#' groups <- stats::relevel(si$Groups, ref = "control")
+#' pca <- diff_expr_PCA(edgeR::cpm(counts, log = TRUE), n = 100)
+#' g <- diff_expr_PCA_ggplot(pca, samp.name = NULL, groups = groups, do.plot = FALSE)
+#' class(g)
 #' @export
 diff_expr_PCA_ggplot <-
   function(PCA, samp.name=NULL, groups, grp.nam=NULL, PC=c(1,2), main=NULL, ellipse = TRUE, ellipse.mapping.groups=NULL, ellipse.grp.nam=NULL,
@@ -288,10 +338,24 @@ diff_expr_PCA_ggplot <-
 #' @param grp.nam Legend title.
 #' @param PC Integer vector of length three specifying the principal components to be plotted.
 #' @param main Plot title.
+#' @return No return value. Called for its side effect of drawing a three-dimensional PCA scatterplot on
+#'   the current graphics device.
+#' @examples
+#' \donttest{
+#' si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
+#' counts <- diff_expr_filter_counts(diff_expr_read_counts(diffwrap_counts, si), si)
+#' groups <- stats::relevel(si$Groups, ref = "control")
+#' pca <- diff_expr_PCA(edgeR::cpm(counts, log = TRUE), n = 100)
+#' diff_expr_3d_scatterplot(pca, groups = groups)
+#' }
 #' @export
 diff_expr_3d_scatterplot <-
   function(PCA, samp.name=NULL, groups, grp.nam=NULL, PC=c(1,2,3), main=NULL)
   {
+    if (!requireNamespace("scatterplot3d", quietly = TRUE)) {
+      stop("Package ", sQuote("scatterplot3d"),
+           " must be installed to draw the 3D PCA scatterplot.", call. = FALSE)
+    }
     dw_log("    Preparing data...", "\n")
     if (is.null(samp.name)) {
       samp.n <- rownames(PCA$x)
@@ -342,6 +406,15 @@ diff_expr_3d_scatterplot <-
 #' @param grp.nam Legend title.
 #' @param main Plot title.
 #' @param col.grps Logical indicating whether to colour the dendrogram by groups.
+#' @return No return value. Called for its side effect of drawing a hierarchical clustering dendrogram on
+#'   the current graphics device.
+#' @examples
+#' \donttest{
+#' si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
+#' counts <- diff_expr_filter_counts(diff_expr_read_counts(diffwrap_counts, si), si)
+#' groups <- stats::relevel(si$Groups, ref = "control")
+#' diff_expr_dendro_plot(edgeR::cpm(counts, log = TRUE), groups = groups)
+#' }
 #' @export
 diff_expr_dendro_plot <-
     function(counts, groups, grp.nam=NULL, main=NULL, col.grps=FALSE)

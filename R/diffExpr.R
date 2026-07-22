@@ -69,7 +69,7 @@
 #' @param fdr.thr \code{numeric}. Threshold for FDR values. Defaults to 0.05.
 #' @param logfc.thr \code{numeric}. Threshold for fold-change values on the log2-scale. Defaults to 1.
 #' @param numlab \code{numeric}. Maximum number of point labels to be shown in the plot. This overrides/limits
-#'   values calculated by any thresholds. Defaults to 15.
+#'   values calculated by any thresholds. Defaults to 25.
 #' @param point.lab \code{logical}. Should point labels be shown in the plot? Defaults to \code{TRUE}.
 #' @param heatmap.topn \code{numeric}. Number of top values to be plotted. Defaults to 100.
 #' @param heatmap.split.expr \code{logical}. Should the top up- and top down-regulated genes be displayed at equal numbers (50/50),
@@ -137,6 +137,17 @@
 #' }
 #' However, the function is first and foremost called for its side effects of generating results tables and plots.
 #'
+#' @examples
+#' \donttest{
+#' out.dir <- file.path(tempdir(), "diffwrap_demo")
+#' dir.create(out.dir, showWarnings = FALSE)
+#' res <- diffExpr(expr.dat = diffwrap_counts,
+#'                 samp.info = diffwrap_samp_info,
+#'                 samples = "SampleName", groups = "Group",
+#'                 control = "control", analysis.name = "demo",
+#'                 out.dir = out.dir, do.enrichment = FALSE)
+#' names(res$contrasts)
+#' }
 #' @export
 diffExpr <-
   function(expr.dat,
@@ -153,7 +164,7 @@ diffExpr <-
            analysis.name = NULL,
            biomart = FALSE,
            biom.data.set = "hsapiens_gene_ensembl",
-           biom.mart = c("ensembl", "snp", "funcgen", "vega", "pride", "plants"),
+           biom.mart = "ensembl",
            host = "https://www.ensembl.org",
            biom.filter = "ensembl_gene_id",
            biom.attributes = c("ensembl_gene_id", "hgnc_symbol", "description", "entrezgene_id"),
@@ -165,7 +176,7 @@ diffExpr <-
            p.thr = 0.05,
            fdr.thr = 0.05,
            logfc.thr = 1,
-           numlab = 20,
+           numlab = 25,
            point.lab = TRUE,
            heatmap.topn = 100,
            heatmap.split.expr = FALSE,
@@ -236,6 +247,24 @@ diffExpr <-
         call. = FALSE
       )
     }
+    # The enrichment engines live in 'Suggests'. If enrichment is requested, check up front
+    # that the packages needed by the selected methods are installed, so the run fails here
+    # rather than after all the modelling and plotting is done.
+    if (do.enrichment) {
+      enr.needed <- c(
+        if (any(grepl("clusterProfiler", enrichment.methods))) "clusterProfiler",
+        if (any(grepl("gProfileR", enrichment.methods)))       "gprofiler2",
+        if (any(grepl("topGO", enrichment.methods)))           "topGO",
+        "WriteXLS"
+      )
+      enr.miss <- enr.needed[!vapply(enr.needed, requireNamespace, logical(1), quietly = TRUE)]
+      if (length(enr.miss)) {
+        stop("Package(s) ", paste(sQuote(enr.miss), collapse = ", "),
+             " must be installed to perform enrichment analysis.\n",
+             "  Please install them, or set 'do.enrichment = FALSE' to run the rest of the pipeline.",
+             call. = FALSE)
+      }
+    }
     if (use.cache && !requireNamespace("rappdirs", quietly = TRUE)) {
       stop(
         paste("Package", sQuote("rappdirs"), "must be installed to use the biomart cache."),
@@ -246,8 +275,11 @@ diffExpr <-
       biom.cache <- rappdirs::user_cache_dir("biomaRt")
     }
     dw_log("  Checking for necessary user input...", "\n")
-    if (missing(expr.dat) || !is.character(unlist(expr.dat))) {
-      stop("Need input file with raw expression values (read counts)!")
+    ## 'expr.dat' may be file path(s) (character) OR an in-memory count matrix/data.frame;
+    ## diff_expr_read_counts() handles all of these, so the guard must accept them too.
+    if (missing(expr.dat) ||
+        !(is.character(unlist(expr.dat)) || is.matrix(expr.dat) || is.data.frame(expr.dat))) {
+      stop("Need input for 'expr.dat': file path(s) to read counts, or a count matrix/data.frame!")
     }
     if (missing(samp.info)) {
       if (is.null(samples)) {

@@ -12,6 +12,10 @@
 #' The coordinates are used in a network graph and minimum and maximum scale values correspond to
 #'   minimum and maximum fold-changes, by default.
 #'
+#' @return A named \code{list} with the elements \code{scale.y.coordinates} (the vertical positions of
+#'   the legend tick labels) and \code{scale.labels} (the corresponding label values).
+#' @examples
+#' prepare_scale_for_legend(scale.minimum = -3, scale.maximum = 4)
 #' @export
 prepare_scale_for_legend = function(scale.minimum, scale.maximum, int.values.for.ticks=NULL){
 
@@ -51,6 +55,14 @@ prepare_scale_for_legend = function(scale.minimum, scale.maximum, int.values.for
 #' @param pdf.width,pdf.height Numeric; width and height of the PDF graphics region in inches.
 #' @param legend.cex.main,legend.cex.text Numeric; text sizes of legend title and text, given as character expansion
 #'   (magnification) relative to the default.
+#' @return No return value. Called for its side effect of writing a network visualisation of the
+#'   enrichment result to the file given by \option{plot.filename}.
+#' @examples
+#' \dontrun{
+#' # builds a network plot from an enrichment result and writes it to 'plot.filename'
+#' plot_enrichment_network(enrichment.result, DE.result,
+#'                         plot.filename = file.path(tempdir(), "network.pdf"))
+#' }
 #' @export
 plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
                                     show.terms = 5,
@@ -61,10 +73,19 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
                                     legend.cex.main = 0.8,
                                     legend.cex.text = 0.7) {
 
+  if (!requireNamespace("igraph", quietly = TRUE)) {
+    stop("Package ", sQuote("igraph"),
+         " must be installed to draw the enrichment network plot.", call. = FALSE)
+  }
+
   if (typeof(enrichment.result) == "character") {
+    if (!requireNamespace("readxl", quietly = TRUE)) {
+      stop("Package ", sQuote("readxl"),
+           " must be installed to read enrichment results from an Excel file.", call. = FALSE)
+    }
     # Read in enrichment result table
-    enrichment.table <- data.frame(read_excel(enrichment.result))
-    DE.table <- data.frame(read_excel(DE.result))
+    enrichment.table <- data.frame(readxl::read_excel(enrichment.result))
+    DE.table <- data.frame(readxl::read_excel(DE.result))
   } else{
     enrichment.table = enrichment.result
     DE.table = DE.result
@@ -239,7 +260,7 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
   plot(g, vertex.label.color = "black", vertex.size = igraph::V(g)$sizes, vertex.frame.color = "white",
        vertex.color = igraph::V(g)$colors, vertex.label.cex = igraph::V(g)$vert.label.sizes, vertex.shape = igraph::V(g)$shapes,
        vertex.label.dist = igraph::V(g)$vertex.label.dists,
-       layout = layout.graphopt(g, spring.length = 1.3, spring.constant = 1.3), vertex.label.family = "sans", vertex.label.font = 2)
+       layout = igraph::layout.graphopt(g, spring.length = 1.3, spring.constant = 1.3), vertex.label.family = "sans", vertex.label.font = 2)
   # Add the legend
   legend_image <- as.raster(matrix(rev(palette(100)), ncol = 1))
 
@@ -265,6 +286,8 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
 #' Enrichment tools report all genes annotated to a certain term in one string, separated by comma or similar. The function
 #'   splits each row into individual IDs before converting and later re-collapses converted IDs.
 #'
+#' @return The input enrichment result with the Ensembl gene identifiers in the gene column replaced by
+#'   the corresponding gene symbols.
 format_ensembl_ids_annotated_to_term <- function(result, species, which.split = ",")
 {
   gene.col <- colnames(result)[grepl("ENSG", result)]
@@ -319,6 +342,17 @@ format_ensembl_ids_annotated_to_term <- function(result, species, which.split = 
 #' @return A list of all relevant objects generated in the course of the enrichment analyses
 ###############################################################################
 
+#' @examples
+#' \dontrun{
+#' # needs an annotation package (org.Hs.eg.db); run on real data with mappable gene IDs
+#' out.dir <- file.path(tempdir(), "diffwrap_demo")
+#' dir.create(out.dir, showWarnings = FALSE)
+#' res <- diffExpr(diffwrap_counts, diffwrap_samp_info, samples = "SampleName",
+#'                 groups = "Group", control = "control", analysis.name = "demo",
+#'                 out.dir = out.dir, do.enrichment = FALSE)
+#' runEnrichmentAnalyses(res, analysis.name = "demo", out.dir = out.dir,
+#'                       species = "human", enrichment.methods = "clusterProfilerGO")
+#' }
 #' @export
 runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichment",
                                   use.background.from.diffr.output=TRUE, use.pval.in.DE.filtering.if.no.sign.fdrs=FALSE,
@@ -364,6 +398,20 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
       "Package \"org.Mm.eg.db\" must be installed to use this function.",
       call. = FALSE
     )
+  }
+
+  # the enrichment engines and the Excel writer live in 'Suggests'; check the ones the
+  # selected 'enrichment.methods' actually need, so a missing package fails early and clearly
+  needed <- c(
+    if (any(grepl("clusterProfiler", enrichment.methods))) "clusterProfiler",
+    if (any(grepl("gProfileR", enrichment.methods)))       "gprofiler2",
+    if (any(grepl("topGO", enrichment.methods)))           "topGO",
+    "WriteXLS"
+  )
+  miss <- needed[!vapply(needed, requireNamespace, logical(1), quietly = TRUE)]
+  if (length(miss)) {
+    stop("The following package(s) must be installed for the requested enrichment analysis: ",
+         paste(sQuote(miss), collapse = ", "), ".", call. = FALSE)
   }
 
   ## TODO: invent a smarter way to do this...

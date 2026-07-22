@@ -22,9 +22,22 @@ utils::globalVariables(c("Average Expression", "logFC", "log2 Fold-Change", "adj
 #' @param biom.attributes \code{character}. Vector of column names to be retrieved from biomart.
 #' @param font.size Size of point labels in M-A plots.
 #' @param lists Logical; should output tables be written to files?
+#' @return A named \code{list} of \code{ggplot} objects with the elements \code{FDR} and \code{Pval},
+#'   holding the M-A plot with points highlighted by false discovery rate and by p-value, respectively.
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' d3 <- data.frame(gene_symbol = paste0("G", 1:100),
+#'                  logFC = rnorm(100), PValue = runif(100), FDR = runif(100),
+#'                  AveExpr = rnorm(100, 5))
+#' rownames(d3) <- d3$gene_symbol
+#' g <- diff_expr_ma_plot(d3, contr = "treated-control", sym.col = "gene_symbol",
+#'                        out.dir = tempdir(), lists = FALSE)
+#' names(g)
+#' }
 #' @export
 diff_expr_ma_plot <-
-		function(dat, contr, id=NULL, sym.col="gene_symbol", p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15,
+		function(dat, contr, id=NULL, sym.col="gene_symbol", p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=25,
 		         out.dir, analysis.name=NULL, point.lab=TRUE, biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"),
 		         font.size=5, lists=TRUE)
 {
@@ -122,146 +135,134 @@ diff_expr_ma_plot <-
 }
 
 
-##' Helper function that returns volcano plot.
+#' Helper function that returns a volcano plot.
+#' @description Builds a single volcano plot for one significance measure. Points are coloured by an
+#'   'EnhancedVolcano'-style, colour-blind safe (Okabe-Ito) four-level scheme distinguishing genes that
+#'   pass neither threshold ("NS"), the fold-change threshold only, the significance threshold only, or
+#'   both. Only the doubly-significant genes are eligible for text labels.
 #' @param data.df \code{data.frame}. Data frame containing all necessary columns to generate a Volcano plot with
 #'   gene labels (at least p-values, FDR values, log-ratios and gene symbols or other IDs)
-#' @param property.to.plot \code{character}. Statistics to be plotted. One of "fdr", "p".
-#' @param property.column \code{character}. Name of the actual column with to the statistics to be plotted.
-#' @param property.thr \code{numeric}. Plotted values with a statistics (property) value below this threshold
-#'   will be labelled in the respective plot.
-#' @param logfc.thr \code{numeric}. Plotted (`abs`olute) values above this threshold will have bigger dots.
-#' @param main \code{character}. Main plot title. (Will be complemented with additional information, e.g., 'FDR'
-#'   when labelling according to and FDR threshold.)
-#' @param numlab \code{numeric}. Maximum number of labels per plot. Supersedes numbers calculated based on `p.thr` and `fdr.thr`.
+#' @param property.to.plot \code{character}. Statistic to be plotted, one of "fdr" or "p". Matched via \code{match.arg}.
+#' @param property.column \code{character}. Name of the actual column holding the statistic to be plotted.
+#' @param property.thr \code{numeric}. Significance threshold; genes below it (in \option{property.column})
+#'   are considered significant. Defaults to 0.05.
+#' @param logfc.thr \code{numeric}. Absolute log2 fold-change threshold; genes beyond it, together with the
+#'   significance threshold, form the highlighted ("both") set that is eligible for labelling. Defaults to 1.
+#' @param main \code{character}. Main plot title. Defaults to \code{NULL}.
+#' @param numlab \code{numeric}. Maximum total number of gene labels per plot (default 25). Labels are taken
+#'   from the doubly-significant genes and split between up- and down-regulated in proportion to the skew,
+#'   with a guaranteed minimum per side so the minor side is never left empty. The chosen split is logged.
 #' @param point.lab \code{logical}. Should points be labelled, at all?
 #' @param sym.col \code{character}. Name of column with gene symbols, e.g., HGNC Symbols.
 #' @param pretty.breaks \code{logical}. Should the breaks on the axes be pretty? Uses `scales::breaks_extended`.
+#' @return A \code{ggplot} object containing the volcano plot for the requested significance measure.
+#' @examples
+#' set.seed(1)
+#' d3 <- data.frame(gene_symbol = paste0("G", 1:100),
+#'                  logFC = rnorm(100), PValue = runif(100))
+#' g <- prepare_volcano_of_given_property(d3, property.to.plot = "p",
+#'                                        property.column = "PValue",
+#'                                        property.thr = 0.05, logfc.thr = 1)
+#' class(g)
 #' @export
-prepare_volcano_of_given_property = function(data.df, property.to.plot = c("fdr", "p"), property.column,
-		property.thr, logfc.thr, main, numlab, point.lab, sym.col, pretty.breaks=FALSE){
+prepare_volcano_of_given_property <-
+  function(data.df, property.to.plot = c("fdr", "p"), property.column,
+           property.thr = 0.05, logfc.thr = 1, main = NULL, numlab = 25,
+           point.lab = TRUE, sym.col = "gene_symbol", pretty.breaks = FALSE) {
 
-  # test if needed packages are installed
-  if (pretty.breaks && !requireNamespace("scales", quietly = TRUE)) {
-    stop(
-      paste("Package", sQuote("scales"), "must be installed to use the 'pretty.breaks' option."),
-      call. = FALSE
-    )
+    property.to.plot <- match.arg(property.to.plot)
+    if (pretty.breaks && !requireNamespace("scales", quietly = TRUE)) {
+      stop("Package ", sQuote("scales"),
+           " must be installed to use the 'pretty.breaks' option.", call. = FALSE)
+    }
+
+    # --- significance categories (EnhancedVolcano-style, colour-blind safe) ------
+    prop    <- data.df[[property.column]]
+    data.df[["neg.log10"]] <- -log10(prop)
+    measure <- toupper(property.to.plot)                       # "FDR" or "P"
+
+    pass.p  <- !is.na(prop) & prop < property.thr
+    pass.fc <- !is.na(data.df$logFC) & abs(data.df$logFC) > logfc.thr
+
+    lab.ns   <- "NS"
+    lab.fc   <- sprintf("|logFC| > %s", logfc.thr)
+    lab.sig  <- sprintf("%s < %s", measure, property.thr)
+    lab.both <- sprintf("%s < %s & |logFC| > %s", measure, property.thr, logfc.thr)
+    levs     <- c(lab.ns, lab.fc, lab.sig, lab.both)
+    # Okabe-Ito palette: grey / bluish-green / sky-blue / vermillion
+    pal      <- stats::setNames(c("#999999", "#009E73", "#56B4E9", "#D55E00"), levs)
+
+    cat.vec <- ifelse(pass.p & pass.fc, lab.both,
+               ifelse(pass.p, lab.sig, ifelse(pass.fc, lab.fc, lab.ns)))
+    data.df[["Significance"]] <- factor(cat.vec, levels = levs)
+
+    # --- choose genes to label: the doubly-significant set, budget 'numlab' ------
+    #     total <= numlab, split between up- and down-regulated in proportion to the
+    #     skew, but with a guaranteed minimum so the minor side is never empty
+    lab <- data.df[0, , drop = FALSE]
+    if (isTRUE(point.lab)) {
+      cand <- data.df[pass.p & pass.fc, , drop = FALSE]
+      cand <- cand[order(cand[[property.column]]), , drop = FALSE]  # most significant first
+      n.dn <- sum(cand$logFC < 0)
+      n.up <- sum(cand$logFC > 0)
+      tot  <- min(numlab, n.dn + n.up)
+      if (tot > 0) {
+        avail <- c(down = n.dn, up = n.up)
+        alloc <- pmin(avail, round(tot * avail / sum(avail)))       # skew-weighted
+        floor.each <- max(1L, tot %/% 4L)                           # never crush the minor side
+        alloc <- pmax(alloc, ifelse(avail > 0L, pmin(avail, floor.each), 0L))
+        while (sum(alloc) > tot) alloc[which.max(alloc)] <- alloc[which.max(alloc)] - 1L
+        while (sum(alloc) < tot) {
+          room <- avail - alloc
+          if (max(room) <= 0L) break
+          alloc[which.max(room)] <- alloc[which.max(room)] + 1L
+        }
+        lab <- rbind(utils::head(cand[cand$logFC < 0, , drop = FALSE], alloc[["down"]]),
+                     utils::head(cand[cand$logFC > 0, , drop = FALSE], alloc[["up"]]))
+        dw_log(sprintf("    Labelling %d significant gene(s): %d down / %d up",
+                       nrow(lab), alloc[["down"]], alloc[["up"]]), "\n")
+        if (n.dn + n.up > numlab)
+          dw_log(sprintf("     (%d significant, capped at numlab = %d; split weighted by skew)\n",
+                         n.dn + n.up, numlab))
+      }
+    }
+
+    # --- assemble the plot ------------------------------------------------------
+    line.tag <- paste0(if (property.to.plot == "fdr") "q" else "p", " = ", property.thr)
+
+    g <- ggplot(data.df, aes(x = .data[["logFC"]], y = .data[["neg.log10"]])) +
+      geom_point(aes(colour = .data[["Significance"]]), size = 1.75, alpha = 0.7) +
+      scale_colour_manual(values = pal, drop = FALSE) +
+      geom_hline(yintercept = -log10(property.thr), colour = "red", linetype = "dashed") +
+      geom_vline(xintercept =  logfc.thr, colour = "red", linetype = "dashed") +
+      geom_vline(xintercept = -logfc.thr, colour = "red", linetype = "dashed") +
+      annotate("text", x = min(data.df$logFC, na.rm = TRUE),
+               y = -log10(property.thr), label = line.tag,
+               hjust = 0, vjust = -0.4, size = 3, colour = "red") +
+      labs(x = "Logarithmic fold change", y = paste0("-log10(", measure, ")"),
+           colour = NULL, title = main, subtitle = paste0("(", measure, "-values)")) +
+      theme_bw(base_size = 10) +
+      theme(panel.border = element_blank(),
+            axis.line = element_line(colour = "black"),
+            panel.grid.major = element_line(linewidth = 0.2),
+            panel.grid.minor = element_line(linewidth = 0.2),
+            plot.title = element_text(hjust = 0.5),
+            plot.subtitle = element_text(hjust = 0.5))
+
+    if (pretty.breaks)
+      g <- g + scale_x_continuous(breaks = scales::breaks_extended(6)) +
+               scale_y_continuous(breaks = scales::breaks_extended(8))
+
+    if (isTRUE(point.lab) && nrow(lab) > 0)
+      g <- g + ggrepel::geom_text_repel(
+        data = lab, inherit.aes = FALSE,
+        aes(x = .data[["logFC"]], y = .data[["neg.log10"]], label = .data[[sym.col]]),
+        size = 3, colour = "gray30", max.overlaps = 15,
+        box.padding = grid::unit(0.35, "lines"),
+        point.padding = grid::unit(0.3, "lines"), show.legend = FALSE)
+
+    g
   }
-
-	data.df[[property.to.plot]] <- data.df[[property.column]]
-
-	# Formatted names to use in plot texts:
-	property.formatted.name = toupper(property.to.plot)
-	name.of.legend = paste0(property.formatted.name, "-values")
-	legend.treshold.tag = paste0("signif. (", property.formatted.name, "<", property.thr, ")")
-	#legend.treshold.tag = paste0("signif. (", property.formatted.name, "<", property.thr, " & ", "logFC>", logfc.thr, ")")
-	subtitle.name = paste("(",")", sep=name.of.legend )
-	x.axis.name = "Logarithmic fold change"
-	y.axis.name = paste0("-log10(", property.formatted.name, ")")
-	line.label.tag = "p" #except if we have FDR-values:
-	if(property.to.plot == "fdr" ){
-		line.label.tag = "q"
-	}
-	line_label_text = paste(line.label.tag, property.thr, sep = "=")
-
-	# Constructing new bivalue column for coloring the points and displaying legend
-	data.df[[name.of.legend]] <- "not signif."
-	data.df[[name.of.legend]][data.df[[property.to.plot]] < property.thr] <- legend.treshold.tag
-	#data.df[[name.of.legend]][data.df[[property.to.plot]] < property.thr & abs(data.df$logFC) > logfc.thr] <- legend.treshold.tag
-
-	# Adding another bivalue column for magnitude of foldchange
-	data.df$FC <- paste0("less than ", 2^logfc.thr, "-fold")
-	data.df$FC[(data.df$logFC < -1*logfc.thr | data.df$logFC > logfc.thr)] <- paste0("more than ", 2^logfc.thr, "-fold")
-
-	# Filtering data.df to label points
-	filtdat <- data.df[data.df[[property.to.plot]] < property.thr & abs(data.df$logFC) > logfc.thr, ]
-	dw_log("    ", nrow(filtdat), "point(s) labelled...\n")
-	if (nrow(filtdat) > numlab) {
-		dw_log("     Restricting to", numlab, "...\n")
-		ix <- sort(filtdat[,property.to.plot], index=TRUE)$ix
-		filtdat <- filtdat[ix[1:numlab], ][order(ix[1:numlab]), ]
-	}
-	if (nrow(filtdat) & length(which(filtdat$logFC < 0)) < (numlab %/% 2.5) || nrow(filtdat) & length(which(filtdat$logFC > 0)) < (numlab %/% 2.5)) {
-	  if (nrow(filtdat) & length(which(filtdat$logFC < 0)) < (numlab %/% 2.5)) {
-	    filtdat1 <- rbind(filtdat, data.df[data.df[[property.to.plot]] < property.thr & data.df$logFC < logfc.thr, ])
-	    filtdat1 <- filtdat1[!duplicated(filtdat1$ensembl_gene_id), ]
-	  }
-	  if (nrow(filtdat) & length(which(filtdat$logFC > 0)) < (numlab %/% 2.5)) {
-	    filtdat1 <- rbind(filtdat, data.df[data.df[[property.to.plot]] < property.thr & data.df$logFC > logfc.thr, ])
-	    filtdat1 <- filtdat1[!duplicated(filtdat1$ensembl_gene_id), ]
-	  }
-	  filtdat1 <- filtdat1[order(abs(filtdat1$logFC), decreasing = TRUE), ]
-	  filtdat <- filtdat1[1:min(nrow(filtdat1), numlab), ]
-
-	  if (nrow(filtdat) & length(which(filtdat$logFC < 0)) < (numlab %/% 2.5) || nrow(filtdat) & length(which(filtdat$logFC > 0)) < (numlab %/% 2.5)) {
-	    if (nrow(filtdat) & length(which(filtdat$logFC < 0)) < (numlab %/% 2.5)) {
-	      filtdat.d <- data.df[data.df[[property.to.plot]] < property.thr & data.df$logFC < logfc.thr, ]
-	      filtdat.d <- filtdat.d[!duplicated(filtdat.d$ensembl_gene_id), ]
-	    } else {
-	      filtdat.d <- data.df[which(data.df$logFC < 0), ]
-	    }
-	    filtdat.d <- filtdat.d[order(abs(filtdat.d$logFC), decreasing = TRUE), ][1:min(nrow(filtdat.d), numlab), ]
-	    if (nrow(filtdat) & length(which(filtdat$logFC > 0)) < (numlab %/% 2.5)) {
-	      filtdat.u <- data.df[data.df[[property.to.plot]] < property.thr & data.df$logFC > logfc.thr, ]
-	      filtdat.u <- filtdat.u[!duplicated(filtdat.u$ensembl_gene_id), ]
-	    } else {
-	      filtdat.u <- data.df[which(data.df$logFC > 0), ]
-	    }
-	    filtdat.u <- filtdat.u[order(abs(filtdat.u$logFC), decreasing = TRUE), ][1:min(nrow(filtdat.u), numlab), ]
-
-	    filtdat1 <- rbind(filtdat.d, filtdat.u)
-	    filtdat1 <- filtdat1[abs(filtdat1$logFC) > logfc.thr, ]
-	    filtdat1 <- filtdat1[order(abs(filtdat1$logFC), decreasing = TRUE), ]
-	    filtdat <- filtdat1[1:min(nrow(filtdat1), numlab), ]
-	  }
-	}
-
-	# Constructing the plot
-	volcano.plot <- ggplot(data.df, aes(x = logFC, y = -log10(data.df[, property.to.plot])))# ,
-	volcano.plot <- volcano.plot + geom_point(inherit.aes= TRUE, aes(color = .data[[name.of.legend]]), size = 1.75)
-	volcano.plot <- volcano.plot + theme_bw(base_size = 10)
-
-	volcano.plot <- volcano.plot + theme(panel.border = element_blank(),
-			axis.line = element_line(color='black'),
-			panel.grid.major = element_line(linewidth = 0.2),
-			panel.grid.minor = element_line(linewidth = 0.2))
-
-	volcano.plot <- volcano.plot + xlab(x.axis.name) + ylab(y.axis.name)
-	volcano.plot <- volcano.plot + labs(color = name.of.legend)
-
-	#volcano.plot <- volcano.plot + scale_color_manual(values=c("#0066FF", "#CC0000"))
-	if (pretty.breaks) {
-	  volcano.plot <- volcano.plot + scale_x_continuous(breaks = scales::breaks_extended(n=6)) + scale_y_continuous(breaks = scales::breaks_extended(n=8))
-	}
-
-	volcano.plot <- volcano.plot + geom_hline(aes(yintercept=-log10(property.thr)), colour="red", linetype="dashed")
-	volcano.plot <- volcano.plot + geom_vline(aes(xintercept=logfc.thr), colour="red", linetype="dashed")
-	volcano.plot <- volcano.plot + geom_vline(aes(xintercept=-logfc.thr), colour="red", linetype="dashed")
-
-	volcano.plot <- volcano.plot + ggtitle(main, subtitle = subtitle.name) +
-			theme(plot.title = element_text(hjust = 0.5)) +
-			theme(plot.subtitle = element_text(hjust = 0.5)) #hjust 0.5 for centering
-
-	volcano.plot <- volcano.plot + geom_text(inherit.aes= FALSE, data=data.df, aes(x=floor(min(logFC)), y=-log10(property.thr)), label = line_label_text, nudge_x=0.5, nudge_y=max(-log10(data.df[,property.to.plot]))/nrow(data.df), size=3.5, color="red")
-	#volcano.plot <- volcano.plot + geom_text(x=0, y=0, label="two-fold FC", size=3, color="red") # TO DO: FIND GOOD POSITION, USE VARIABLE (fold change can sometimes be other than 2-fold?)
-
-	if (point.lab && nrow(filtdat)>0) {
-
-		volcano.plot <- volcano.plot + ggrepel::geom_text_repel(inherit.aes= FALSE,
-				data = filtdat,
-				aes(x= filtdat$logFC, y = -log10(.data[[property.to.plot]]), label = .data[[sym.col]]),
-				size = 3,
-				colour = "gray30",
-				max.overlaps = 15,
-				box.padding = unit(0.35, "lines"),
-				point.padding = unit(0.3, "lines"),
-				show.legend = FALSE
-		)
-
-	}
-
-	return(volcano.plot)
-}
 
 #' Function to generate a Volcano plot using `ggplot2`
 #' @description `diff_expr_volcano_plot` generates two Volcano plots highlighing genes that are differentially expressed beyond custom thresholds for siginificance (set by parameters `p.thr` and fdr.thr`) and differential expression level (set by parameter `logfc.thr`).
@@ -274,17 +275,29 @@ prepare_volcano_of_given_property = function(data.df, property.to.plot = c("fdr"
 #' @param logfc.thr \code{numeric}. Plotted (`abs`olute) values above this threshold will have bigger dots.
 #' @param numlab \code{numeric}. Maximum number of labels per plot. Takes precedence to numbers calculated based on `p.thr` and `fdr.thr`.
 #' @param point.lab \code{logical}. Should points be labelled, at all?
+#' @return A named \code{list} of \code{ggplot} objects with the elements \code{FDR} and \code{Pval},
+#'   holding the volcano plot with points highlighted by false discovery rate and by p-value,
+#'   respectively. Both plots are additionally printed, so that they are captured when the function is
+#'   called with an open plotting device.
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' d3 <- data.frame(gene_symbol = paste0("G", 1:100),
+#'                  logFC = rnorm(100), PValue = runif(100), FDR = runif(100))
+#' g <- diff_expr_volcano_plot(d3, id = "gene_symbol", sym.col = "gene_symbol")
+#' names(g)
+#' }
 #' @export
 diff_expr_volcano_plot <-
-		function(d3, id, sym.col="gene_symbol", main=NULL, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=15, point.lab=TRUE)
+		function(d3, id, sym.col="gene_symbol", main=NULL, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=25, point.lab=TRUE)
 {
 	pv.col <- names(d3)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
 	fdr.col <- names(d3)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
 
 	if (point.lab) {
 		cont.dat <- d3[, c(id, sym.col, "logFC", pv.col, fdr.col)]
-		if (any(cont.dat$gene_symbol=="") || any(is.na(cont.dat$gene_symbol))) {
-			repl <- which(cont.dat$gene_symbol==""|is.na(cont.dat$gene_symbol))
+		if (any(cont.dat[[sym.col]]=="") || any(is.na(cont.dat[[sym.col]]))) {
+			repl <- which(cont.dat[[sym.col]]==""|is.na(cont.dat[[sym.col]]))
 			cont.dat[repl, sym.col] <- cont.dat[repl, as.character(id)]
 		}
 	} else {
@@ -324,6 +337,11 @@ diff_expr_volcano_plot <-
 #' Function to generate a histogram of the P-Value distribution
 #' @param d3 \code{data.frame}. Data frame containing a P-Value column to generate a histogram. The column name will be determined
 #'   by pattern matching.
+#' @return Invisibly, an object of class \code{histogram} as returned by \code{\link[graphics]{hist}}.
+#'   Called for its side effect of drawing the p-value distribution.
+#' @examples
+#' d3 <- data.frame(ID = paste0("g", 1:200), PValue = runif(200))
+#' diff_expr_pval_hist_plot(d3)
 #' @export
 diff_expr_pval_hist_plot <-
 		function(d3)

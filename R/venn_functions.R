@@ -88,7 +88,7 @@ diffr_venn <- function(list.comp.tables,
       dw_log(rownames(venn.tt)[j], "\n")
       inters.all <- list.comp.tables %>% purrr::reduce(dplyr::inner_join, by = join.vec)
       hgnc.col <- names(inters.all)[grep("symbol|hgnc", tolower(names(inters.all)))]
-      inters.all <- inters.all[inters.all[hgnc.col] != "",]
+      inters.all <- inters.all[which(inters.all[[hgnc.col]] != ""),]
       list.venn.tables[[rownames(venn.tt)[j]]] <- inters.all
 
       dw_log(paste0(rownames(venn.tt)[j],"-",nrow(inters.all[unique(inters.all[[hgnc.col]]),])), "\n")
@@ -102,7 +102,7 @@ diffr_venn <- function(list.comp.tables,
       outsect <- anti.part %>% purrr::reduce(dplyr::full_join, by = join.vec)
       res.join <- inters %>% dplyr::anti_join(outsect, by = join.vec)
       hgnc.col <- names(res.join)[grep("symbol|hgnc", tolower(names(res.join)))]
-      res.join <- res.join[res.join[[hgnc.col]] != "",]
+      res.join <- res.join[which(res.join[[hgnc.col]] != ""),]
       list.venn.tables[[rownames(venn.tt)[j]]] <- res.join
       dw_log(paste0("Venn sections summary - ",rownames(venn.tt)[j],"--",nrow(res.join[unique(res.join[[hgnc.col]]),])), "\n")
     }

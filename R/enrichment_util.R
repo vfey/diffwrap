@@ -116,13 +116,13 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
 
   # Filter DE.table by log2FC
   if (!is.null(logfc.thr)) {
-    DE.table <- DE.table[abs(DE.table[[logFoldChangeColumn]]) >= logfc.thr, ]
+    DE.table <- DE.table[which(abs(DE.table[[logFoldChangeColumn]]) >= logfc.thr), ]
 
   }
 
   # Filter DE.table by p-value
   if (!is.null(fdr.thr)) {
-    DE.table <- DE.table[DE.table[[adjPvalColumn]] < fdr.thr, ]
+    DE.table <- DE.table[which(DE.table[[adjPvalColumn]] < fdr.thr), ]
   }
 
   # Outlier detection:
@@ -469,12 +469,12 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
     de_table <- diffr.wrapper.output$contrasts[[contrast]]
 
     dw_log("   Filtering the DE genes (fdr < ", fdr.thr, "and abs. logFC >=", logfc.thr, ")...\n")
-    filtered_de_table <- de_table[de_table[[fdr.col]] < fdr.thr & abs(de_table[[fc.col]]) >= logfc.thr,]
+    filtered_de_table <- de_table[which(de_table[[fdr.col]] < fdr.thr & abs(de_table[[fc.col]]) >= logfc.thr), ]
 
     #if there are no entries with significant fdr, then filter by p.value
     if (!(nrow(filtered_de_table) > 0) & use.pval.in.DE.filtering.if.no.sign.fdrs) {
       dw_log("      No entries with significant fdr. P-values used instead...\n")
-      filtered_de_table <- de_table[de_table[[pv.col]] < p.thr & abs(de_table[[fc.col]]) >= logfc.thr,]
+      filtered_de_table <- de_table[which(de_table[[pv.col]] < p.thr & abs(de_table[[fc.col]]) >= logfc.thr), ]
     }
 
     input.genes <- rownames(filtered_de_table)

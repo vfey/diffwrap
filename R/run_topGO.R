@@ -41,10 +41,24 @@ utils::globalVariables("genesInTerm")
 #'
 #' @author Bogdan Iancu - Genevia Technologies Oy
 #' @return A data frame with enriched terms and p-values from Fisher's exact test, using different algorithms: elim, classic, weight01.
+#' @examples
+#' \dontrun{
+#' # needs org.Hs.eg.db; builds a genome-wide GO universe, so it is not run automatically
+#' if (requireNamespace("org.Hs.eg.db", quietly = TRUE) &&
+#'     requireNamespace("AnnotationDbi", quietly = TRUE)) {
+#'   bg <- AnnotationDbi::keys(org.Hs.eg.db::org.Hs.eg.db, keytype = "ENSEMBL")
+#'   fg <- c("ENSG00000141510", "ENSG00000012048", "ENSG00000139618")
+#'   run.topGO(background = bg, foreground = fg, ontologies = "BP",
+#'             organism = "org.Hs.eg.db", ID_type = "ENSEMBL")
+#' }
+#' }
 #' @export
 run.topGO <- function(background, foreground, ontologies = c("BP"), organism, ID_type = "ENSEMBL", pAdjustMethod = "BH") {
 
-  # test if data packages are installed
+  # test if needed packages are installed
+  if (!requireNamespace("topGO", quietly = TRUE)) {
+    stop("Package ", sQuote("topGO"), " must be installed to run topGO enrichment.", call. = FALSE)
+  }
   if (!requireNamespace(organism, quietly = TRUE)) {
     stop(
       paste("Package", sQuote(organism), "must be installed to use this function."),

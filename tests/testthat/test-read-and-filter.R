@@ -79,6 +79,25 @@ test_that("a subset of samples can be imported", {
   expect_identical(colnames(counts), as.character(si$SampleNames))
 })
 
+test_that("the miRSEQ path reads a CAP-miRSeq-style summary file", {
+  # regression guard: this path previously referenced an undefined 'expression.raw' object
+  quiet_log()
+  si <- ex_samp_info()
+  # minimal CAP-miRSeq summary: a Mature.miRNA column plus one count column per sample
+  mir <- data.frame(Mature.miRNA = paste0("hsa-miR-", 1:5),
+                    check.names = FALSE, stringsAsFactors = FALSE)
+  for (s in as.character(si$SampleNames)) mir[[s]] <- sample(0:100, 5)
+  f <- file.path(tempdir(), "mirseq_summary.tsv")
+  write.table(mir, f, sep = "\t", quote = FALSE, row.names = FALSE)
+  on.exit(unlink(f), add = TRUE)
+
+  counts <- diff_expr_read_counts(f, si, miRSEQ = TRUE)
+  expect_true(is.matrix(counts))
+  expect_equal(nrow(counts), 5L)
+  expect_equal(ncol(counts), nrow(si))
+  expect_setequal(rownames(counts), paste0("hsa-miR-", 1:5))
+})
+
 test_that("filtering removes the htseq-count summary rows", {
   quiet_log()
   si     <- ex_samp_info()

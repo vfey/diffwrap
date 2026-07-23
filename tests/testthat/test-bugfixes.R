@@ -100,6 +100,35 @@ test_that("format_ensembl_ids_annotated_to_term detects mouse ENSMUSG columns", 
   expect_equal(nrow(out), 2L)
 })
 
+# --- extract_contrasts plotting + heatmap path -----------------------------
+
+test_that("diff_expr_extract_contrasts runs the plotting and heatmap path", {
+  # exercises the heatmap branch (the 'id.col' fix and the hm.* thresholds) and the
+  # per-contrast output directory handling, which had no direct coverage before
+  skip_on_cran()
+  skip_if_not_installed("pheatmap")
+  quiet_log()
+
+  ex        <- ex_dge()
+  design    <- diff_expr_make_design(ex$samp.info, ex$groups)
+  contrasts <- diff_expr_make_contrasts(design, ex$groups)
+  fit       <- diff_expr_fit(ex$counts, ex$d, design, do.voom = FALSE, quasi.likelihood = TRUE)
+  normcnt   <- edgeR::cpm(fit$d2, log = TRUE)
+
+  out.dir <- tempfile("dw_ec_"); dir.create(out.dir)
+  on.exit(unlink(out.dir, recursive = TRUE), add = TRUE)
+
+  out <- suppressWarnings(diff_expr_extract_contrasts(
+    contrasts = contrasts, fit = fit$fit, normcnt = normcnt, out.l = list(),
+    do.voom = FALSE, out.dir = out.dir, analysis.name = "demo",
+    plots = TRUE, lists = TRUE, heatmap.topn = 20,
+    samp.info = ex$samp.info, samples = "SampleNames", groups = ex$groups))
+
+  expect_true("treated-control" %in% names(out$contrasts))
+  expect_true(dir.exists(file.path(out.dir, "treated-control")))       # per-contrast dir
+  expect_false(is.null(out$heatmapPlots[["treated-control"]]))         # heatmap path executed
+})
+
 # --- diffr_venn default join.vec -------------------------------------------
 
 test_that("diffr_venn runs with its default join.vec on minimal (symbol-only) tables", {

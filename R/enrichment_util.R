@@ -92,11 +92,11 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
   }
 
 
-  geneSymbolColumn = names(DE.table)[grep("ymbol", tolower(names(DE.table)))]
-  logFoldChangeColumn = names(DE.table)[grep("foldch|logfc", tolower(names(DE.table)))]
-  adjPvalColumn = names(DE.table)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(DE.table)))]
-  termColumn = names(enrichment.table)[grep("description|^term_name", tolower(names(enrichment.table)))]
-  DEGcolumn =   names(enrichment.table)[grep("^degs|^genes|^intersection$", tolower(names(enrichment.table)))]
+  geneSymbolColumn = dw_find_col(names(DE.table), "ymbol", "gene symbol")
+  logFoldChangeColumn = dw_find_col(names(DE.table), "foldch|logfc", "log fold-change")
+  adjPvalColumn = dw_find_col(names(DE.table), "^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", "FDR")
+  termColumn = dw_find_col(names(enrichment.table), "description|^term_name", "term description")
+  DEGcolumn = dw_find_col(names(enrichment.table), "^degs|^genes|^intersection$", "gene set")
   dw_log("         Detected following columns in data inputted for network visualisation: \n")
   dw_log("         DE (log) fold changes: ", logFoldChangeColumn,  "\n")
   dw_log("         FDR: ",adjPvalColumn, "\n")
@@ -163,7 +163,7 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
   # Parse the pathway table to create edges
   edges <- c()
   genes = c()
-  for (i in 1:length(enrichment.table[[termColumn]])) {
+  for (i in seq_along(enrichment.table[[termColumn]])) {
     dw_log("\n")
     x <- strsplit(as.character(enrichment.table[i, DEGcolumn]), split = ",")[[1]]
     dw_log("         Genes associated with the term '", enrichment.table[i, termColumn], "': ", length(x), "\n")
@@ -186,7 +186,7 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
 
   # Assign categories to vertices
   categories <- c()
-  for (i in 1:length(vertices)) {
+  for (i in seq_along(vertices)) {
     if (vertices[i] %in% enrichment.table[[termColumn]]) {
       categories <- append(categories, "pathway")
     } else {
@@ -225,7 +225,7 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
   sizes <- c()
   vert.label.sizes <- c()
   vertex.label.dists <- c()
-  for (i in 1:length(igraph::V(g)$name)) {
+  for (i in seq_along(igraph::V(g)$name)) {
     if (igraph::V(g)$categories[i] == "pathway") {
       #print(vertices[i])
       shapes <- append(shapes, "circle")
@@ -445,8 +445,8 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
 
   dat <- diffr.wrapper.output$contrasts[[1]] ## extracting appropriate colnames using the first contrast
   pv.col <- names(dat)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(dat)))]
-  fdr.col <- names(dat)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(dat)))]
-  fc.col <- names(dat)[grep("^logfc$|fold$", tolower(names(dat)))]
+  fdr.col <- dw_find_col(names(dat), "^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", "FDR")
+  fc.col <- dw_find_col(names(dat), "^logfc$|fold$", "log fold-change")
   entrez.col <- names(dat)[grep("entrez", tolower(names(dat)))]
 
 
@@ -637,7 +637,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
 
           gene.col <- colnames(result)[grepl("^DEGs", colnames(result))] #TODO: invent more robust approach to this?
           #First, fetching corresponding ensembles for entrez-IDs
-          for (i in 1:length(result[[gene.col]])) {
+          for (i in seq_along(result[[gene.col]])) {
             #print(result[[gene.col]])
             genes <- unlist(strsplit(result[[gene.col]][i], split = ','))
             #print(head(genes))

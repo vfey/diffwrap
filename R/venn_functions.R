@@ -46,7 +46,7 @@ diffr_venn <- function(list.comp.tables,
   #extract DEGs list from the contrast tables list
   DEGs.list <- lapply(list.comp.tables, function(x) {
     #extract hgnc colname
-    hgnc.col <- names(x)[grep("symbol|hgnc", tolower(names(x)))]
+    hgnc.col <- dw_find_col(names(x), "symbol|hgnc", "gene symbol")
     #extract DEGs from table x based on hgnc.col
     DEGs <- as.character(x[[hgnc.col]])
     #remove all entry with empty string
@@ -56,7 +56,7 @@ diffr_venn <- function(list.comp.tables,
     return(DEGs)
   })
 
-  fill.color = rev(RColorBrewer::brewer.pal(n = 9, name = "PiYG"))[1:length(DEGs.list)]
+  fill.color = rev(RColorBrewer::brewer.pal(n = 9, name = "PiYG"))[seq_len(length(DEGs.list))]
   if (.log) {
     futile.logger::flog.threshold(futile.logger::ERROR, name = "VennDiagramLogger")
   }
@@ -78,7 +78,7 @@ diffr_venn <- function(list.comp.tables,
 
   list.venn.tables <- list()
   list.comp.tables = purrr::map2(list.comp.tables,names(list.comp.tables),create.individual.ids)
-  for(j in 1:nrow(venn.tt)) {
+  for(j in seq_len(nrow(venn.tt))) {
     #if all entries in the venn truth table are 0 then skip
     if (sum(venn.tt[j,]) == 0) {
       next
@@ -87,7 +87,7 @@ diffr_venn <- function(list.comp.tables,
     else if (all(venn.tt[j,] == 1)) {
       dw_log(rownames(venn.tt)[j], "\n")
       inters.all <- list.comp.tables %>% purrr::reduce(dplyr::inner_join, by = join.vec)
-      hgnc.col <- names(inters.all)[grep("symbol|hgnc", tolower(names(inters.all)))]
+      hgnc.col <- dw_find_col(names(inters.all), "symbol|hgnc", "gene symbol")
       inters.all <- inters.all[which(inters.all[[hgnc.col]] != ""),]
       list.venn.tables[[rownames(venn.tt)[j]]] <- inters.all
 
@@ -101,7 +101,7 @@ diffr_venn <- function(list.comp.tables,
       anti.part <- list.comp.tables[which(venn.tt[j,] == 0)]
       outsect <- anti.part %>% purrr::reduce(dplyr::full_join, by = join.vec)
       res.join <- inters %>% dplyr::anti_join(outsect, by = join.vec)
-      hgnc.col <- names(res.join)[grep("symbol|hgnc", tolower(names(res.join)))]
+      hgnc.col <- dw_find_col(names(res.join), "symbol|hgnc", "gene symbol")
       res.join <- res.join[which(res.join[[hgnc.col]] != ""),]
       list.venn.tables[[rownames(venn.tt)[j]]] <- res.join
       dw_log(paste0("Venn sections summary - ",rownames(venn.tt)[j],"--",nrow(res.join[unique(res.join[[hgnc.col]]),])), "\n")

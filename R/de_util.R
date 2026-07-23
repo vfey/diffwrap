@@ -441,7 +441,7 @@ diff_expr_extract_contrasts <-
       if (lists) {
         DE.out <- paste(analysis.name, contr, "differential_expression.tsv", sep="_")
         dw_log("Saving list to", DE.out, "...\n")
-        pv.col <- names(d3)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
+        pv.col <- dw_find_col(names(d3), "^p\\.{0,1}val[e-u]{0,2}$", "p-value")
         dw_log("The result table is ordered in increasing order by column ", pv.col, "...\n")
         d3 = d3[order(d3[[pv.col]]),]
         write.table(d3, file.path(contr.out.dir, DE.out), sep="\t", quote=FALSE, row.names=FALSE)
@@ -528,8 +528,8 @@ diff_expr_extract_contrasts <-
     dw_log("=============================================================================\n")
     dw_log("Venn sections list\n")
     cols.interest.de.table = c("ensembl","symbol|hgnc","description","entrez","^average$|^ave[a-r]{0,4}expr[e-s]{0,6}$","^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$","^p\\.{0,1}val[e-u]{0,2}$")
-    pv.col = names(out.l$contrasts[[1]])[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(out.l$contrasts[[1]])))]
-    fdr.col = names(out.l$contrasts[[1]])[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(out.l$contrasts[[1]])))]
+    pv.col = dw_find_col(names(out.l$contrasts[[1]]), "^p\\.{0,1}val[e-u]{0,2}$", "p-value")
+    fdr.col = dw_find_col(names(out.l$contrasts[[1]]), "^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", "FDR")
 
     sign.de.tables <- lapply(out.l$contrasts, function(x) {
       sel.col.de.table <- names(x)[grep(paste(cols.interest.de.table,collapse="|"), tolower(names(x)))]
@@ -558,7 +558,7 @@ diff_expr_extract_contrasts <-
     }
 
     ifelse(!dir.exists(file.path(out.dir, "Venn sections")), dir.create(file.path(out.dir, "Venn sections")), FALSE)
-    for(j in 1:length(v[["venn.sections"]])){
+    for(j in seq_along(v[["venn.sections"]])){
       dw_log_obj(names(v[["venn.sections"]])[j])
       openxlsx::write.xlsx(v[["venn.sections"]][[j]], file = file.path(out.dir, "Venn sections", paste0(names(v[["venn.sections"]])[j],".xlsx")))
     }

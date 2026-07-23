@@ -8,6 +8,13 @@
 #' @param counts Counts matrix.
 #' @param n Number of rows to be selected from the sorted variance matrix (by default, the top 500 rows are selected from the matrix sorted in decreasing order).
 #' @param scale. A logical value passed to \code{prcomp}; should the variables be scaled to have unit variance?
+#' @return An object of class \code{prcomp} as returned by \code{\link[stats]{prcomp}}, holding the
+#'   principal component decomposition of the (optionally variance-filtered) count matrix.
+#' @examples
+#' si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
+#' counts <- diff_expr_filter_counts(diff_expr_read_counts(diffwrap_counts, si), si)
+#' pca <- diff_expr_PCA(edgeR::cpm(counts, log = TRUE), n = 100)
+#' pca$sdev[1:3]
 #' @export
 diff_expr_PCA <-
 		function(counts, n=500, scale.=FALSE)
@@ -15,7 +22,8 @@ diff_expr_PCA <-
 	select <- 1:nrow(counts)
 	if (!is.null(n)) {
 		dw_log("    Getting row-wise variances...\n")
-		Pvars <- genefilter::rowVars(counts)
+		# per-row (per-gene) sample variance, base-R equivalent of genefilter::rowVars()
+		Pvars <- rowSums((counts - rowMeans(counts))^2) / (ncol(counts) - 1L)
 		dw_log("    Selecting", n, "rows with highest variances...\n")
 		select <- order(Pvars, decreasing = TRUE)[seq_len(min(n, length(Pvars)))]
 	}
@@ -32,6 +40,20 @@ diff_expr_PCA <-
 #'   must supply the correct prefix.
 #' @param disp \code{character}. one of "tagwise.dispersion", "trended.dispersion", "bin.dispersion"
 #' @param do.cpm \code{logical}. should the pseudo counts be transformed to CPMs?
+#' @return A \code{matrix} of pseudo counts in which the effect of the blocking variable has been
+#'   removed; on the log2 counts per million scale if \code{do.cpm=TRUE} and on the count scale
+#'   otherwise.
+#' @examples
+#' \donttest{
+#' si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
+#' si$Subject <- diffwrap_samp_info$Subject[order(diffwrap_samp_info$SampleName)]
+#' counts <- diff_expr_filter_counts(diff_expr_read_counts(diffwrap_counts, si), si)
+#' groups <- stats::relevel(si$Groups, ref = "control")
+#' d <- edgeR::calcNormFactors(edgeR::DGEList(counts, group = groups))
+#' design <- diff_expr_make_design(si, groups, pairs = "Subject")
+#' pc <- diff_expr_pseudo_counts(d = d, design = design, pairs = "pairs")
+#' dim(pc)
+#' }
 #' @export
 diff_expr_pseudo_counts <-
 		function(d, design, pairs="pairs", disp="tagwise.dispersion", do.cpm=TRUE)

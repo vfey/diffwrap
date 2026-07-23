@@ -72,6 +72,10 @@
 #'   values calculated by any thresholds. Defaults to 25.
 #' @param point.lab \code{logical}. Should point labels be shown in the plot? Defaults to \code{TRUE}.
 #' @param heatmap.topn \code{numeric}. Number of top values to be plotted. Defaults to 100.
+#' @param hm.p.thr,hm.fdr.thr,hm.logfc.thr \code{numeric}. Significance and fold-change thresholds used
+#'   specifically for selecting genes shown in the heatmaps, kept separate from \option{p.thr},
+#'   \option{fdr.thr} and \option{logfc.thr} (which control the plots and tables) because heatmaps
+#'   usually read best with a stricter gene set. Default to 0.05, 0.05 and 1.
 #' @param heatmap.split.expr \code{logical}. Should the top up- and top down-regulated genes be displayed at equal numbers (50/50),
 #' if they meet the significance threshold (regardless of the actual significance)? Defaults to \code{FALSE}.
 #' @param color.blind.pal string determining the RColorBrewer color blind palette (default = "PuOr");
@@ -179,6 +183,9 @@ diffExpr <-
            numlab = 25,
            point.lab = TRUE,
            heatmap.topn = 100,
+           hm.p.thr = 0.05,
+           hm.fdr.thr = 0.05,
+           hm.logfc.thr = 1,
            heatmap.split.expr = FALSE,
            color.blind.pal = "PuOr",
            n.pal.cols = 11,
@@ -481,7 +488,6 @@ diffExpr <-
 
     # create design matrix
     if (is.null(design)) {
-      user_design <- FALSE
       # create a design matix based on the choices for pairs or block
       ## if block is TRUE or there are no paired samples, a simple design matrix is created without an intercept
       ### the block argument here is logical and determines whether or not the samples are independent
@@ -499,7 +505,6 @@ diffExpr <-
       if (length(grp.col)) {
         colnames(design)[grp.col] <- sub(paste0("^", grp.nam), "groups", colnames(design)[grp.col])
       }
-      user_design <- TRUE
     }
     if (length(grep(":", colnames(design)))) {
       dw_log("  Checking design column names...\n")
@@ -512,7 +517,6 @@ diffExpr <-
                                           pairs = pairs,
                                           block = block,
                                           contrasts = contrasts)
-                                          # user_design = user_design)
 
     ## set dispersion method
     disp <- match.arg(disp)
@@ -681,6 +685,9 @@ diffExpr <-
                                              numlab = numlab,
                                              point.lab = point.lab,
                                              heatmap.topn = heatmap.topn,
+                                             hm.p.thr = hm.p.thr,
+                                             hm.fdr.thr = hm.fdr.thr,
+                                             hm.logfc.thr = hm.logfc.thr,
                                              heatmap.split.expr = heatmap.split.expr,
                                              color.blind.pal = color.blind.pal,
                                              n.pal.cols = n.pal.cols,
@@ -727,6 +734,9 @@ diffExpr <-
                                              numlab = numlab,
                                              point.lab = point.lab,
                                              heatmap.topn = heatmap.topn,
+                                             hm.p.thr = hm.p.thr,
+                                             hm.fdr.thr = hm.fdr.thr,
+                                             hm.logfc.thr = hm.logfc.thr,
                                              heatmap.split.expr = heatmap.split.expr,
                                              color.blind.pal = color.blind.pal,
                                              n.pal.cols = n.pal.cols,
@@ -775,6 +785,9 @@ diffExpr <-
                                              numlab = numlab,
                                              point.lab = point.lab,
                                              heatmap.topn = heatmap.topn,
+                                             hm.p.thr = hm.p.thr,
+                                             hm.fdr.thr = hm.fdr.thr,
+                                             hm.logfc.thr = hm.logfc.thr,
                                              heatmap.split.expr = heatmap.split.expr,
                                              color.blind.pal = color.blind.pal,
                                              n.pal.cols = n.pal.cols,
@@ -821,6 +834,9 @@ diffExpr <-
                                              numlab = numlab,
                                              point.lab = point.lab,
                                              heatmap.topn = heatmap.topn,
+                                             hm.p.thr = hm.p.thr,
+                                             hm.fdr.thr = hm.fdr.thr,
+                                             hm.logfc.thr = hm.logfc.thr,
                                              heatmap.split.expr = heatmap.split.expr,
                                              color.blind.pal = color.blind.pal,
                                              n.pal.cols = n.pal.cols,

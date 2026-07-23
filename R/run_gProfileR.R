@@ -51,6 +51,12 @@
 #' @param highlight If set to TRUE, returns a TRUE-FALSE column called 'highlighted' to indicate driver terms in GO.
 #' @return A table listing statistically significant enrichment results according to threshold set in padjCutoff.
 #'     The table is also saved in xlsx format with user-specified name.
+#' @examples
+#' \dontrun{
+#' # requires network access to the g:Profiler service
+#' run_gprofiler(input_genes = c("ENSG00000141510", "ENSG00000012048"),
+#'               organism = "hsapiens")
+#' }
 #' @export
 
 run_gprofiler <- function(input_genes,
@@ -69,6 +75,14 @@ run_gprofiler <- function(input_genes,
                           data_sources = NULL,
                           highlight = FALSE)
 {
+  if (!requireNamespace("gprofiler2", quietly = TRUE)) {
+    stop("Package ", sQuote("gprofiler2"),
+         " must be installed to run g:Profiler enrichment.", call. = FALSE)
+  }
+  ## An empty 'background_genes' means "use the default domain" (all annotated genes).
+  ## g:Profiler expects NULL for custom_bg in that case, not "" which triggers an error.
+  if (is.null(background_genes) || !any(nzchar(background_genes))) background_genes <- NULL
+
   dw_log("Set parameters:", "\n")
   dw_log(paste0(">> ordered_query: ",ordered_query), "\n")
   dw_log(paste0(">> multi_query: ",multi_query), "\n")
@@ -98,6 +112,10 @@ run_gprofiler <- function(input_genes,
                               highlight = highlight)
 
   if (!is.null(file_name)) {
+    if (!requireNamespace("WriteXLS", quietly = TRUE)) {
+      stop("Package ", sQuote("WriteXLS"), " must be installed to write the result to an Excel file.",
+           call. = FALSE)
+    }
     dw_log("         Saving result into ", paste0(file_name, ".xlsx"), "...\n")
     WriteXLS::WriteXLS(results$result, ExcelFileName = paste0(file_name, ".xlsx"), SheetNames = NULL, BoldHeaderRow = TRUE)
   }

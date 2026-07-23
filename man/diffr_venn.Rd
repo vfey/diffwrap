@@ -4,17 +4,15 @@
 \alias{diffr_venn}
 \title{Function to produce a Venn diagram of differentially expressed gene tables}
 \usage{
-diffr_venn(
-  list.comp.tables,
-  join.vec = c("ensembl_gene_id", "gene_symbol", "description", "entrezgene_id"),
-  .log = FALSE
-)
+diffr_venn(list.comp.tables, join.vec = "gene_symbol", .log = FALSE)
 }
 \arguments{
 \item{list.comp.tables}{list of DE tables, preferably a list of data.frames}
 
 \item{join.vec}{vector to perform the join operation on; corresponds to column names in the DE tables.
-Defaults to \code{c("ensembl_gene_id","gene_symbol","description","entrezgene_id")}.}
+Defaults to \code{"gene_symbol"}, the column present in every diffwrap DE table. A longer vector
+(e.g. also including \code{"ensembl_gene_id"}) joins on more annotation columns, but note that every
+column named here must exist in each input table.}
 
 \item{.log}{Logical; should logging be done?}
 }

@@ -4,7 +4,11 @@
 \alias{diffr_venn}
 \title{Function to produce a Venn diagram of differentially expressed gene tables}
 \usage{
-diffr_venn(list.comp.tables, join.vec, .log = FALSE)
+diffr_venn(
+  list.comp.tables,
+  join.vec = c("ensembl_gene_id", "gene_symbol", "description", "entrezgene_id"),
+  .log = FALSE
+)
 }
 \arguments{
 \item{list.comp.tables}{list of DE tables, preferably a list of data.frames}

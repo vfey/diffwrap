@@ -17,11 +17,10 @@ diffExpr(
   block = FALSE,
   contrasts = NULL,
   out.dir = NULL,
-  project.dir = ".",
   analysis.name = NULL,
   biomart = FALSE,
   biom.data.set = "hsapiens_gene_ensembl",
-  biom.mart = c("ensembl", "snp", "funcgen", "vega", "pride", "plants"),
+  biom.mart = "ensembl",
   host = "https://www.ensembl.org",
   biom.filter = "ensembl_gene_id",
   biom.attributes = c("ensembl_gene_id", "hgnc_symbol", "description", "entrezgene_id"),
@@ -33,7 +32,7 @@ diffExpr(
   p.thr = 0.05,
   fdr.thr = 0.05,
   logfc.thr = 1,
-  numlab = 20,
+  numlab = 25,
   point.lab = TRUE,
   heatmap.topn = 100,
   heatmap.split.expr = FALSE,
@@ -77,6 +76,8 @@ diffExpr(
   enrichment.methods = c("clusterProfilerGO", "clusterProfilerKEGG", "gProfileR",
     "topGO"),
   ...,
+  verbose = TRUE,
+  log.file = NULL,
   dry.run = FALSE
 )
 }
@@ -104,9 +105,10 @@ vector of groups.}
 \item{contrasts}{\code{character}. Vector of contrasts to be made. If not provided, all possible contrasts will be made.
 This specifies group name pairs to be compared in the format expected by \code{makeContrasts()}, i.e., "group2-group1".}
 
-\item{out.dir}{\code{character}. Path to the output directory. If not provided, a new directory will be created in the project directory.}
-
-\item{project.dir}{\code{character}. Path to the project directory. Defaults to the current working directory.}
+\item{out.dir}{\code{character}. Path to the output directory. This argument is required: all
+result tables, plots and the run log are written below it. There is deliberately no default,
+so that no files are ever created in the working directory unintentionally. Use, e.g.,
+\code{out.dir = tempdir()} to try the pipeline out without keeping the results.}
 
 \item{analysis.name}{\code{character}. Name of the analysis. If not provided, a default name will be generated.}
 
@@ -139,7 +141,7 @@ This specifies group name pairs to be compared in the format expected by \code{m
 \item{logfc.thr}{\code{numeric}. Threshold for fold-change values on the log2-scale. Defaults to 1.}
 
 \item{numlab}{\code{numeric}. Maximum number of point labels to be shown in the plot. This overrides/limits
-values calculated by any thresholds. Defaults to 15.}
+values calculated by any thresholds. Defaults to 25.}
 
 \item{point.lab}{\code{logical}. Should point labels be shown in the plot? Defaults to \code{TRUE}.}
 
@@ -242,6 +244,16 @@ Defaults to 0.05.}
 
 \item{...}{\code{ANY}. Additional arguments passed to functions.}
 
+\item{verbose}{\code{logical} or \code{character}. Controls console output. \code{TRUE} (default) prints
+major workflow steps, \code{FALSE} prints nothing, and \code{"all"} mirrors the full detail of the log
+file to the console. Console output is written via \code{message()} and can therefore also be silenced
+with \code{suppressMessages()}. Irrespective of this setting, the complete log is always written to
+\option{log.file}.}
+
+\item{log.file}{\code{character}. Path to the run log file. If \code{NULL} (default), a log file named
+\emph{<analysis.name>_diffwrap.log} is created in \option{out.dir}. No log file is written if
+\code{dry.run=TRUE}.}
+
 \item{dry.run}{\code{logical}. If \code{TRUE}, the function will not create any output files or directories.}
 }
 \value{
@@ -282,4 +294,16 @@ For experimental designs involving comparisons within as well as between subject
     provides more robust and reliable error rate control when the number of replicates is small.
     The QL dispersion estimation and hypothesis testing is done by using the functions
     glmQLFit() and glmQLFTest().
+}
+\examples{
+\donttest{
+out.dir <- file.path(tempdir(), "diffwrap_demo")
+dir.create(out.dir, showWarnings = FALSE)
+res <- diffExpr(expr.dat = diffwrap_counts,
+                samp.info = diffwrap_samp_info,
+                samples = "SampleName", groups = "Group",
+                control = "control", analysis.name = "demo",
+                out.dir = out.dir, do.enrichment = FALSE)
+names(res$contrasts)
+}
 }

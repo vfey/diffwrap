@@ -39,5 +39,3 @@ Maintainer: Vidal Fey <vidal.fey@gmail.com>
 \concept{limma}
 \concept{linear modelling}
 \concept{pathway analysis}
-\keyword{"_PACKAGE"}
-\keyword{package}

@@ -17,10 +17,17 @@ prepare_scale_for_legend(
 
 \item{int.values.for.ticks}{Not implemented.}
 }
+\value{
+A named \code{list} with the elements \code{scale.y.coordinates} (the vertical positions of
+  the legend tick labels) and \code{scale.labels} (the corresponding label values).
+}
 \description{
 Helper function for enrichment visualisations: prepare plot legend y coordinates and labels
 }
 \details{
 The coordinates are used in a network graph and minimum and maximum scale values correspond to
   minimum and maximum fold-changes, by default.
+}
+\examples{
+prepare_scale_for_legend(scale.minimum = -3, scale.maximum = 4)
 }

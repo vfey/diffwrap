@@ -23,6 +23,17 @@ vector of groups.}
 \item{ellipse.mapping.groups}{Optional additional grouping for ellipse drawing. Overrides sample groups.
 Use for selective highlighting of user-defined sample groups.}
 }
+\value{
+A \code{data.frame} holding the sample sheet standardised to the conventions of this package:
+  the sample and grouping columns renamed to \code{SampleNames} and \code{Groups} (and, where
+  supplied, the ellipse grouping column to \code{Ellipse}), all coerced to factors with unused levels
+  dropped, and the rows ordered by sample name.
+}
 \description{
 Function to standardize samp.info sample information data frame
+}
+\examples{
+si <- diff_expr_get_samp_info(diffwrap_samp_info,
+                              samples = "SampleName", groups = "Group")
+head(si)
 }

@@ -12,7 +12,7 @@ diff_expr_volcano_plot(
   p.thr = 0.05,
   fdr.thr = 0.05,
   logfc.thr = 1,
-  numlab = 15,
+  numlab = 25,
   point.lab = TRUE
 )
 }
@@ -35,6 +35,21 @@ diff_expr_volcano_plot(
 
 \item{point.lab}{\code{logical}. Should points be labelled, at all?}
 }
+\value{
+A named \code{list} of \code{ggplot} objects with the elements \code{FDR} and \code{Pval},
+  holding the volcano plot with points highlighted by false discovery rate and by p-value,
+  respectively. Both plots are additionally printed, so that they are captured when the function is
+  called with an open plotting device.
+}
 \description{
 `diff_expr_volcano_plot` generates two Volcano plots highlighing genes that are differentially expressed beyond custom thresholds for siginificance (set by parameters `p.thr` and fdr.thr`) and differential expression level (set by parameter `logfc.thr`).
+}
+\examples{
+\donttest{
+set.seed(1)
+d3 <- data.frame(gene_symbol = paste0("G", 1:100),
+                 logFC = rnorm(100), PValue = runif(100), FDR = runif(100))
+g <- diff_expr_volcano_plot(d3, id = "gene_symbol", sym.col = "gene_symbol")
+names(g)
+}
 }

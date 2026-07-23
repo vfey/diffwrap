@@ -11,6 +11,9 @@ quantile_breaks(xs, n = 20)
 
 \item{n}{desired length of the numeric vector of probabilities (see ?quantile)}
 }
+\value{
+A \code{numeric} vector of unique quantile break points, of length at most \option{n}.
+}
 \description{
 Function to define quantile breaks to be used for changing the palette of the heatmap.
 }

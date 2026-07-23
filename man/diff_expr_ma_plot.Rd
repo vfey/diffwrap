@@ -12,8 +12,8 @@ diff_expr_ma_plot(
   p.thr = 0.05,
   fdr.thr = 0.05,
   logfc.thr = 1,
-  numlab = 15,
-  out.dir = ".",
+  numlab = 25,
+  out.dir,
   analysis.name = NULL,
   point.lab = TRUE,
   biom.attributes = c("ensembl_gene_id", "hgnc_symbol", "description"),
@@ -40,7 +40,7 @@ conforming to the same format.}
 
 \item{numlab}{\code{numeric}. Maximum number of labels per plot. Overrides numbers calculated based on `p.thr` and `fdr.thr`.}
 
-\item{out.dir}{Character; output directory for final tables.}
+\item{out.dir}{Character; output directory for final tables. Required; no default is used so that nothing is written to the working directory unintentionally.}
 
 \item{analysis.name}{Character used in the output file name.}
 
@@ -52,6 +52,22 @@ conforming to the same format.}
 
 \item{lists}{Logical; should output tables be written to files?}
 }
+\value{
+A named \code{list} of \code{ggplot} objects with the elements \code{FDR} and \code{Pval},
+  holding the M-A plot with points highlighted by false discovery rate and by p-value, respectively.
+}
 \description{
 Function to generate a M-A plot using `ggplot2`
+}
+\examples{
+\donttest{
+set.seed(1)
+d3 <- data.frame(gene_symbol = paste0("G", 1:100),
+                 logFC = rnorm(100), PValue = runif(100), FDR = runif(100),
+                 AveExpr = rnorm(100, 5))
+rownames(d3) <- d3$gene_symbol
+g <- diff_expr_ma_plot(d3, contr = "treated-control", sym.col = "gene_symbol",
+                       out.dir = tempdir(), lists = FALSE)
+names(g)
+}
 }

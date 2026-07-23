@@ -12,11 +12,11 @@ diff_expr_extract_contrasts(
   out.l,
   do.voom = TRUE,
   quasi.likelihood = TRUE,
-  out.dir = ".",
+  out.dir,
   analysis.name = NULL,
   biomart = FALSE,
   biom.data.set = "hsapiens_gene_ensembl",
-  biom.mart = c("ensembl", "snp", "funcgen", "vega", "pride", "plants"),
+  biom.mart = "ensembl",
   host = "https://www.ensembl.org",
   biom.filter = "ensembl_gene_id",
   biom.attributes = c("ensembl_gene_id", "hgnc_symbol", "description"),
@@ -28,7 +28,7 @@ diff_expr_extract_contrasts(
   p.thr = 0.05,
   fdr.thr = 0.05,
   logfc.thr = 1,
-  numlab = 15,
+  numlab = 25,
   point.lab = TRUE,
   heatmap.topn = 100,
   heatmap.split.expr = FALSE,
@@ -69,7 +69,7 @@ normalized expression values on the log2 scale.}
 If \code{TRUE}, the default, then the quasi-likelihood methods are used, if \code{FALSE}, then the
 likelihood ratio test is used. Olease note the main wrapper function \code{diffExpr()} will set this parameter.}
 
-\item{out.dir}{Character; output directory for final tables.}
+\item{out.dir}{Character; output directory for final tables. Required; no default is used so that nothing is written to the working directory unintentionally.}
 
 \item{analysis.name}{Character used in the output file name.}
 
@@ -146,6 +146,31 @@ vector of groups.}
 
 \item{sample.plot.names}{\code{character}. Optional name of a column with "nice" sample names for plotting.}
 }
+\value{
+The input list \option{out.l}, extended with a \code{contrasts} element holding one annotated
+  result \code{data.frame} per contrast and, if plots were requested, with the \code{MAplots},
+  \code{volcanoPlots} and \code{heatmapPlots} elements. Called also for its side effects of writing
+  result tables, plot files and Venn section spreadsheets below \option{out.dir}.
+}
 \description{
 Function to extract contrasts and generate top tables and plots
+}
+\examples{
+\donttest{
+si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
+counts <- diff_expr_filter_counts(diff_expr_read_counts(diffwrap_counts, si), si)
+groups <- stats::relevel(si$Groups, ref = "control")
+d <- edgeR::calcNormFactors(edgeR::DGEList(counts, group = groups))
+design <- diff_expr_make_design(si, groups)
+contrasts <- diff_expr_make_contrasts(design, groups)
+fit <- diff_expr_fit(counts, d, design, do.voom = FALSE, quasi.likelihood = TRUE)
+normcnt <- edgeR::cpm(fit$d2, log = TRUE)
+out <- diff_expr_extract_contrasts(contrasts = contrasts, fit = fit$fit,
+                                   normcnt = normcnt, out.l = list(),
+                                   do.voom = FALSE, out.dir = tempdir(),
+                                   analysis.name = "demo", plots = FALSE,
+                                   samp.info = si, samples = "SampleNames",
+                                   groups = groups)
+names(out$contrasts)
+}
 }

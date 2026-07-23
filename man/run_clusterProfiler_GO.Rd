@@ -17,7 +17,8 @@ run_clusterProfiler_GO(
   max_set_size = 1000,
   min_overlap = 2,
   pAdjustMethod = "BH",
-  similarity_filtering = FALSE
+  similarity_filtering = FALSE,
+  rng.seed = NULL
 )
 }
 \arguments{
@@ -53,6 +54,12 @@ smaller intersections are excluded. By default uses 2.}
 "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none". By default uses "BH".}
 
 \item{similarity_filtering}{Similarity filtering method, either FALSE (default) or TRUE (uses simplify function).}
+
+\item{rng.seed}{Optional integer. If supplied, \code{set.seed()} is called with this value before
+the permutation-based gene set enrichment analysis, making the result reproducible. Defaults to
+\code{NULL}, i.e. the random number generator is left untouched, so that the function does not
+alter the state of the user's session. Note that this is distinct from the \code{seed} argument
+of \code{clusterProfiler::gseGO()}/\code{gseKEGG()}, which controls that package's own internal seeding.}
 }
 \value{
 A table listing statistically significant enrichment results according to threshold set in pvalueCutoff
@@ -60,4 +67,13 @@ A table listing statistically significant enrichment results according to thresh
 }
 \description{
 Runs clusterProfiler GO enrichment function for a DEG list or for a ranked gene list.
+}
+\examples{
+\donttest{
+if (requireNamespace("org.Hs.eg.db", quietly = TRUE)) {
+  genes <- c("ENSG00000141510", "ENSG00000012048", "ENSG00000139618")
+  run_clusterProfiler_GO(input_genes = genes, ontology = "BP",
+                         OrgDb = "org.Hs.eg.db", id_type = "ENSEMBL")
+}
+}
 }

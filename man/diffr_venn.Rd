@@ -23,6 +23,14 @@ Function to produce a Venn diagram of differentially expressed gene tables
 \details{
 The actual plot is produced in the main plotting function by means of 'grid::grid.draw()' using the plot object as input.
 }
+\examples{
+\donttest{
+mk <- function(sig) data.frame(gene_symbol = paste0("G", sig), fdr = 0.01)
+tabs <- list(A = mk(1:20), B = mk(10:30))
+v <- diffr_venn(tabs, join.vec = "gene_symbol")
+names(v)
+}
+}
 \author{
 Bogdan Iancu - Genevia Technologies Oy
 }

@@ -13,6 +13,9 @@ reorderFactors(df, column = "my_column_name", desired_level_order)
 
 \item{desired_level_order}{vector of factor levels in the desired order}
 }
+\value{
+The input \code{data.frame} with the levels of the specified factor column reordered.
+}
 \description{
 Function which reorders the levels of a column of a data frame specified as a factor
 }

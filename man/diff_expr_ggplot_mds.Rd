@@ -35,8 +35,19 @@ diff_expr_ggplot_mds(
 
 \item{main}{Plot title.}
 }
+\value{
+A \code{ggplot} object containing the multidimensional scaling plot.
+}
 \description{
 Function to generate a MDS plot usig `ggplot2`
+}
+\examples{
+si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
+counts <- diff_expr_filter_counts(diff_expr_read_counts(diffwrap_counts, si), si)
+groups <- stats::relevel(si$Groups, ref = "control")
+lcpm <- edgeR::cpm(counts, log = TRUE)
+g <- diff_expr_ggplot_mds(lcpm, samp.name = colnames(lcpm), groups = groups)
+class(g)
 }
 \seealso{
 [plotMDS()]

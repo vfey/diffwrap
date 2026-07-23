@@ -7,7 +7,7 @@
 diff_expr_biomart(
   d3,
   biom.data.set = "hsapiens_gene_ensembl",
-  biom.mart = c("ensembl", "snp", "funcgen", "vega", "pride", "plants"),
+  biom.mart = "ensembl",
   host = "https://www.ensembl.org",
   biom.filter = "ensembl_gene_id",
   biom.attributes = c("ensembl_gene_id", "hgnc_symbol", "description"),
@@ -42,6 +42,17 @@ corresponding statistical tests.}
 
 \item{force.ensg}{\code{logical}. Should Ensembl Gene IDs be checked for (and stripped of) ensemble version numbers? Defaults to \code{FALSE}.}
 }
+\value{
+A \code{data.frame}: the input table \option{d3} merged with the annotation retrieved from
+  biomart. The column holding gene symbols is renamed to \code{gene_symbol}.
+}
 \description{
 Function to retrieve additional information from biomart
+}
+\examples{
+\dontrun{
+# requires network access to Ensembl biomart
+d3 <- data.frame(ID = c("ENSG00000141510", "ENSG00000012048"))
+diff_expr_biomart(d3, biom.data.set = "hsapiens_gene_ensembl")
+}
 }

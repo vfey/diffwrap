@@ -23,6 +23,18 @@ diff_expr_dendro_plot(
 
 \item{col.grps}{Logical indicating whether to colour the dendrogram by groups.}
 }
+\value{
+No return value. Called for its side effect of drawing a hierarchical clustering dendrogram on
+  the current graphics device.
+}
 \description{
 Function to generate dendrogram plots based on hierarchical clustering
+}
+\examples{
+\donttest{
+si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
+counts <- diff_expr_filter_counts(diff_expr_read_counts(diffwrap_counts, si), si)
+groups <- stats::relevel(si$Groups, ref = "control")
+diff_expr_dendro_plot(edgeR::cpm(counts, log = TRUE), groups = groups)
+}
 }

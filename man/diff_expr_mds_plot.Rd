@@ -11,7 +11,7 @@ diff_expr_mds_plot(
   sample.plot.names = NULL,
   analysis.name = NULL,
   do.pdf = FALSE,
-  out.dir = "."
+  out.dir
 )
 }
 \arguments{
@@ -28,10 +28,23 @@ for example an ExpressionSet or an EList. Rows represent genes or genomic featur
 
 \item{do.pdf}{Logical indicating whether a PDF should be produced.}
 
-\item{out.dir}{Character; path where to save PDF.}
+\item{out.dir}{Character; path where to save PDF. Required; no default is used so that nothing is written to the working directory unintentionally.}
+}
+\value{
+No return value. Called for its side effect of drawing a multidimensional scaling plot,
+  optionally into a PDF file below \option{out.dir}.
 }
 \description{
 Wrapepr around `limma::plotMDS` to generate a MDS plot
+}
+\examples{
+\donttest{
+si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
+counts <- diff_expr_filter_counts(diff_expr_read_counts(diffwrap_counts, si), si)
+groups <- stats::relevel(si$Groups, ref = "control")
+d <- edgeR::calcNormFactors(edgeR::DGEList(counts, group = groups))
+diff_expr_mds_plot(d, groups = groups, do.pdf = FALSE, out.dir = tempdir())
+}
 }
 \seealso{
 [plotMDS()]

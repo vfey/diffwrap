@@ -28,7 +28,7 @@ diff_expr_QC_plots(
   n = 500,
   type = NULL,
   analysis.name = NULL,
-  out.dir = "."
+  out.dir
 )
 }
 \arguments{
@@ -81,8 +81,26 @@ blocked designs (e.g., paired samples or batch factors).}
 
 \item{analysis.name}{Character used in the plot title and the output file name if the plot is saved to a PDF}
 
-\item{out.dir}{Character; path where to save PDF.}
+\item{out.dir}{Character; path where to save PDF. Required; no default is used so that nothing is written to the working directory unintentionally.}
+}
+\value{
+The input list \option{out.l}, with a \code{QCplots} element added (or extended) holding the
+  generated quality control plots as \code{ggplot} objects, named after the plot type and the value of
+  \option{type}.
 }
 \description{
 Main wrapper function for QC plots
+}
+\examples{
+\donttest{
+si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
+counts <- diff_expr_filter_counts(diff_expr_read_counts(diffwrap_counts, si), si)
+groups <- stats::relevel(si$Groups, ref = "control")
+lcpm <- edgeR::cpm(counts, log = TRUE)
+out.l <- diff_expr_QC_plots(counts = lcpm, samp.info = si, control = "control",
+                            out.l = list(), grp.nam = "Group",
+                            sample.plot.names = colnames(lcpm),
+                            analysis.name = "demo", out.dir = tempdir())
+names(out.l$QCplots)
+}
 }

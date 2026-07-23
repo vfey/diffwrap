@@ -16,10 +16,20 @@ diff_expr_filter_counts(counts, samp.info, strict = TRUE, min.samp = NULL)
 \item{min.samp}{Integer; Number of samples in which a feature needs to be covered by at least one read per million.
 Defaults to the size of the smallest group of replicates. See \emph{details}.}
 }
+\value{
+A \code{matrix} of counts with weakly expressed features and the non-informative
+  \command{htseq-count} summary rows removed.
+}
 \description{
 Function to filter counts
 }
 \details{
 In edgeR, it is recommended to remove features without at least 1 read per million in n of the
   samples, where n is the size of the smallest group of replicates (determined from the 'groups' vector).
+}
+\examples{
+si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
+counts <- diff_expr_read_counts(diffwrap_counts, si)
+filtered <- diff_expr_filter_counts(counts, si, strict = TRUE)
+c(before = nrow(counts), after = nrow(filtered))
 }

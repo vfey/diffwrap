@@ -9,7 +9,7 @@ runEnrichmentAnalyses(
   analysis.name = "enrichment",
   use.background.from.diffr.output = TRUE,
   use.pval.in.DE.filtering.if.no.sign.fdrs = FALSE,
-  out.dir = NULL,
+  out.dir,
   species = "human",
   p.thr = 0.05,
   fdr.thr = 0.05,
@@ -20,9 +20,9 @@ runEnrichmentAnalyses(
   plot.num.terms = 5,
   enrichment.methods = c("clusterProfilerGO", "clusterProfilerKEGG", "gProfileR",
     "topGO"),
-  clusterProfilerGO.params = list(analysis.approach = "ORA", do.similarity.filtering = F,
-    min.gene.set.size = 10, max.gene.set.size = 1000, ontology = "BP", min.overlap = 2,
-    p.adjust.method = "BH"),
+  clusterProfilerGO.params = list(analysis.approach = "ORA", do.similarity.filtering =
+    FALSE, min.gene.set.size = 10, max.gene.set.size = 1000, ontology = "BP", min.overlap
+    = 2, p.adjust.method = "BH"),
   clusterProfilerKEGG.params = list(analysis.approach = "ORA", min.gene.set.size = 10,
     max.gene.set.size = 1000, ontology = "BP", min.overlap = 2, p.adjust.method = "BH"),
   gProfileR.params = list(data.sources = "GO:BP", show.only.significant = TRUE,
@@ -43,7 +43,8 @@ with experiment-specific background obtained from pre-filtered expression matrix
 \item{use.pval.in.DE.filtering.if.no.sign.fdrs}{\code{logical} Sometimes no DE genes with significant adjusted p-value is found.
 In such cases, should uncorrected p-values be used in order to get at least some results}
 
-\item{out.dir}{\code{character}. Root directory for the resulting subdirectories. Must contain subfolders for contrasts.}
+\item{out.dir}{\code{character}. Root directory for the resulting subdirectories. Must contain subfolders for contrasts.
+Required; no default is used so that nothing is written to the working directory unintentionally.}
 
 \item{species}{\code{character}. Currently valid options are "human" or "mouse".}
 
@@ -84,4 +85,16 @@ A list of all relevant objects generated in the course of the enrichment analyse
 gene set enrichment analysis (GSEA) functions for the output of diffExpr main wrapper.
 Functions in various R-packages (clusterProfiler, topGO, gProfileR)
 are integrated. Currently supports human or mouse!
+}
+\examples{
+\dontrun{
+# needs an annotation package (org.Hs.eg.db); run on real data with mappable gene IDs
+out.dir <- file.path(tempdir(), "diffwrap_demo")
+dir.create(out.dir, showWarnings = FALSE)
+res <- diffExpr(diffwrap_counts, diffwrap_samp_info, samples = "SampleName",
+                groups = "Group", control = "control", analysis.name = "demo",
+                out.dir = out.dir, do.enrichment = FALSE)
+runEnrichmentAnalyses(res, analysis.name = "demo", out.dir = out.dir,
+                      species = "human", enrichment.methods = "clusterProfilerGO")
+}
 }

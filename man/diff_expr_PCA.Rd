@@ -13,6 +13,16 @@ diff_expr_PCA(counts, n = 500, scale. = FALSE)
 
 \item{scale.}{A logical value passed to \code{prcomp}; should the variables be scaled to have unit variance?}
 }
+\value{
+An object of class \code{prcomp} as returned by \code{\link[stats]{prcomp}}, holding the
+  principal component decomposition of the (optionally variance-filtered) count matrix.
+}
 \description{
 Function to do PCA using `stats::prcomp`
+}
+\examples{
+si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
+counts <- diff_expr_filter_counts(diff_expr_read_counts(diffwrap_counts, si), si)
+pca <- diff_expr_PCA(edgeR::cpm(counts, log = TRUE), n = 100)
+pca$sdev[1:3]
 }

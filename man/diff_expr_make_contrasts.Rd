@@ -25,7 +25,12 @@ diff_expr_make_contrasts(
 \item{contrasts}{Character vector specifying group name pairs to be compared in the format expected by
 \code{makeContrasts()}, i.e., "group2-group1".}
 
-\item{user_design}{\code{logical}. Has the user provided a design matrix? This impacts the choosing of column names used for automatic contrasting.}
+\item{user_design}{\code{logical}. Currently unused and reserved for future use; kept only for
+backward compatibility and scheduled for removal in a future version. Defaults to \code{FALSE}.}
+}
+\value{
+A contrast \code{matrix} as produced by \code{\link[limma]{makeContrasts}}, or \code{NULL}
+  when no contrast matrix is needed because the comparisons are already inherent to the design matrix.
 }
 \description{
 Function to make contrast matrix
@@ -34,4 +39,10 @@ Function to make contrast matrix
 The 'block' argument is used to specify whether the comparisons are to be made within AND between subjects or in the case of
 technical replicates, i.e., if the samples are not independent, in other words, correlated.
   @seealso [makeContrasts()]
+}
+\examples{
+si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
+groups <- stats::relevel(si$Groups, ref = "control")
+design <- diff_expr_make_design(si, groups)
+diff_expr_make_contrasts(design, groups)
 }

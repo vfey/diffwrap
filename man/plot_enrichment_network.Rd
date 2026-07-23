@@ -38,7 +38,18 @@ a particular contrast.}
 \item{legend.cex.main, legend.cex.text}{Numeric; text sizes of legend title and text, given as character expansion
 (magnification) relative to the default.}
 }
+\value{
+No return value. Called for its side effect of writing a network visualisation of the
+  enrichment result to the file given by \option{plot.filename}.
+}
 \description{
 Function for making network visualisation based on enrichment result, DE gene table and thresholding.
 Can take the input tables either as data frames or Excel files
+}
+\examples{
+\dontrun{
+# builds a network plot from an enrichment result and writes it to 'plot.filename'
+plot_enrichment_network(enrichment.result, DE.result,
+                        plot.filename = file.path(tempdir(), "network.pdf"))
+}
 }

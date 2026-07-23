@@ -2,18 +2,18 @@
 % Please edit documentation in R/de_plots.R
 \name{prepare_volcano_of_given_property}
 \alias{prepare_volcano_of_given_property}
-\title{Helper function that returns volcano plot.}
+\title{Helper function that returns a volcano plot.}
 \usage{
 prepare_volcano_of_given_property(
   data.df,
   property.to.plot = c("fdr", "p"),
   property.column,
-  property.thr,
-  logfc.thr,
-  main,
-  numlab,
-  point.lab,
-  sym.col,
+  property.thr = 0.05,
+  logfc.thr = 1,
+  main = NULL,
+  numlab = 25,
+  point.lab = TRUE,
+  sym.col = "gene_symbol",
   pretty.breaks = FALSE
 )
 }
@@ -21,19 +21,21 @@ prepare_volcano_of_given_property(
 \item{data.df}{\code{data.frame}. Data frame containing all necessary columns to generate a Volcano plot with
 gene labels (at least p-values, FDR values, log-ratios and gene symbols or other IDs)}
 
-\item{property.to.plot}{\code{character}. Statistics to be plotted. One of "fdr", "p".}
+\item{property.to.plot}{\code{character}. Statistic to be plotted, one of "fdr" or "p". Matched via \code{match.arg}.}
 
-\item{property.column}{\code{character}. Name of the actual column with to the statistics to be plotted.}
+\item{property.column}{\code{character}. Name of the actual column holding the statistic to be plotted.}
 
-\item{property.thr}{\code{numeric}. Plotted values with a statistics (property) value below this threshold
-will be labelled in the respective plot.}
+\item{property.thr}{\code{numeric}. Significance threshold; genes below it (in \option{property.column})
+are considered significant. Defaults to 0.05.}
 
-\item{logfc.thr}{\code{numeric}. Plotted (`abs`olute) values above this threshold will have bigger dots.}
+\item{logfc.thr}{\code{numeric}. Absolute log2 fold-change threshold; genes beyond it, together with the
+significance threshold, form the highlighted ("both") set that is eligible for labelling. Defaults to 1.}
 
-\item{main}{\code{character}. Main plot title. (Will be complemented with additional information, e.g., 'FDR'
-when labelling according to and FDR threshold.)}
+\item{main}{\code{character}. Main plot title. Defaults to \code{NULL}.}
 
-\item{numlab}{\code{numeric}. Maximum number of labels per plot. Supersedes numbers calculated based on `p.thr` and `fdr.thr`.}
+\item{numlab}{\code{numeric}. Maximum total number of gene labels per plot (default 25). Labels are taken
+from the doubly-significant genes and split between up- and down-regulated in proportion to the skew,
+with a guaranteed minimum per side so the minor side is never left empty. The chosen split is logged.}
 
 \item{point.lab}{\code{logical}. Should points be labelled, at all?}
 
@@ -41,6 +43,21 @@ when labelling according to and FDR threshold.)}
 
 \item{pretty.breaks}{\code{logical}. Should the breaks on the axes be pretty? Uses `scales::breaks_extended`.}
 }
+\value{
+A \code{ggplot} object containing the volcano plot for the requested significance measure.
+}
 \description{
-Helper function that returns volcano plot.
+Builds a single volcano plot for one significance measure. Points are coloured by an
+  'EnhancedVolcano'-style, colour-blind safe (Okabe-Ito) four-level scheme distinguishing genes that
+  pass neither threshold ("NS"), the fold-change threshold only, the significance threshold only, or
+  both. Only the doubly-significant genes are eligible for text labels.
+}
+\examples{
+set.seed(1)
+d3 <- data.frame(gene_symbol = paste0("G", 1:100),
+                 logFC = rnorm(100), PValue = runif(100))
+g <- prepare_volcano_of_given_property(d3, property.to.plot = "p",
+                                       property.column = "PValue",
+                                       property.thr = 0.05, logfc.thr = 1)
+class(g)
 }

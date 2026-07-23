@@ -25,6 +25,23 @@ must supply the correct prefix.}
 
 \item{do.cpm}{\code{logical}. should the pseudo counts be transformed to CPMs?}
 }
+\value{
+A \code{matrix} of pseudo counts in which the effect of the blocking variable has been
+  removed; on the log2 counts per million scale if \code{do.cpm=TRUE} and on the count scale
+  otherwise.
+}
 \description{
 Function to calculate pseudo counts representing batch-corrected normalised but untransformed values
+}
+\examples{
+\donttest{
+si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
+si$Subject <- diffwrap_samp_info$Subject[order(diffwrap_samp_info$SampleName)]
+counts <- diff_expr_filter_counts(diff_expr_read_counts(diffwrap_counts, si), si)
+groups <- stats::relevel(si$Groups, ref = "control")
+d <- edgeR::calcNormFactors(edgeR::DGEList(counts, group = groups))
+design <- diff_expr_make_design(si, groups, pairs = "Subject")
+pc <- diff_expr_pseudo_counts(d = d, design = design, pairs = "pairs")
+dim(pc)
+}
 }

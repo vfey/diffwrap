@@ -13,7 +13,8 @@ diff_expr_make_design(
 )
 }
 \arguments{
-\item{samp.info}{\code{data.frame}. samp.info object containing information of the project's sample sheet.}
+\item{samp.info}{\code{data.frame}. samp.info object containing information of the project's sample sheet.
+vector of sample names.}
 
 \item{groups}{\code{character}. Name of the column in 'samp.info' containing grouping information. If 'samp.info' is not supplied
 vector of groups.}
@@ -23,6 +24,11 @@ vector of groups.}
 \item{block}{\code{logical}. Are the samples not independent? See Details section.}
 
 \item{use_weights}{\code{logical}. Are sample-specific quality weights used? See Details section. (Placeholder for future versions)}
+}
+\value{
+A design \code{matrix} as produced by \code{\link[stats]{model.matrix}}: a means model without
+  intercept (\code{~0 + groups}) for unpaired or blocked designs, or an additive model with intercept
+  (\code{~pairs + groups}) when \option{pairs} enters the model as a fixed effect.
 }
 \description{
 Function to create design matrix
@@ -36,6 +42,11 @@ The choice of the design matrix type impacts the estimated weights due to the ef
 in more complex designs, e.g., involving blocking factors, interactions or continuous covariates. The recommendation by the limma authors
 is to use the default design matrix, i.e., with intercept. With simple designs, the type of design matrix is not relevant.
 NOTE: This argument is not yet functional but a mere place-holder for future versions allowing for readily implemented more complex designs.
+}
+\examples{
+si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
+groups <- stats::relevel(si$Groups, ref = "control")
+diff_expr_make_design(si, groups)
 }
 \seealso{
 [model.matrix()]

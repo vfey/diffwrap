@@ -13,6 +13,10 @@ format_ensembl_ids_annotated_to_term(result, species, which.split = ",")
 
 \item{which.split}{Character; separator used in the ID column of \code{result}. See \emph{details}.}
 }
+\value{
+The input enrichment result with the Ensembl gene identifiers in the gene column replaced by
+  the corresponding gene symbols.
+}
 \description{
 Helper function for formatting the gene ID column of enrichment data frame.
 }

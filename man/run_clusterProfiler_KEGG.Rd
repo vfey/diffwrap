@@ -15,7 +15,8 @@ run_clusterProfiler_KEGG(
   min_set_size = 10,
   max_set_size = 1000,
   min_overlap = 2,
-  pAdjustMethod = "BH"
+  pAdjustMethod = "BH",
+  rng.seed = NULL
 )
 }
 \arguments{
@@ -45,6 +46,12 @@ smaller intersections are excluded. By default uses 2.}
 
 \item{pAdjustMethod}{The algorithm used for multiple testing correction, one of
 "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none". By default uses "BH".}
+
+\item{rng.seed}{Optional integer. If supplied, \code{set.seed()} is called with this value before
+the permutation-based gene set enrichment analysis, making the result reproducible. Defaults to
+\code{NULL}, i.e. the random number generator is left untouched, so that the function does not
+alter the state of the user's session. Note that this is distinct from the \code{seed} argument
+of \code{clusterProfiler::gseGO()}/\code{gseKEGG()}, which controls that package's own internal seeding.}
 }
 \value{
 A table listing statistically significant enrichment results according to threshold set in pvalueCutoff
@@ -52,4 +59,14 @@ A table listing statistically significant enrichment results according to thresh
 }
 \description{
 Runs clusterProfiler KEGG enrichment function for a DEG list or for a ranked gene list.
+}
+\examples{
+\dontrun{
+# enrichKEGG downloads pathway data from the KEGG web service (needs network)
+if (requireNamespace("org.Hs.eg.db", quietly = TRUE)) {
+  # KEGG works on Entrez identifiers
+  run_clusterProfiler_KEGG(input_genes = c("7157", "672", "675"),
+                           organism = "hsa", id_type = "kegg")
+}
+}
 }

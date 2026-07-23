@@ -101,3 +101,13 @@ The final plot object returned by ggplot.
 \description{
 Make a biplot of PCA output data using ggplot2.
 }
+\examples{
+\donttest{
+si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
+counts <- diff_expr_filter_counts(diff_expr_read_counts(diffwrap_counts, si), si)
+groups <- stats::relevel(si$Groups, ref = "control")
+pca <- diff_expr_PCA(edgeR::cpm(counts, log = TRUE), n = 100)
+g <- ggbiplot.n(pca, groups = groups)
+class(g)
+}
+}

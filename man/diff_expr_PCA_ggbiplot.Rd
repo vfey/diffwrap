@@ -41,8 +41,20 @@ diff_expr_PCA_ggbiplot(
 
 \item{...}{Arguments passed to \code{ggbiplot.n()}.}
 }
+\value{
+A \code{ggplot} object containing the PCA biplot. The plot is returned rather than drawn, so
+  it has to be printed to appear on a device.
+}
 \description{
 Function to generate a PCA biplot using `ggbiplot.n`, a version of `ggbiplot` from https://github.com/vqv/ggbiplot.
+}
+\examples{
+si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
+counts <- diff_expr_filter_counts(diff_expr_read_counts(diffwrap_counts, si), si)
+groups <- stats::relevel(si$Groups, ref = "control")
+pca <- diff_expr_PCA(edgeR::cpm(counts, log = TRUE), n = 100)
+g <- diff_expr_PCA_ggbiplot(pca, groups = groups)
+class(g)
 }
 \seealso{
 [ggbiplot.n()]

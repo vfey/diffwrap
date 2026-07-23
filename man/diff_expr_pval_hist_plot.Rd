@@ -10,6 +10,14 @@ diff_expr_pval_hist_plot(d3)
 \item{d3}{\code{data.frame}. Data frame containing a P-Value column to generate a histogram. The column name will be determined
 by pattern matching.}
 }
+\value{
+Invisibly, an object of class \code{histogram} as returned by \code{\link[graphics]{hist}}.
+  Called for its side effect of drawing the p-value distribution.
+}
 \description{
 Function to generate a histogram of the P-Value distribution
+}
+\examples{
+d3 <- data.frame(ID = paste0("g", 1:200), PValue = runif(200))
+diff_expr_pval_hist_plot(d3)
 }

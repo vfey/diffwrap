@@ -32,7 +32,8 @@ to genes in the Ensembl database, and also a mixed vector of IDs.}
 annotated to term domain.}
 
 \item{file_name}{A character string used as a file name without file extension. If not NULL output will be saved
-to an Excel file. Currently not in use.}
+to an Excel file. Should be given as a full path, since a bare name would write to the current working
+directory. Defaults to NULL, in which case no file is written. Currently not in use.}
 
 \item{ordered_query}{If set to TRUE, computes GSEA-style p-values for an input ranked gene list.}
 
@@ -80,4 +81,11 @@ A table listing statistically significant enrichment results according to thresh
 }
 \description{
 Runs gprofiler function for a DEG list or for a ranked gene list.
+}
+\examples{
+\dontrun{
+# requires network access to the g:Profiler service
+run_gprofiler(input_genes = c("ENSG00000141510", "ENSG00000012048"),
+              organism = "hsapiens")
+}
 }

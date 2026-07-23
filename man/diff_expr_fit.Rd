@@ -61,6 +61,13 @@ Consequently, in that case, no contrasts will be fitted.}
 
 \item{disp}{Character; one of "tagwise.dispersion", "trended.dispersion", "bin.dispersion"}
 }
+\value{
+A named \code{list}. If \code{do.voom=TRUE} the elements are \code{v} (the \code{EList} of
+  voom-transformed counts), \code{fit} (the \code{MArrayLM} linear model fit) and \code{fit2} (the
+  \code{MArrayLM} fit after \code{eBayes()}, with contrasts applied if these were supplied). Otherwise
+  they are \code{d} (the input \code{DGEList}), \code{d2} (the \code{DGEList} with estimated
+  dispersions) and \code{fit} (the \code{DGEGLM} generalised linear model fit).
+}
 \description{
 Function to compute linear model fit and optionally apply 'voom' beforehand
 }
@@ -75,4 +82,13 @@ For experimental designs involving comparisons within as well as between subject
     provides more robust and reliable error rate control when the number of replicates is small.
     The QL dispersion estimation and hypothesis testing is done by using the functions
     glmQLFit() and glmQLFTest().
+}
+\examples{
+si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
+counts <- diff_expr_filter_counts(diff_expr_read_counts(diffwrap_counts, si), si)
+groups <- stats::relevel(si$Groups, ref = "control")
+d <- edgeR::calcNormFactors(edgeR::DGEList(counts, group = groups))
+design <- diff_expr_make_design(si, groups)
+fit <- diff_expr_fit(counts, d, design, do.voom = FALSE, quasi.likelihood = TRUE)
+class(fit$fit)
 }

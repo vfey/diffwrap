@@ -51,8 +51,19 @@ Use for selective highlighting of user-defined sample groups.}
 
 \item{do.plot}{Logical; should the plot be printed to the graphics device? Defaults to \code{TRUE}.}
 }
+\value{
+A \code{ggplot} object containing the labelled PCA scatterplot.
+}
 \description{
 Function to generate an ordinary two-dimensional PCA plot using `ggplot2`
+}
+\examples{
+si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
+counts <- diff_expr_filter_counts(diff_expr_read_counts(diffwrap_counts, si), si)
+groups <- stats::relevel(si$Groups, ref = "control")
+pca <- diff_expr_PCA(edgeR::cpm(counts, log = TRUE), n = 100)
+g <- diff_expr_PCA_ggplot(pca, samp.name = NULL, groups = groups, do.plot = FALSE)
+class(g)
 }
 \seealso{
 [stat_ellipse()]

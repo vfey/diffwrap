@@ -26,6 +26,19 @@ diff_expr_3d_scatterplot(
 
 \item{main}{Plot title.}
 }
+\value{
+No return value. Called for its side effect of drawing a three-dimensional PCA scatterplot on
+  the current graphics device.
+}
 \description{
 Function to generate a 3D scatterplot
+}
+\examples{
+\donttest{
+si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
+counts <- diff_expr_filter_counts(diff_expr_read_counts(diffwrap_counts, si), si)
+groups <- stats::relevel(si$Groups, ref = "control")
+pca <- diff_expr_PCA(edgeR::cpm(counts, log = TRUE), n = 100)
+diff_expr_3d_scatterplot(pca, groups = groups)
+}
 }

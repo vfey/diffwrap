@@ -17,6 +17,15 @@ If \code{miRSEQ=TRUE} this expects the output from CAP-miRSEQ summary script whi
 
 \item{miRSEQ}{\code{logical}. Is the input data the output from CAP-miRSEQ summary script?}
 }
+\value{
+A \code{matrix} of raw counts with features in rows and samples in columns, restricted to the
+  samples listed in \option{samp.info} and ordered as they are there.
+}
 \description{
 Function to read counts as produced by htseq-count
+}
+\examples{
+si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
+counts <- diff_expr_read_counts(diffwrap_counts, si)
+dim(counts)
 }

@@ -9,6 +9,11 @@ make_pheatmap_anno_color(clinical.mat)
 \arguments{
 \item{clinical.mat}{matrix with clinical annotation values in (clinical category, samples) format}
 }
+\value{
+A named \code{list} of named character vectors of colours, one element per annotation
+  variable, in the form expected by the \code{annotation_colors} argument of
+  \code{\link[pheatmap]{pheatmap}}.
+}
 \description{
 Function to create the annotation colour list used in the heatmap
 }

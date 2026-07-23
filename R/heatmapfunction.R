@@ -22,7 +22,11 @@ get_hm_breaks <- function(
   if (is.data.frame(expr.mat)) {
     expr.mat <- as.matrix(expr.mat)
   }
-  if (scale.fl != "none") {
+  # scale on the same margin pheatmap will use, so the computed breaks match the displayed data
+  # (scale() works on columns, so row-scaling needs the transpose dance)
+  if (scale.fl == "row") {
+    expr.mat <- t(scale(t(expr.mat)))
+  } else if (scale.fl == "column") {
     expr.mat <- scale(expr.mat)
   }
 
@@ -194,8 +198,13 @@ correlogram_pheatmap = function(expr.mat, clinical.mat, scale.fl = "none", legen
                                 anno.color = NULL,
                                 main.correl = "Correlogram", sample.correl = FALSE) {
   #calculate the correlation matrix using Hmisc package
-
-  corr_hmap = Hmisc::rcorr(expr.mat)
+  # rcorr() needs at least two columns and can fail on very small/degenerate designs; a
+  # correlogram is supplementary, so on failure return NULL rather than aborting the heatmaps
+  corr_hmap = try(Hmisc::rcorr(expr.mat), silent = TRUE)
+  if (is(corr_hmap, "try-error")) {
+    dw_log("    NOTE: correlogram could not be computed (rcorr failed); skipping it.\n")
+    return(NULL)
+  }
   cor.mat = as.matrix(corr_hmap$r)
   pv.mat = as.matrix(corr_hmap$P)
   mat.breaks.correl = NULL

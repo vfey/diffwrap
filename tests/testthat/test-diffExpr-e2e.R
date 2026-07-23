@@ -18,7 +18,7 @@ test_that("out.dir is required and its omission is an error, not a working-direc
                               groups    = "Group",
                               control   = "control",
                               analysis.name = "demo",
-                              do.enrichment = FALSE)),
+                              enr.do = FALSE)),
     "out.dir"
   )
 })
@@ -37,7 +37,7 @@ test_that("an unpaired run produces the documented outputs and a log file", {
              control   = "control",
              analysis.name = "demo",
              out.dir   = out.dir,
-             do.enrichment = FALSE)
+             enr.do = FALSE)
   )
 
   # return value
@@ -82,7 +82,7 @@ test_that("verbose = FALSE is silent on the console but still writes the full lo
              analysis.name = "quiet",
              out.dir   = out.dir,
              verbose   = FALSE,
-             do.enrichment = FALSE)
+             enr.do = FALSE)
   ))
   expect_false(any(grepl("PREPROCESSING|STARTUP CHECKS|LINEAR MODELLING", msgs)))
 
@@ -107,7 +107,7 @@ test_that("a custom log.file location is honoured", {
              analysis.name = "demo",
              out.dir   = out.dir,
              log.file  = lf,
-             do.enrichment = FALSE)
+             enr.do = FALSE)
   )
   expect_true(file.exists(lf))
 })
@@ -127,7 +127,7 @@ test_that("a paired run resolves to the fixed-effect mode and completes", {
              control   = "control",
              analysis.name = "paired",
              out.dir   = out.dir,
-             do.enrichment = FALSE)
+             enr.do = FALSE)
   )
   expect_type(res, "list")
   expect_true("contrasts" %in% names(res))

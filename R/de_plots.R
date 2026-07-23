@@ -55,7 +55,8 @@ diff_expr_ma_plot <-
 	pv.col <- dw_find_col(names(dat), "^p\\.{0,1}val[e-u]{0,2}$", "p-value")
 	fdr.col <- dw_find_col(names(dat), "^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", "FDR")
 	numlab <- ceiling(1.25*numlab)
-	A <- grep("^logCPM$|^AveExpr$", names(dat), value=TRUE)
+	# average-expression column: 'logCPM' from edgeR::topTags, 'AveExpr' from limma::topTable
+	A <- dw_find_col(names(dat), "^logcpm$|^aveexpr$", "average expression")
 	degFDR <- rn[dat[[fdr.col]] < fdr.thr & abs(dat$logFC) >= logfc.thr]
 	degPval <- rn[dat[[pv.col]] < p.thr & abs(dat$logFC) >= logfc.thr]
 	dat$`P-Value` <- dat[[pv.col]]

@@ -110,8 +110,6 @@ diff_expr_make_design <-
 #' @param block \code{logical}. Are the samples not independent? See Details section.
 #' @param contrasts Character vector specifying group name pairs to be compared in the format expected by
 #'   \code{makeContrasts()}, i.e., "group2-group1".
-#' @param user_design \code{logical}. Currently unused and reserved for future use; kept only for
-#'   backward compatibility and scheduled for removal in a future version. Defaults to \code{FALSE}.
 #' @details
 #' The 'block' argument is used to specify whether the comparisons are to be made within AND between subjects or in the case of
 #' technical replicates, i.e., if the samples are not independent, in other words, correlated.
@@ -125,7 +123,7 @@ diff_expr_make_design <-
 #' diff_expr_make_contrasts(design, groups)
 #' @export
 diff_expr_make_contrasts <-
-		function(design, groups, pairs=NULL, block=FALSE, contrasts=NULL, user_design = FALSE)
+		function(design, groups, pairs=NULL, block=FALSE, contrasts=NULL)
 {
 	if (is.null(contrasts)) {
 		dw_log("Comparing all groups vs. all...\n")

@@ -19,7 +19,7 @@
 diff_expr_PCA <-
 		function(counts, n=500, scale.=FALSE)
 {
-	select <- 1:nrow(counts)
+	select <- seq_len(nrow(counts))
 	if (!is.null(n)) {
 		dw_log("    Getting row-wise variances...\n")
 		# per-row (per-gene) sample variance, base-R equivalent of genefilter::rowVars()

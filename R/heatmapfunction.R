@@ -127,7 +127,7 @@ reorderFactors <- function(df, column = "my_column_name",
 make_pheatmap_anno_color = function(clinical.mat) {
   #create the annotation colour list
   anno.vars = list()
-  for (j in 1:length(colnames(clinical.mat))) {
+  for (j in seq_along(colnames(clinical.mat))) {
     #find unique annotation terms and exclude NAs
     unique.anno.terms = unique(clinical.mat[,j])
     anno.vars[[j]] = unique.anno.terms[!is.na(unique.anno.terms)]
@@ -138,8 +138,8 @@ make_pheatmap_anno_color = function(clinical.mat) {
 
   anno.color = list()
   #choose number of colors from the annotation palette to be equal with the annotation.vars.count
-  for (i in 1:length(colnames(clinical.mat))) {
-    anno.color[[names(clinical.mat)[i]]] = anno.palette[1:length(anno.vars[[i]])]
+  for (i in seq_along(colnames(clinical.mat))) {
+    anno.color[[names(clinical.mat)[i]]] = anno.palette[seq_len(length(anno.vars[[i]]))]
     names(anno.color[[i]]) = levels(as.factor(clinical.mat[,i]))
   }
   return(anno.color)

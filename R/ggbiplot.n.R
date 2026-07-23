@@ -73,7 +73,7 @@ ggbiplot.n <- function (pcobj, choices = 1:2, scale = 1, pc.biplot = TRUE,
 		nobs.factor <- sqrt(nrow(pcobj$call$X))
 		d <- unlist(sqrt(pcobj$eig)[1])
 		u <- sweep(pcobj$ind$coord, 2, 1/(d * nobs.factor), FUN = "*")
-		v <- sweep(pcobj$var$coord, 2, sqrt(pcobj$eig[1:ncol(pcobj$var$coord),
+		v <- sweep(pcobj$var$coord, 2, sqrt(pcobj$eig[seq_len(ncol(pcobj$var$coord)),
 								1]), FUN = "/")
 	}
 	else if (inherits(pcobj, "lda")) {

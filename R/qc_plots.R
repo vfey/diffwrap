@@ -371,7 +371,7 @@ diff_expr_3d_scatterplot <-
     percentVar <- round(100*PCA$sdev^2/sum(PCA$sdev^2), 1)
     dat <- data.frame(PCx=PCA$x[, PC[1]], PCy=PCA$x[, PC[2]], PCz=PCA$x[, PC[3]], Condition=groups)
     cond <- levels(dat$Condition)
-    col_seq <- rev(rep(c(seq.int(from=2, to=12, by=2), seq.int(from=1, to=11, by=2)), ceiling(length(cond)/12))[1:length(cond)])
+    col_seq <- rev(rep(c(seq.int(from=2, to=12, by=2), seq.int(from=1, to=11, by=2)), ceiling(length(cond)/12))[seq_len(length(cond))])
     cols <- RColorBrewer::brewer.pal(n=12, name="Paired")[col_seq]
     plcol <- rep(cols[1], nrow(dat))
     names(plcol) <- dat$Condition

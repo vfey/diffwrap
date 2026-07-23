@@ -87,7 +87,7 @@ run.topGO <- function(background, foreground, ontologies = c("BP"), organism, ID
   result.topGO.elim <- NULL
   result.topGO.classic <- NULL
   result.topGO.weight01 <- NULL
-  for (i in 1:length(table.go)) {
+  for (i in seq_along(table.go)) {
     dw_log(" @", sQuote(table.go[[i]]), "\n")
     ## prepare data
     dw_log("   Generating new object of class", sQuote("topGOdata"), "...\n")

@@ -106,10 +106,10 @@ pheatmap_plots <-
         dat.sign.pv.down <- dat.sign.pv.down[order(dat.sign.pv.down[[pv.col]], rev(dat.sign.pv.down[[fc.col]])), ]
         dat.sign.pv.down <- dat.sign.pv.down[1:min(nrow(dat.sign.pv.down), topn-(topn %/% 2)), ]
         dat.sign.pv.split <- rbind(dat.sign.pv.up, dat.sign.pv.down)
-        dat.sign.fdr.up <- d3[d3[[fdr.col]] < p.thr & d3[[fc.col]] >= logfc.thr, ]
+        dat.sign.fdr.up <- d3[d3[[fdr.col]] < fdr.thr & d3[[fc.col]] >= logfc.thr, ]
         dat.sign.fdr.up <- dat.sign.fdr.up[order(dat.sign.fdr.up[[fdr.col]], rev(dat.sign.fdr.up[[fc.col]])), ]
         dat.sign.fdr.up <- dat.sign.fdr.up[1:min(nrow(dat.sign.fdr.up), topn %/% 2), ]
-        dat.sign.fdr.down <- d3[d3[[fdr.col]] < p.thr & d3[[fc.col]] <= -1*logfc.thr, ]
+        dat.sign.fdr.down <- d3[d3[[fdr.col]] < fdr.thr & d3[[fc.col]] <= -1*logfc.thr, ]
         dat.sign.fdr.down <- dat.sign.fdr.down[order(dat.sign.fdr.down[[fdr.col]], rev(dat.sign.fdr.down[[fc.col]])), ]
         dat.sign.fdr.down <- dat.sign.fdr.down[1:min(nrow(dat.sign.fdr.down), topn-(topn %/% 2)), ]
         dat.sign.fdr.split <- rbind(dat.sign.fdr.up, dat.sign.fdr.down)

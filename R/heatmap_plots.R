@@ -68,9 +68,9 @@ pheatmap_plots <-
       #print(samp.names)
 
       # find columns with P-Values or FDR values
-      pv.col = names(d3)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
-      fdr.col = names(d3)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
-      fc.col <- names(d3)[grep("^logfc$|fold$", tolower(names(d3)))]
+      pv.col = dw_find_col(names(d3), "^p\\.{0,1}val[e-u]{0,2}$", "p-value")
+      fdr.col = dw_find_col(names(d3), "^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", "FDR")
+      fc.col <- dw_find_col(names(d3), "^logfc$|fold$", "log fold-change")
 
       g.l = list()
       #cat("Heatmap plots...\n")

@@ -52,8 +52,8 @@ diff_expr_ma_plot <-
 		stop("No ID columns found.")
 	}
 	rn <- rownames(dat)
-	pv.col <- names(dat)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(dat)))]
-	fdr.col <- names(dat)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(dat)))]
+	pv.col <- dw_find_col(names(dat), "^p\\.{0,1}val[e-u]{0,2}$", "p-value")
+	fdr.col <- dw_find_col(names(dat), "^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", "FDR")
 	numlab <- ceiling(1.25*numlab)
 	A <- grep("^logCPM$|^AveExpr$", names(dat), value=TRUE)
 	degFDR <- rn[dat[[fdr.col]] < fdr.thr & abs(dat$logFC) >= logfc.thr]
@@ -291,8 +291,8 @@ prepare_volcano_of_given_property <-
 diff_expr_volcano_plot <-
 		function(d3, id, sym.col="gene_symbol", main=NULL, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=25, point.lab=TRUE)
 {
-	pv.col <- names(d3)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
-	fdr.col <- names(d3)[grep("^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
+	pv.col <- dw_find_col(names(d3), "^p\\.{0,1}val[e-u]{0,2}$", "p-value")
+	fdr.col <- dw_find_col(names(d3), "^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", "FDR")
 
 	if (point.lab) {
 		cont.dat <- d3[, c(id, sym.col, "logFC", pv.col, fdr.col)]
@@ -347,7 +347,7 @@ diff_expr_pval_hist_plot <-
 		function(d3)
 {
 	dw_log("   Histogram of P-value distribution...\n")
-	pv.col <- names(d3)[grep("^p\\.{0,1}val[e-u]{0,2}$", tolower(names(d3)))]
+	pv.col <- dw_find_col(names(d3), "^p\\.{0,1}val[e-u]{0,2}$", "p-value")
 	hist(d3[[pv.col]],breaks=20, xlab="P Value", ylab="Frequency", main="P-value distribution")
 }
 

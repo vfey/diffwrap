@@ -256,7 +256,7 @@ diffExpr <-
     ## Map the categorised public argument names to the internal names used throughout the body.
     ## The public interface (above) is grouped by prefix (filter./fit./biom./qc./hm./enr./out.);
     ## the internal logic keeps its original names, so only this block changes when arguments are
-    ## renamed. Editing anything below this block should use the internal (right-hand) names.
+    ## renamed. Editing anything below this block should use the internal (left-hand) names.
     ## ----------------------------------------------------------------------------------------------
     strict                    <- filter.strict
     min.samp                  <- filter.min.samp

@@ -40,7 +40,7 @@ or a DGEList object.}
 
 \item{quasi.likelihood}{Logical; should quasi-likelihood methods be used? See \emph{Details} section.
 If \code{TRUE}, the default, then the quasi-likelihood methods are used, if \code{FALSE}, then the
-likelihood ratio test is used. Olease note the main wrapper function \code{diffExpr()} will set this parameter.}
+likelihood ratio test is used. Please note the main wrapper function \code{diffExpr()} will set this parameter.}
 
 \item{bayes.trend}{Logical passed to \code{eBayes()}: should an intensity-dependent trend be allowed for the prior variance?
 If FALSE then the prior variance is constant.

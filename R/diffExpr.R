@@ -247,6 +247,13 @@ diffExpr <-
         call. = FALSE
       )
     }
+    # enrichment currently only supports human and mouse; fail here rather than after the
+    # whole analysis, when 'species' would resolve to NULL inside runEnrichmentAnalyses()
+    if (do.enrichment && !biom.data.set %in% c("hsapiens_gene_ensembl", "mmusculus_gene_ensembl")) {
+      stop("Enrichment analysis currently supports only 'hsapiens_gene_ensembl' or ",
+           "'mmusculus_gene_ensembl' (via 'biom.data.set'). Set 'do.enrichment = FALSE' ",
+           "to run the rest of the pipeline for other datasets.", call. = FALSE)
+    }
     # The enrichment engines live in 'Suggests'. If enrichment is requested, check up front
     # that the packages needed by the selected methods are installed, so the run fails here
     # rather than after all the modelling and plotting is done.

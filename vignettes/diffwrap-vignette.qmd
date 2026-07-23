@@ -2,7 +2,7 @@
 title: "Differential expression analysis with diffwrap"
 output: html
 editor: visual
-author: Vidal Fey (vidal.fey@tuni.fi)
+author: Vidal Fey (vidal.fey@gmail.com)
 date: 'Last updated: `r format(Sys.Date(), "%B %d, %Y")`'
 format:
   html:
@@ -129,7 +129,7 @@ These two axes give five valid combinations. The only constraint is that a block
 :::
 
 | `pairs` | `block` | `do.voom`     | Design            | Engine     | Role of `pairs`   |
-|---------|---------|---------------|-------------------|------------|-------------------|
+|------------|------------|------------|------------|------------|--------------|
 | ---     | `FALSE` | `FALSE`       | `~0 + groups`     | edgeR GLM  | ---               |
 | ---     | `FALSE` | `TRUE`        | `~0 + groups`     | limma/voom | ---               |
 | given   | `FALSE` | `FALSE`       | `~pairs + groups` | edgeR GLM  | fixed effect      |

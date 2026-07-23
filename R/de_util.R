@@ -287,6 +287,10 @@ diffr_expr_generate_cleaned_de_table_output <-
 #' @param numlab \code{numeric}. Maximum number of labels per plot. Overrides numbers calculated based on `p.thr` and `fdr.thr`.
 #' @param point.lab \code{logical}. Should points be labelled, at all?
 #' @param heatmap.topn \code{numeric}. Number of top values to be plotted. Defaults to 100.
+#' @param hm.p.thr,hm.fdr.thr,hm.logfc.thr \code{numeric}. Significance and fold-change thresholds used
+#'   specifically when selecting genes for the heatmaps. These are kept separate from the plot/table
+#'   thresholds (\option{p.thr}, \option{fdr.thr}, \option{logfc.thr}) because heatmaps usually read best
+#'   with a stricter gene set. Default to 0.05, 0.05 and 1.
 #' @param heatmap.split.expr \code{logical}. Should the top up- and top down-regulated genes be displayed at equal numbers (50/50),
 #' if they meet the significance threshold (regardless of the actual significance)? Defaults to \code{FALSE}.
 #' @param color.blind.pal string determining the RColorBrewer color blind palette (default = "PuOr");
@@ -339,6 +343,7 @@ diff_expr_extract_contrasts <-
            host="https://www.ensembl.org", biom.filter="ensembl_gene_id", biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"),
            biom.force.ensg = FALSE, biom.cache = NULL, use.cache = FALSE, sym.col="hgnc_symbol",
            rm.dups=FALSE, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=25, point.lab=TRUE, heatmap.topn = 100,
+           hm.p.thr = 0.05, hm.fdr.thr = 0.05, hm.logfc.thr = 1,
            heatmap.split.expr = FALSE, color.blind.pal = "PuOr", n.pal.cols = 11, color.extremes = c("#3182BD", "#E6550D"),
            palette.length = NULL, anno.color = NULL, anno.name = "Sample Class", heatmap.main = NULL, font.size=5, plots=TRUE,
            lists=TRUE, filtered.lists = TRUE, samp.info = NULL, samples = NULL, groups = NULL, sample.plot.names = NULL)
@@ -376,8 +381,8 @@ diff_expr_extract_contrasts <-
     out.l$volcanoPlots <- list()
     for (contr in cn) {
       dw_log("Calculating differential expression for", contr, "\n")
-      dir.create(file.path(out.dir, contr))
-      contr.out.dir  <- dir(out.dir, pattern = paste0("^",contr), full.names = TRUE)
+      contr.out.dir <- file.path(out.dir, contr)
+      dir.create(contr.out.dir, showWarnings = FALSE)
       dw_log("Storing all results under", contr.out.dir, "\n")
 
       if (do.voom) {
@@ -426,7 +431,12 @@ diff_expr_extract_contrasts <-
         d3 <- diff_expr_biomart(d3, biom.data.set, biom.mart, host, biom.filter, biom.attributes, biom.cache, use.cache, sym.col, rm.dups, force.ensg = biom.force.ensg)
         id.col <- names(d3)[names(d3) %in% biom.filter]
       } else {
-        syms <- convertid::convertId2(as.character(d3$ID))
+        # convertId2() defaults to human; pass the species matching 'biom.data.set' so mouse
+        # datasets are not annotated with human symbols
+        conv.species <- switch(biom.data.set,
+                               mmusculus_gene_ensembl = "Mouse",
+                               "Human")
+        syms <- convertid::convertId2(as.character(d3$ID), conv.species)
         syms <- data.frame(ID=names(syms), gene_symbol=as.character(syms), stringsAsFactors=FALSE)
         d3 <- merge(syms, d3, by="ID", all.y=TRUE, all.x=FALSE, sort=TRUE)
         if (any(d3$gene_symbol=="") || any(is.na(d3$gene_symbol))) {
@@ -479,7 +489,7 @@ diff_expr_extract_contrasts <-
           pdf(file.path(contr.out.dir, paste(analysis.name, contr, "_heatmaps.pdf", sep="_")), width = 25, height = 35)
           dw_log("Heatmap plots...\n")
           out.l$heatmapPlots[[contr]] <- pheatmap_plots(d3 = d3,
-                                                        id = id,
+                                                        id = id.col,
                                                         sym.col="gene_symbol",
                                                         samp.info = samp.info,
                                                         samples = samples,
@@ -493,16 +503,16 @@ diff_expr_extract_contrasts <-
                                                         anno.name = anno.name,
                                                         main=NULL,
                                                         add.main = heatmap.main,
-                                                        p.thr=0.05,
-                                                        fdr.thr=0.05,
-                                                        logfc.thr = 1,
+                                                        p.thr = hm.p.thr,
+                                                        fdr.thr = hm.fdr.thr,
+                                                        logfc.thr = hm.logfc.thr,
                                                         topn = heatmap.topn,
                                                         split.expr = heatmap.split.expr)
           dev.off()
         } else {
           dw_log("Heatmap plots...\n")
           out.l$heatmapPlots[[contr]] <- pheatmap_plots(d3 = d3,
-                                                        id = id,
+                                                        id = id.col,
                                                         sym.col="gene_symbol",
                                                         samp.info = samp.info,
                                                         samples = samples,
@@ -516,9 +526,9 @@ diff_expr_extract_contrasts <-
                                                         anno.name = anno.name,
                                                         main=NULL,
                                                         add.main = heatmap.main,
-                                                        p.thr=0.05,
-                                                        fdr.thr=0.05,
-                                                        logfc.thr = 1,
+                                                        p.thr = hm.p.thr,
+                                                        fdr.thr = hm.fdr.thr,
+                                                        logfc.thr = hm.logfc.thr,
                                                         topn = heatmap.topn,
                                                         split.expr = heatmap.split.expr)
           dev.off()

@@ -394,6 +394,13 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
                                   )
 {
 
+  # only human and mouse are supported; guard here so a NULL/other value fails with a clear
+  # message rather than deep inside clusterProfiler (or at the 'species == "human"' test below)
+  if (is.null(species) || length(species) != 1L || !species %in% c("human", "mouse")) {
+    stop("Enrichment currently supports species 'human' or 'mouse'; got ",
+         if (is.null(species)) "NULL" else sQuote(species), ".", call. = FALSE)
+  }
+
   # test if data packages are installed
   if (species == "human" && !requireNamespace("org.Hs.eg.db", quietly = TRUE)) {
     stop(
@@ -510,12 +517,12 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
 
          ordered.query <- TRUE
 
-         # For GSEA,an ordered gene list of ALL genes must be prepared:
-         #### feature 1: numeric vector
+         # For GSEA, an ordered gene list of ALL genes must be prepared:
+         #### feature 1: numeric vector, named by the (unique) Ensembl gene IDs
          geneList <- de_table[[fc.col]]
-         ## feature 2: named vector
          names(geneList) <- as.character(rownames(de_table))
-         ## feature 3: decreasing order
+         ## feature 2: drop genes without a fold change, then order decreasingly
+         geneList <- geneList[!is.na(geneList)]
          geneList <- sort(geneList, decreasing = TRUE)
          genes <- geneList
 
@@ -605,14 +612,18 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
 
           ordered.query <- TRUE
 
-          #For GSEA,an ordered gene list of ALL genes must be prepared:
-          #### feature 1: numeric vector
-          geneList <- de_table[[fc.col]][!is.na(de_table[[entrez.col]])]
-
-          ## feature 2: named vector
-          names(geneList) <- as.character(de_table[[entrez.col]][!is.na(de_table[[entrez.col]])])
-
-          ## feature 3: decreasing order
+          # For GSEA, an ordered gene list of ALL genes must be prepared, named by Entrez ID.
+          # Several Ensembl IDs can map to the same Entrez ID, so deduplicate by Entrez (keeping
+          # the most extreme fold change) to avoid duplicate names, which gseKEGG() rejects.
+          ent <- as.character(de_table[[entrez.col]])
+          fc  <- de_table[[fc.col]]
+          keep <- !is.na(ent) & !is.na(fc)
+          ent <- ent[keep]; fc <- fc[keep]
+          ord <- order(abs(fc), decreasing = TRUE)   # most extreme fold change first
+          ent <- ent[ord]; fc <- fc[ord]
+          dup <- duplicated(ent)                      # keep the first (largest |logFC|) per Entrez
+          geneList <- fc[!dup]
+          names(geneList) <- ent[!dup]
           geneList <- sort(geneList, decreasing = TRUE)
 
           genes <- geneList

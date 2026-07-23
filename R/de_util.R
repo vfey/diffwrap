@@ -14,7 +14,7 @@
 #' @param norm.method Character; one of "quantile", "tmm".
 #' @param quasi.likelihood Logical; should quasi-likelihood methods be used? See \emph{Details} section.
 #'   If \code{TRUE}, the default, then the quasi-likelihood methods are used, if \code{FALSE}, then the
-#'   likelihood ratio test is used. Olease note the main wrapper function \code{diffExpr()} will set this parameter.
+#'   likelihood ratio test is used. Please note the main wrapper function \code{diffExpr()} will set this parameter.
 #' @param bayes.trend Logical passed to \code{eBayes()}: should an intensity-dependent trend be allowed for the prior variance?
 #'   If FALSE then the prior variance is constant.
 #'   Alternatively, trend can be a row-wise numeric vector, which will be used as the covariate for the prior variance.

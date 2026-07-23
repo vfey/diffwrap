@@ -4,6 +4,19 @@
 #'    Most sub-functions are exported and can be called by the user, as well, if desired.
 #'    These functions may be applicable to different kinds of data/input, rely, however,
 #'    on the conventions set for this package.
+#' @section Argument groups:
+#' The arguments are grouped by name prefix:
+#' \itemize{
+#'   \item no prefix: core experiment definition, plus the primary differential-expression thresholds
+#'     (\code{p.thr}, \code{fdr.thr}, \code{logfc.thr}, \code{numlab}, \code{point.lab});
+#'   \item \code{filter.*}: count pre-filtering;
+#'   \item \code{fit.*}: model fitting (voom / edgeR options);
+#'   \item \code{biom.*}: 'biomart' gene annotation;
+#'   \item \code{qc.*}: quality-control plots (MDS / PCA);
+#'   \item \code{hm.*}: heatmaps, including their own significance thresholds and colour palette;
+#'   \item \code{enr.*}: enrichment analysis;
+#'   \item \code{out.*}, \code{verbose}, \code{log.file}, \code{dry.run}: output and run control.
+#' }
 #' @param expr.dat \code{character} or \code{list}. String or vector or list of input file paths, or matrix of count values
 #' @param samp.info \code{data.frame}. samp.info object containing information of the project's sample sheet
 #' @param control \code{character}. Name of the control group
@@ -17,29 +30,90 @@
 #' @param block \code{logical}. Are the the samples not independent? See Details section.
 #' @param contrasts \code{character}. Vector of contrasts to be made. If not provided, all possible contrasts will be made.
 #'   This specifies group name pairs to be compared in the format expected by \code{makeContrasts()}, i.e., "group2-group1".
-#' @param bayes.trend \code{logical}. Should an intensity-trend be allowed for the prior variance? Passed to 'limma::eBayes'.
-#' @param bayes.robust \code{logical}. Should the estimation of df.prior and var.prior be robustified against outlier sample variances? Passed to 'limma::eBayes'.
-#' @param quasi.likelihood Logical; should quasi-likelihood methods be used? See \emph{Details} section.
+#' @param out.dir \code{character}. Path to the output directory. This argument is required: all
+#'   result tables, plots and the run log are written below it. There is deliberately no default,
+#'   so that no files are ever created in the working directory unintentionally. Use, e.g.,
+#'   \code{out.dir = tempdir()} to try the pipeline out without keeping the results.
+#' @param analysis.name \code{character}. Name of the analysis. If not provided, a default name will be generated.
+#' @param filter.strict \code{logical}. For miRNA analysis: only keep a miRNA if there are > 5 reads per million in at least half of the samples?
+#' @param filter.min.samp \code{integer}. Number of samples in which a feature needs to be covered by at least one read per million.
+#'   Defaults to the size of the smallest group of replicates. See \emph{details}.
+#' @param fit.voom \code{logical}. Should the voom function be used? Defaults to \code{FALSE}.
+#' @param fit.voom.fun \code{character}. The voom function to be used. Should be one of 'limma::voom', 'limma::voomWithQualityWeights' or
+#' 'edgeR::voomLmFit'. Defaults to \code{edgeR::voomLmFit}. See 'Details'.
+#' @param fit.use.weights \code{logical}. Should sample-specific quality weights be estimated?
+#' @param fit.norm.method \code{character}. The normalisation method to be used. Defaults to "tmm".
+#' @param fit.disp \code{character}. The dispersion method to be used. Defaults to "gene".
+#' @param fit.bayes.trend \code{logical}. Should an intensity-trend be allowed for the prior variance? Passed to 'limma::eBayes'.
+#' @param fit.bayes.robust \code{logical}. Should the estimation of df.prior and var.prior be robustified against outlier sample variances? Passed to 'limma::eBayes'.
+#' @param fit.quasi.likelihood Logical; should quasi-likelihood methods be used? See \emph{Details} section.
 #'   Defaults to NA, which will determine the method based on the number of replicate samples.
 #'   If more than 4 replicates are present, the likelihood ratio test is used, otherwise the quasi-likelihood methods.
 #'   If \code{TRUE}, then the quasi-likelihood methods are used, if \code{FALSE}, then the likelihood ratio test is used.
-#' @param sym.col \code{character}. Name of the column in the query result with gene symbols
-#' @param ellipse \code{logical}. Should an ellipse be plotted around samples belonging to the same sample group? Defaults to \code{TRUE}.
-#' @param ellipse.mapping.groups \code{character} The name of the column in 'samp.info' with group names for ellipse drawing. If \code{NULL} (default)
+#' @param p.thr \code{numeric}. Threshold for p-values. Defaults to 0.05.
+#' @param fdr.thr \code{numeric}. Threshold for FDR values. Defaults to 0.05.
+#' @param logfc.thr \code{numeric}. Threshold for fold-change values on the log2-scale. Defaults to 1.
+#' @param numlab \code{numeric}. Maximum number of point labels to be shown in the plot. This overrides/limits
+#'   values calculated by any thresholds. Defaults to 25.
+#' @param point.lab \code{logical}. Should point labels be shown in the plot? Defaults to \code{TRUE}.
+#' @param biom.use \code{logical}. Should the biomart be used for gene annotation? Defaults to \code{FALSE}.
+#' @param biom.data.set \code{character}. The biomart dataset to be used. Defaults to "hsapiens_gene_ensembl".
+#' @param biom.mart \code{character}. The biomart to be used.
+#' @param biom.host \code{character}. The host to be used for the biomart. Defaults to "www.ensembl.org".
+#' @param biom.filter \code{character}. The biomart filter to be used. Defaults to "ensembl_gene_id".
+#' @param biom.attributes \code{character}. The biomart attributes to be used. Defaults to c("ensembl_gene_id", "hgnc_symbol", "description", "entrezgene_id").
+#' @param biom.force.ensg \code{logical}. Should Ensembl Gene IDs be checked for (and stripped of) ensemble version numbers? Defaults to \code{FALSE}.
+#' @param biom.cache \code{character}. Path name giving the location of the cache \command{getBM()} uses if \code{use.cache=TRUE}. Defaults to the value in the \emph{BIOMART_CACHE} environment variable.
+#' @param biom.use.cache (\code{logical}). Should \command{getBM()} use the cache? Defaults to \code{TRUE} as in the \command{getBM()} function and is passed on to that.
+#' @param biom.sym.col \code{character}. Name of the column in the query result with gene symbols
+#' @param biom.rm.dups \code{logical}. Should duplicates be removed from the output of the biomart request? Defaults to \code{FALSE}.
+#' @param qc.top.n \code{integer}. Passed to \code{plotMDS()} (\code{top}): number of top genes used to calculate pairwise distances. Defaults to 500.
+#' @param qc.gene.selection \code{character}. passed to \code{plotMDS()} specifying the mode to select genes for comparisons. Defaults to "common".
+#' @param qc.pc \code{numeric}. Which principal components to plot. Defaults to 1:3.
+#' @param qc.type \code{character}. Which type of plot to produce. Needs to be one of "both", "uncorrected", "pseudo-corrected"
+#'   describing which values should be plotted. "uncorrected" will plot the input counts matrix while
+#'   "pseudo-corrected" will plot pseudo counts for blocked designs (e.g., paired samples or batch factors).
+#'   Defaults to "both".
+#' @param qc.ellipse \code{logical}. Should an ellipse be plotted around samples belonging to the same sample group? Defaults to \code{TRUE}.
+#' @param qc.ellipse.groups \code{character} The name of the column in 'samp.info' with group names for ellipse drawing. If \code{NULL} (default)
 #'     will use the \code{groups} column. If 'samp.info' is not supplied vector of groups.
-#' @param label.samples \code{logical}. Should points in appropriate QC plots be labelled. So far, applies only to PCA ggplot. Defaults to \code{TRUE}.
-#' @param geom.point.size \code{numeric}. Size of points in appropriate QC plots. So far, applies only to PCA ggplot. Defaults to 2.
-#' @param label.font.size \code{numeric}. Font size used for point labels in appropriate QC plots. So far, applies to PCA ggplot and M-A plots. Defaults to 5.
-#' @param plot.ellipse.legend \code{logical}. Should a legend be addded for ellipses in PCA plots? NA, the default, includes
+#' @param qc.ellipse.legend \code{logical}. Should a legend be addded for ellipses in PCA plots? NA, the default, includes
 #'     if any aesthetics are mapped. FALSE never includes, and TRUE always includes. It can also be a named logical vector to finely select
 #'     the aesthetics to display.
-#' @param do.enrichment \code{logical}. Whether or not to call enrichment wrapper. Defaults to \code{TRUE}.
-#' @param enrichment.plot \code{logical}. Whether or not to draw a network plot for the enrichment results. Defaults to \code{FALSE}.
-#' @param enrichment.plot.fdr.thr \code{numeric}. FDR threshold used in the enrichment plot. This may be useful to tweak to produce a more informative plot.
+#' @param qc.label.samples \code{logical}. Should points in appropriate QC plots be labelled. So far, applies only to PCA ggplot. Defaults to \code{TRUE}.
+#' @param qc.point.size \code{numeric}. Size of points in appropriate QC plots. So far, applies only to PCA ggplot. Defaults to 2.
+#' @param qc.label.size \code{numeric}. Font size used for point labels in appropriate QC plots. So far, applies to PCA ggplot and M-A plots. Defaults to 5.
+#' @param qc.circle \code{logical}. Draw a correlation circle around points representing correlating samples? Only applies when prcomp was called with scale = TRUE and when var.scale = 1. Defaults to \code{TRUE}.
+#' @param qc.varname.size \code{numeric}. Size of the text for variable names. Defaults to 0.
+#' @param qc.var.axes \code{logical}. Draw arrows for the variables? Defaults to \code{FALSE}.
+#' @param hm.topn \code{numeric}. Number of top values to be plotted. Defaults to 100.
+#' @param hm.p.thr,hm.fdr.thr,hm.logfc.thr \code{numeric}. Significance and fold-change thresholds used
+#'   specifically for selecting genes shown in the heatmaps, kept separate from \option{p.thr},
+#'   \option{fdr.thr} and \option{logfc.thr} (which control the plots and tables) because heatmaps
+#'   usually read best with a stricter gene set. Default to 0.05, 0.05 and 1.
+#' @param hm.split.expr \code{logical}. Should the top up- and top down-regulated genes be displayed at equal numbers (50/50),
+#' if they meet the significance threshold (regardless of the actual significance)? Defaults to \code{FALSE}.
+#' @param hm.pal.blind string determining the RColorBrewer color blind palette (default = "PuOr");
+#' other option can be visualized with the following command: brewer.pal.info[brewer.pal.info$colorblind,]
+#' @param hm.pal.n desired length of the number of different colours in 'color.blind.pal'. Will also be used
+#' as length of the numeric vector of probabilities in 'quantile_breaks()' (see ?quantile); defaults to 11
+#' @param hm.pal.extremes character vector of length 2 giving the two extremes of a user-defined colour palette
+#' varying from the first hue to the second via white.
+#' @param hm.pal.length integer setting the desired length of the colour palette to be used in the heatmap
+#' @param hm.anno.color list of named character vectors giving the colours used in the heatmap annotation bars. See 'annotation_colors'
+#' in [pheatmap()]. Automatically generated if NULL (default).
+#' @param hm.anno.name character string used as the column annotation legend title. If 'anno.color' is not NULL and of length 1 the slot name will be used if existing.
+#' @param enr.do \code{logical}. Whether or not to call enrichment wrapper. Defaults to \code{TRUE}.
+#' @param enr.methods \code{character}. One or more of the following: c("clusterProfilerGO", "clusterProfilerKEGG", "gProfileR", "topGO"). By default, uses them all.
+#' @param enr.plot \code{logical}. Whether or not to draw a network plot for the enrichment results. Defaults to \code{FALSE}.
+#' @param enr.plot.fdr.thr \code{numeric}. FDR threshold used in the enrichment plot. This may be useful to tweak to produce a more informative plot.
 #' Defaults to 0.05.
-#' @param enrichment.plot.logfc.thr \code{numeric}. FC threshold on the log2-scale used in the enrichment plot. Defaults to 1.
-#' @param enrichment.plot.num.terms \code{integer}. Number of terms shown in the plot. Defaults to 5.
-#' @param enrichment.methods \code{character}. One or more of the following: c("clusterProfilerGO", "clusterProfilerKEGG", "gProfileR", "topGO"). By default, uses them all.
+#' @param enr.plot.logfc.thr \code{numeric}. FC threshold on the log2-scale used in the enrichment plot. Defaults to 1.
+#' @param enr.plot.num.terms \code{integer}. Number of terms shown in the plot. Defaults to 5.
+#' @param out.plots \code{logical}. Should plots be produced? Defaults to \code{TRUE}.
+#' @param out.tables \code{logical}. Should lists of differentially expressed genes be produced? Defaults to \code{TRUE}.
+#' @param out.filtered.tables \code{logical}. Should lists of differentially expressed genes be produced for filtered data? Defaults to \code{TRUE}.
+#'
 #' @param verbose \code{logical} or \code{character}. Controls console output. \code{TRUE} (default) prints
 #'   major workflow steps, \code{FALSE} prints nothing, and \code{"all"} mirrors the full detail of the log
 #'   file to the console. Console output is written via \code{message()} and can therefore also be silenced
@@ -50,67 +124,6 @@
 #'   \code{dry.run=TRUE}.
 #' @param dry.run \code{logical}. If \code{TRUE}, the function will not create any output files or directories.
 #' @param ... \code{ANY}. Additional arguments passed to functions.
-#' @param out.dir \code{character}. Path to the output directory. This argument is required: all
-#'   result tables, plots and the run log are written below it. There is deliberately no default,
-#'   so that no files are ever created in the working directory unintentionally. Use, e.g.,
-#'   \code{out.dir = tempdir()} to try the pipeline out without keeping the results.
-#' @param analysis.name \code{character}. Name of the analysis. If not provided, a default name will be generated.
-#' @param biomart \code{logical}. Should the biomart be used for gene annotation? Defaults to \code{FALSE}.
-#' @param biom.data.set \code{character}. The biomart dataset to be used. Defaults to "hsapiens_gene_ensembl".
-#' @param biom.mart \code{character}. The biomart to be used.
-#' @param host \code{character}. The host to be used for the biomart. Defaults to "www.ensembl.org".
-#' @param biom.filter \code{character}. The biomart filter to be used. Defaults to "ensembl_gene_id".
-#' @param biom.attributes \code{character}. The biomart attributes to be used. Defaults to c("ensembl_gene_id", "hgnc_symbol", "description", "entrezgene_id").
-#' @param biom.force.ensg \code{logical}. Should Ensembl Gene IDs be checked for (and stripped of) ensemble version numbers? Defaults to \code{FALSE}.
-#' @param biom.cache \code{character}. Path name giving the location of the cache \command{getBM()} uses if \code{use.cache=TRUE}. Defaults to the value in the \emph{BIOMART_CACHE} environment variable.
-#' @param use.cache (\code{logical}). Should \command{getBM()} use the cache? Defaults to \code{TRUE} as in the \command{getBM()} function and is passed on to that.
-#' @param rm.dups \code{logical}. Should duplicates be removed from the output of the biomart request? Defaults to \code{FALSE}.
-#' @param p.thr \code{numeric}. Threshold for p-values. Defaults to 0.05.
-#' @param fdr.thr \code{numeric}. Threshold for FDR values. Defaults to 0.05.
-#' @param logfc.thr \code{numeric}. Threshold for fold-change values on the log2-scale. Defaults to 1.
-#' @param numlab \code{numeric}. Maximum number of point labels to be shown in the plot. This overrides/limits
-#'   values calculated by any thresholds. Defaults to 25.
-#' @param point.lab \code{logical}. Should point labels be shown in the plot? Defaults to \code{TRUE}.
-#' @param heatmap.topn \code{numeric}. Number of top values to be plotted. Defaults to 100.
-#' @param hm.p.thr,hm.fdr.thr,hm.logfc.thr \code{numeric}. Significance and fold-change thresholds used
-#'   specifically for selecting genes shown in the heatmaps, kept separate from \option{p.thr},
-#'   \option{fdr.thr} and \option{logfc.thr} (which control the plots and tables) because heatmaps
-#'   usually read best with a stricter gene set. Default to 0.05, 0.05 and 1.
-#' @param heatmap.split.expr \code{logical}. Should the top up- and top down-regulated genes be displayed at equal numbers (50/50),
-#' if they meet the significance threshold (regardless of the actual significance)? Defaults to \code{FALSE}.
-#' @param color.blind.pal string determining the RColorBrewer color blind palette (default = "PuOr");
-#' other option can be visualized with the following command: brewer.pal.info[brewer.pal.info$colorblind,]
-#' @param n.pal.cols desired length of the number of different colours in 'color.blind.pal'. Will also be used
-#' as length of the numeric vector of probabilities in 'quantile_breaks()' (see ?quantile); defaults to 11
-#' @param color.extremes character vector of length 2 giving the two extremes of a user-defined colour palette
-#' varying from the first hue to the second via white.
-#' @param palette.length integer setting the desired length of the colour palette to be used in the heatmap
-#' @param anno.color list of named character vectors giving the colours used in the heatmap annotation bars. See 'annotation_colors'
-#' in [pheatmap()]. Automatically generated if NULL (default).
-#' @param anno.name character string used as the column annotation legend title. If 'anno.color' is not NULL and of length 1 the slot name will be used if existing.
-#' @param min.samp \code{integer}. Number of samples in which a feature needs to be covered by at least one read per million.
-#'   Defaults to the size of the smallest group of replicates. See \emph{details}.
-#' @param strict \code{logical}. For miRNA analysis: only keep a miRNA if there are > 5 reads per million in at least half of the samples?
-#' @param disp \code{character}. The dispersion method to be used. Defaults to "gene".
-#' @param do.voom \code{logical}. Should the voom function be used? Defaults to \code{FALSE}.
-#' @param voom.fun \code{character}. The voom function to be used. Should be one of 'limma::voom', 'limma::voomWithQualityWeights' or
-#' 'edgeR::voomLmFit'. Defaults to \code{edgeR::voomLmFit}. See 'Details'.
-#' @param use_weights \code{logical}. Should sample-specific quality weights be estimated?
-#' @param norm.method \code{character}. The normalisation method to be used. Defaults to "tmm".
-#' @param n \code{integer}. Passed to \code{plotMDS()} (\code{top}): number of top genes used to calculate pairwise distances. Defaults to 500.
-#' @param gene.selection \code{character}. passed to \code{plotMDS()} specifying the mode to select genes for comparisons. Defaults to "common".
-#' @param circle \code{logical}. Draw a correlation circle around points representing correlating samples? Only applies when prcomp was called with scale = TRUE and when var.scale = 1. Defaults to \code{TRUE}.
-#' @param varname.size \code{numeric}. Size of the text for variable names. Defaults to 0.
-#' @param var.axes \code{logical}. Draw arrows for the variables? Defaults to \code{FALSE}.
-#' @param PC \code{numeric}. Which principal components to plot. Defaults to 1:3.
-#' @param type \code{character}. Which type of plot to produce. Needs to be one of "both", "uncorrected", "pseudo-corrected"
-#'   describing which values should be plotted. "uncorrected" will plot the input counts matrix while
-#'   "pseudo-corrected" will plot pseudo counts for blocked designs (e.g., paired samples or batch factors).
-#'   Defaults to "both".
-#' @param plots \code{logical}. Should plots be produced? Defaults to \code{TRUE}.
-#' @param lists \code{logical}. Should lists of differentially expressed genes be produced? Defaults to \code{TRUE}.
-#' @param filtered.lists \code{logical}. Should lists of differentially expressed genes be produced for filtered data? Defaults to \code{TRUE}.
-#'
 #' @details For experimental designs involving comparisons within as well as between subjects inter-subject needs to be computed.
 #'     In this case, the column specified in the 'pairs' argument must assign the subjects to the treatment/tissue/etc groups.
 #'     For example, if we have two treatments the effects of which are to be observed in each two tissues, this design would apply.
@@ -149,12 +162,13 @@
 #'                 samp.info = diffwrap_samp_info,
 #'                 samples = "SampleName", groups = "Group",
 #'                 control = "control", analysis.name = "demo",
-#'                 out.dir = out.dir, do.enrichment = FALSE)
+#'                 out.dir = out.dir, enr.do = FALSE)
 #' names(res$contrasts)
 #' }
 #' @export
 diffExpr <-
-  function(expr.dat,
+  function(## --- core experiment definition ---
+           expr.dat,
            samp.info,
            control,
            design = NULL,
@@ -166,70 +180,130 @@ diffExpr <-
            contrasts = NULL,
            out.dir = NULL,
            analysis.name = NULL,
-           biomart = FALSE,
-           biom.data.set = "hsapiens_gene_ensembl",
-           biom.mart = "ensembl",
-           host = "https://www.ensembl.org",
-           biom.filter = "ensembl_gene_id",
-           biom.attributes = c("ensembl_gene_id", "hgnc_symbol", "description", "entrezgene_id"),
-           biom.force.ensg = FALSE,
-           biom.cache = NULL,
-           use.cache = FALSE,
-           sym.col = "hgnc_symbol",
-           rm.dups = FALSE,
+           ## --- count pre-filtering (filter.*) ---
+           filter.strict = TRUE,
+           filter.min.samp = NULL,
+           ## --- model fitting (fit.*) ---
+           fit.voom = FALSE,
+           fit.voom.fun = "voomLmFit",
+           fit.use.weights = FALSE,
+           fit.norm.method = c("tmm", "quantile"),
+           fit.disp = c("gene", "trend", "common"),
+           fit.bayes.trend = FALSE,
+           fit.bayes.robust = FALSE,
+           fit.quasi.likelihood = NA,
+           ## --- differential-expression thresholds, tables and MA/volcano labels ---
            p.thr = 0.05,
            fdr.thr = 0.05,
            logfc.thr = 1,
            numlab = 25,
            point.lab = TRUE,
-           heatmap.topn = 100,
+           ## --- biomart annotation (biom.*) ---
+           biom.use = FALSE,
+           biom.data.set = "hsapiens_gene_ensembl",
+           biom.mart = "ensembl",
+           biom.host = "https://www.ensembl.org",
+           biom.filter = "ensembl_gene_id",
+           biom.attributes = c("ensembl_gene_id", "hgnc_symbol", "description", "entrezgene_id"),
+           biom.force.ensg = FALSE,
+           biom.cache = NULL,
+           biom.use.cache = FALSE,
+           biom.sym.col = "hgnc_symbol",
+           biom.rm.dups = FALSE,
+           ## --- QC plots: MDS / PCA (qc.*) ---
+           qc.top.n = 500,
+           qc.gene.selection = "common",
+           qc.pc = c(1, 2, 3),
+           qc.type = c("both", "uncorrected", "pseudo-corrected"),
+           qc.ellipse = TRUE,
+           qc.ellipse.groups = NULL,
+           qc.ellipse.legend = NA,
+           qc.label.samples = TRUE,
+           qc.point.size = 2,
+           qc.label.size = 5,
+           qc.circle = TRUE,
+           qc.varname.size = 0,
+           qc.var.axes = FALSE,
+           ## --- heatmaps (hm.*) ---
+           hm.topn = 100,
            hm.p.thr = 0.05,
            hm.fdr.thr = 0.05,
            hm.logfc.thr = 1,
-           heatmap.split.expr = FALSE,
-           color.blind.pal = "PuOr",
-           n.pal.cols = 11,
-           color.extremes = c("#3182BD", "#E6550D"),
-           palette.length = NULL,
-           anno.color = NULL,
-           anno.name = "Sample Class",
-           min.samp = NULL,
-           strict = TRUE,
-           disp = c("gene", "trend", "common"),
-           do.voom = FALSE,
-           voom.fun = "voomLmFit",
-           use_weights = FALSE,
-           norm.method = c("tmm", "quantile"),
-           bayes.trend = FALSE,
-           bayes.robust = FALSE,
-           quasi.likelihood = NA,
-           n = 500,
-           gene.selection = "common",
-           ellipse = TRUE,
-           ellipse.mapping.groups = NULL,
-           label.samples = TRUE,
-           geom.point.size = 2,
-           label.font.size = 5,
-           plot.ellipse.legend = NA,
-           circle = TRUE,
-           varname.size = 0,
-           var.axes = FALSE,
-           PC = c(1, 2, 3),
-           type = c("both", "uncorrected", "pseudo-corrected"),
-           plots = TRUE,
-           lists = TRUE,
-           filtered.lists = TRUE,
-           do.enrichment = TRUE,
-           enrichment.plot = FALSE,
-           enrichment.plot.fdr.thr = fdr.thr,
-           enrichment.plot.logfc.thr = logfc.thr,
-           enrichment.plot.num.terms = 5,
-           enrichment.methods = c("clusterProfilerGO", "clusterProfilerKEGG", "gProfileR", "topGO"),
-           ...,
+           hm.split.expr = FALSE,
+           hm.pal.blind = "PuOr",
+           hm.pal.n = 11,
+           hm.pal.extremes = c("#3182BD", "#E6550D"),
+           hm.pal.length = NULL,
+           hm.anno.color = NULL,
+           hm.anno.name = "Sample Class",
+           ## --- enrichment (enr.*) ---
+           enr.do = TRUE,
+           enr.methods = c("clusterProfilerGO", "clusterProfilerKEGG", "gProfileR", "topGO"),
+           enr.plot = FALSE,
+           enr.plot.fdr.thr = fdr.thr,
+           enr.plot.logfc.thr = logfc.thr,
+           enr.plot.num.terms = 5,
+           ## --- output and run control ---
+           out.plots = TRUE,
+           out.tables = TRUE,
+           out.filtered.tables = TRUE,
            verbose = TRUE,
            log.file = NULL,
-           dry.run=FALSE)
+           dry.run = FALSE,
+           ...)
   {
+    ## ----------------------------------------------------------------------------------------------
+    ## Map the categorised public argument names to the internal names used throughout the body.
+    ## The public interface (above) is grouped by prefix (filter./fit./biom./qc./hm./enr./out.);
+    ## the internal logic keeps its original names, so only this block changes when arguments are
+    ## renamed. Editing anything below this block should use the internal (right-hand) names.
+    ## ----------------------------------------------------------------------------------------------
+    strict                    <- filter.strict
+    min.samp                  <- filter.min.samp
+    do.voom                   <- fit.voom
+    voom.fun                  <- fit.voom.fun
+    use_weights               <- fit.use.weights
+    norm.method               <- fit.norm.method
+    disp                      <- fit.disp
+    bayes.trend               <- fit.bayes.trend
+    bayes.robust              <- fit.bayes.robust
+    quasi.likelihood          <- fit.quasi.likelihood
+    biomart                   <- biom.use
+    host                      <- biom.host
+    use.cache                 <- biom.use.cache
+    sym.col                   <- biom.sym.col
+    rm.dups                   <- biom.rm.dups
+    n                         <- qc.top.n
+    gene.selection            <- qc.gene.selection
+    PC                        <- qc.pc
+    type                      <- qc.type
+    ellipse                   <- qc.ellipse
+    ellipse.mapping.groups    <- qc.ellipse.groups
+    plot.ellipse.legend       <- qc.ellipse.legend
+    label.samples             <- qc.label.samples
+    geom.point.size           <- qc.point.size
+    label.font.size           <- qc.label.size
+    circle                    <- qc.circle
+    varname.size              <- qc.varname.size
+    var.axes                  <- qc.var.axes
+    heatmap.topn              <- hm.topn
+    heatmap.split.expr        <- hm.split.expr
+    color.blind.pal           <- hm.pal.blind
+    n.pal.cols                <- hm.pal.n
+    color.extremes            <- hm.pal.extremes
+    palette.length            <- hm.pal.length
+    anno.color                <- hm.anno.color
+    anno.name                 <- hm.anno.name
+    do.enrichment             <- enr.do
+    enrichment.methods        <- enr.methods
+    enrichment.plot           <- enr.plot
+    enrichment.plot.fdr.thr   <- enr.plot.fdr.thr
+    enrichment.plot.logfc.thr <- enr.plot.logfc.thr
+    enrichment.plot.num.terms <- enr.plot.num.terms
+    plots                     <- out.plots
+    lists                     <- out.tables
+    filtered.lists            <- out.filtered.tables
+
     ## start logging
     ## the log file itself is opened further below, once 'out.dir' is known; until then
     ## log lines are buffered in memory so that nothing from the startup checks is lost
@@ -243,14 +317,14 @@ diffExpr <-
     if (do.enrichment && biom.data.set == "hsapiens_gene_ensembl" && !requireNamespace("org.Hs.eg.db", quietly = TRUE)) {
       stop(
         paste("Package", sQuote("org.Hs.eg.db"), "must be installed to perform enrichment analysis.
-              Please set 'do.enrichment' to FALSE to disable it but still run the rest of the pipeline."),
+              Please set 'enr.do' to FALSE to disable it but still run the rest of the pipeline."),
         call. = FALSE
       )
     }
     if (do.enrichment && biom.data.set == "mmusculus_gene_ensembl" && !requireNamespace("org.Mm.eg.db", quietly = TRUE)) {
       stop(
         paste("Package", sQuote("org.Mm.eg.db"), "must be installed to perform enrichment analysis.
-              Please set 'do.enrichment' to FALSE to disable it but still run the rest of the pipeline."),
+              Please set 'enr.do' to FALSE to disable it but still run the rest of the pipeline."),
         call. = FALSE
       )
     }
@@ -258,7 +332,7 @@ diffExpr <-
     # whole analysis, when 'species' would resolve to NULL inside runEnrichmentAnalyses()
     if (do.enrichment && !biom.data.set %in% c("hsapiens_gene_ensembl", "mmusculus_gene_ensembl")) {
       stop("Enrichment analysis currently supports only 'hsapiens_gene_ensembl' or ",
-           "'mmusculus_gene_ensembl' (via 'biom.data.set'). Set 'do.enrichment = FALSE' ",
+           "'mmusculus_gene_ensembl' (via 'biom.data.set'). Set 'enr.do = FALSE' ",
            "to run the rest of the pipeline for other datasets.", call. = FALSE)
     }
     # The enrichment engines live in 'Suggests'. If enrichment is requested, check up front
@@ -275,7 +349,7 @@ diffExpr <-
       if (length(enr.miss)) {
         stop("Package(s) ", paste(sQuote(enr.miss), collapse = ", "),
              " must be installed to perform enrichment analysis.\n",
-             "  Please install them, or set 'do.enrichment = FALSE' to run the rest of the pipeline.",
+             "  Please install them, or set 'enr.do = FALSE' to run the rest of the pipeline.",
              call. = FALSE)
       }
     }
@@ -332,7 +406,7 @@ diffExpr <-
     #kegg pathway enrichments needs entrez-IDs while other approaches are fine with ensemble IDs
     if (do.enrichment & kegg.enrichment.will.be.performed) {
       if (!biomart) {
-        stop("Cannot run KEGG-pathway enrichment without entrez IDs. Set biomart to TRUE or remove KEGG enrichment approach from enrichment.methods")
+        stop("Cannot run KEGG-pathway enrichment without entrez IDs. Set 'biom.use' to TRUE or remove KEGG enrichment approach from 'enr.methods'")
       }
     }
     if (kegg.enrichment.will.be.performed) {
@@ -519,7 +593,7 @@ diffExpr <-
                                           contrasts = contrasts)
 
     ## set dispersion method
-    disp <- match.arg(disp)
+    disp <- match.arg(disp, c("gene", "trend", "common"))
     disp <- switch(disp, gene="tagwise.dispersion", trend="trended.dispersion", common="bin.dispersion")
 
     ## extract 'pairs' factor from 'samp.info' and keep column name in 'pairs_col' variable
@@ -532,7 +606,7 @@ diffExpr <-
     ## voom
     if (do.voom) {
       dw_log("Running 'voom'...\n")
-      norm.method <- match.arg(norm.method)
+      norm.method <- match.arg(norm.method, c("tmm", "quantile"))
       dw_log("  Running", sQuote(voom.fun), "with", norm.method, "normalisation...\n")
       ## compute linear model fit and optionally apply voom beforehand
       #### NOTE: voom generates log2-cpms
@@ -575,7 +649,7 @@ diffExpr <-
       normcnt <- edgeR::cpm(fit.l$d2, normalized.lib.sizes=TRUE, log=TRUE, prior.count=3)
     }
 
-    type <- match.arg(type)
+    type <- match.arg(type, c("both", "uncorrected", "pseudo-corrected"))
     if (type=="both") {
       dw_log("Plotting both uncorrected and pseudo-corrected if applicable...\n")
     }

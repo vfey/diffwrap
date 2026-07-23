@@ -358,7 +358,7 @@ format_ensembl_ids_annotated_to_term <- function(result, species, which.split = 
 #' dir.create(out.dir, showWarnings = FALSE)
 #' res <- diffExpr(diffwrap_counts, diffwrap_samp_info, samples = "SampleName",
 #'                 groups = "Group", control = "control", analysis.name = "demo",
-#'                 out.dir = out.dir, do.enrichment = FALSE)
+#'                 out.dir = out.dir, enr.do = FALSE)
 #' runEnrichmentAnalyses(res, analysis.name = "demo", out.dir = out.dir,
 #'                       species = "human", enrichment.methods = "clusterProfilerGO")
 #' }

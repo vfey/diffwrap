@@ -31,6 +31,9 @@ diff_expr_extract_contrasts(
   numlab = 25,
   point.lab = TRUE,
   heatmap.topn = 100,
+  hm.p.thr = 0.05,
+  hm.fdr.thr = 0.05,
+  hm.logfc.thr = 1,
   heatmap.split.expr = FALSE,
   color.blind.pal = "PuOr",
   n.pal.cols = 11,
@@ -106,6 +109,11 @@ likelihood ratio test is used. Olease note the main wrapper function \code{diffE
 \item{point.lab}{\code{logical}. Should points be labelled, at all?}
 
 \item{heatmap.topn}{\code{numeric}. Number of top values to be plotted. Defaults to 100.}
+
+\item{hm.p.thr, hm.fdr.thr, hm.logfc.thr}{\code{numeric}. Significance and fold-change thresholds used
+specifically when selecting genes for the heatmaps. These are kept separate from the plot/table
+thresholds (\option{p.thr}, \option{fdr.thr}, \option{logfc.thr}) because heatmaps usually read best
+with a stricter gene set. Default to 0.05, 0.05 and 1.}
 
 \item{heatmap.split.expr}{\code{logical}. Should the top up- and top down-regulated genes be displayed at equal numbers (50/50),
 if they meet the significance threshold (regardless of the actual significance)? Defaults to \code{FALSE}.}

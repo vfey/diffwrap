@@ -9,8 +9,7 @@ diff_expr_make_contrasts(
   groups,
   pairs = NULL,
   block = FALSE,
-  contrasts = NULL,
-  user_design = FALSE
+  contrasts = NULL
 )
 }
 \arguments{
@@ -24,9 +23,6 @@ diff_expr_make_contrasts(
 
 \item{contrasts}{Character vector specifying group name pairs to be compared in the format expected by
 \code{makeContrasts()}, i.e., "group2-group1".}
-
-\item{user_design}{\code{logical}. Currently unused and reserved for future use; kept only for
-backward compatibility and scheduled for removal in a future version. Defaults to \code{FALSE}.}
 }
 \value{
 A contrast \code{matrix} as produced by \code{\link[limma]{makeContrasts}}, or \code{NULL}

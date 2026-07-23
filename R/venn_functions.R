@@ -31,7 +31,9 @@ utils::globalVariables("counts")
 #' names(v)
 #' }
 #' @export
-diffr_venn <- function(list.comp.tables, join.vec, .log = FALSE) {
+diffr_venn <- function(list.comp.tables,
+                       join.vec = c("ensembl_gene_id", "gene_symbol", "description", "entrezgene_id"),
+                       .log = FALSE) {
 
   # test if logging packages are installed
   if (.log && !requireNamespace("futile.logger", quietly = TRUE)) {

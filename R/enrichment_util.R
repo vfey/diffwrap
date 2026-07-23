@@ -104,8 +104,8 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
   dw_log("         Term descriptions used in nodes: ", termColumn, "\n", "\n")
   dw_log("         Filtering the the genes (fdr < ", fdr.thr, "and abs. logFC >=", logfc.thr, ") and", "by the existence of symbolic names...\n")
 
-  # Take only n enriched terms
-  enrichment.table <- enrichment.table[1:show.terms,]
+  # Take only n enriched terms (never more than are available, to avoid NA rows)
+  enrichment.table <- enrichment.table[seq_len(min(show.terms, nrow(enrichment.table))), , drop = FALSE]
   # Remove rows without HGNC symbol from DE table
   DE.table <- DE.table[!DE.table[[geneSymbolColumn]] == "",]
   DE.table <- DE.table[!is.na(DE.table[[geneSymbolColumn]]),]
@@ -290,9 +290,18 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
 #'   the corresponding gene symbols.
 format_ensembl_ids_annotated_to_term <- function(result, species, which.split = ",")
 {
-  gene.col <- colnames(result)[grepl("ENSG", result)]
+  # locate the column holding Ensembl gene IDs; works for human (ENSG...), mouse (ENSMUSG...)
+  # and other species, unlike a bare grep for the literal "ENSG"
+  is.ens <- vapply(result,
+                   function(col) any(grepl("ENS[A-Z]*G[0-9]", as.character(col))),
+                   logical(1))
+  gene.col <- colnames(result)[is.ens]
+  if (length(gene.col) != 1L) {
+    stop("Could not unambiguously identify the Ensembl gene ID column in the enrichment result ",
+         "(found ", length(gene.col), " candidate column(s)).", call. = FALSE)
+  }
 
-  for (i in 1:length(result[[gene.col]])) {
+  for (i in seq_along(result[[gene.col]])) {
     genes <- unlist(strsplit(result[[gene.col]][i], split = which.split))
     #print(head(genes))
     syms <- convertid::convertId2(genes, species)
@@ -443,9 +452,9 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
 
   background.genes <- ""
   if (use.background.from.diffr.output) {
-    # background.genes <- rownames(dat) ## THIS should be used after filtering is corrected. Until that, two extra elements need to be skipped:
+    # drop the htseq-/STAR-style summary rows if present (keep everything that is NEITHER)
     background.genes <-
-      rownames(dat)[rownames(dat) != "N_multimapping" | rownames(dat) != "N_noFeature"]
+      rownames(dat)[!(rownames(dat) %in% c("N_multimapping", "N_noFeature"))]
     dw_log("The genes of full expression table (", length(background.genes), ") is used as the background (expect in GSEA-analyses, where no background is used)... \n")
   }
 
@@ -569,7 +578,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
 
         if (length(entrez.col) == 0) {
           dw_log("      No entrez IDs found  from the data. skipping KEGG-enrichment...\n")
-          break
+          next   # skip only KEGG for this contrast, not the remaining enrichment methods
         }
 
         background.gene.entrez <- ""

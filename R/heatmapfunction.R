@@ -498,7 +498,7 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
       anno.correl = as.data.frame(anno.correl)
       colnames(anno.correl)[1] = "Correlation"
       anno.correl$Correlation = as.factor(anno.correl$Correlation)
-      anno.correl = reorderFactors(anno.correl,"Correlation", c("-1<r<=-0.75","-0.75<r<=-0.5","-0.5<r<=-0.25","-0.25<r<=0", "0<r<=0.25","0.25<r<=0.5","0.5<r<=0.75"))
+      anno.correl = reorderFactors(anno.correl,"Correlation", c("-1<r<=-0.75","-0.75<r<=-0.5","-0.5<r<=-0.25","-0.25<r<=0", "0<r<=0.25","0.25<r<=0.5","0.5<r<=0.75","0.75<r<=1"))
 
 
       #build the heatmap with biserial correlation annotation

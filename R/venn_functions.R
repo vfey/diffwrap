@@ -23,6 +23,13 @@ utils::globalVariables("counts")
 #'
 #' @author Bogdan Iancu - Genevia Technologies Oy
 #' @return A list containing the Venn diagram grid object and the intersected (or joined) input tables.
+#' @examples
+#' \donttest{
+#' mk <- function(sig) data.frame(gene_symbol = paste0("G", sig), fdr = 0.01)
+#' tabs <- list(A = mk(1:20), B = mk(10:30))
+#' v <- diffr_venn(tabs, join.vec = "gene_symbol")
+#' names(v)
+#' }
 #' @export
 diffr_venn <- function(list.comp.tables, join.vec, .log = FALSE) {
 

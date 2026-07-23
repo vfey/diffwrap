@@ -34,6 +34,15 @@
 #'   of \code{clusterProfiler::gseGO()}/\code{gseKEGG()}, which controls that package's own internal seeding.
 #' @return A table listing statistically significant enrichment results according to threshold set in pvalueCutoff
 #'         The table is also saved in xlsx format with user-specified name.
+#' @examples
+#' \dontrun{
+#' # enrichKEGG downloads pathway data from the KEGG web service (needs network)
+#' if (requireNamespace("org.Hs.eg.db", quietly = TRUE)) {
+#'   # KEGG works on Entrez identifiers
+#'   run_clusterProfiler_KEGG(input_genes = c("7157", "672", "675"),
+#'                            organism = "hsa", id_type = "kegg")
+#' }
+#' }
 #' @export
 
 
@@ -50,6 +59,14 @@ run_clusterProfiler_KEGG <- function(input_genes,
                                      pAdjustMethod = "BH",
                                      rng.seed = NULL) {
 
+  if (!requireNamespace("clusterProfiler", quietly = TRUE)) {
+    stop("Package ", sQuote("clusterProfiler"),
+         " must be installed to run KEGG enrichment.", call. = FALSE)
+  }
+
+  ## An empty 'background_genes' means "use the default universe" (all annotated genes).
+  ## clusterProfiler expects NULL for that, not "" which would be an empty universe.
+  if (is.null(background_genes) || !any(nzchar(background_genes))) background_genes <- NULL
 
   if (ordered_query) {
     dw_log("Running gene set enrichment analysis...", "\n")
@@ -66,6 +83,9 @@ run_clusterProfiler_KEGG <- function(input_genes,
     if (is(GSE.results, "try-error")) {
       dw_log(" ~~ NOTE: KEGG GSE analysis failed ~~\n")
       return(NULL)
+    }
+    if (is.null(GSE.results) || nrow(as.data.frame(GSE.results)) < 1) {
+      return("No enrichments found")
     }
 
     GSE.results.df <- data.frame(GSE.results)
@@ -99,6 +119,9 @@ run_clusterProfiler_KEGG <- function(input_genes,
     if (is(ORA.results, "try-error")) {
       dw_log(" ~~ NOTE: KEGG ORA failed ~~\n")
       return(NULL)
+    }
+    if (is.null(ORA.results) || nrow(as.data.frame(ORA.results)) < 1) {
+      return("No enrichments found")
     }
 
     ORA.results.df <- data.frame(ORA.results)

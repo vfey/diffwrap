@@ -356,6 +356,10 @@ diff_expr_3d_scatterplot <-
       stop("Package ", sQuote("scatterplot3d"),
            " must be installed to draw the 3D PCA scatterplot.", call. = FALSE)
     }
+    if (ncol(PCA$x) < max(PC[1:3])) {
+      dw_log("    # NOTE: fewer than 3 principal components available; skipping 3D scatterplot.\n")
+      return(invisible(NULL))
+    }
     dw_log("    Preparing data...", "\n")
     if (is.null(samp.name)) {
       samp.n <- rownames(PCA$x)

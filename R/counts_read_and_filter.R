@@ -1,9 +1,7 @@
-# Functions to rad and filter counts
+# Functions to read and filter counts
 #
 # Author: vidal
 ###############################################################################
-
-utils::globalVariables("expression.raw")
 
 #' Function to read counts as produced by htseq-count
 #' @param expr.dat \code{character} or \code{list}. String or vector or list of input file paths, or matrix of count values.
@@ -59,8 +57,8 @@ diff_expr_read_counts <-
         # reading output from CAP-miRSEQ summary script
         dw_log("Reading output from CAP-miRSEQ summary script...\n")
         counts <- read.table(expr.dat, sep="\t", header=TRUE, stringsAsFactors=FALSE)
-        # assign unique mature_precursor id to each row
-        row.names(counts) <- expression.raw$Mature.miRNA
+        # assign the mature miRNA id to each row
+        row.names(counts) <- counts$Mature.miRNA
         # extract samples used in this comparison
         samples <- make.names(samp.info$SampleNames)
         counts <- counts[, samples]

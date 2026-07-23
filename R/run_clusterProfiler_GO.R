@@ -37,6 +37,14 @@
 #'   of \code{clusterProfiler::gseGO()}/\code{gseKEGG()}, which controls that package's own internal seeding.
 #' @return A table listing statistically significant enrichment results according to threshold set in pvalueCutoff
 #'        The table is also saved in xlsx format with user-specified name.
+#' @examples
+#' \donttest{
+#' if (requireNamespace("org.Hs.eg.db", quietly = TRUE)) {
+#'   genes <- c("ENSG00000141510", "ENSG00000012048", "ENSG00000139618")
+#'   run_clusterProfiler_GO(input_genes = genes, ontology = "BP",
+#'                          OrgDb = "org.Hs.eg.db", id_type = "ENSEMBL")
+#' }
+#' }
 #' @export
 
 
@@ -56,13 +64,21 @@ run_clusterProfiler_GO <- function(input_genes,
                                    similarity_filtering = FALSE,
                                    rng.seed = NULL) {
 
-  # test if data packages are installed
+  # test if needed packages are installed
+  if (!requireNamespace("clusterProfiler", quietly = TRUE)) {
+    stop("Package ", sQuote("clusterProfiler"),
+         " must be installed to run GO enrichment.", call. = FALSE)
+  }
   if (!requireNamespace(OrgDb, quietly = TRUE)) {
     stop(
       paste("Package", sQuote(OrgDb), "must be installed to use this function."),
       call. = FALSE
     )
   }
+
+  ## An empty 'background_genes' means "use the default universe" (all annotated genes).
+  ## clusterProfiler expects NULL for that, not "" which would be an empty universe.
+  if (is.null(background_genes) || !any(nzchar(background_genes))) background_genes <- NULL
 
   if (ordered_query) {
     dw_log("Running gene set enrichment analysis...", "\n")
@@ -78,7 +94,8 @@ run_clusterProfiler_GO <- function(input_genes,
                                           pAdjustMethod = "BH",
                                           seed = TRUE)
 
-    if (dim(GSE.results)[1] >= 1) {
+    # gseGO() returns NULL when no gene sets qualify; guard against dim(NULL)
+    if (!is.null(GSE.results) && nrow(as.data.frame(GSE.results)) >= 1) {
 
       GSE.results.df <- data.frame(GSE.results)
       GSE.results.df$Count <- sapply(GSE.results.df$core_enrichment, function(x) length(unlist(strsplit(x, split = "/"))))
@@ -116,7 +133,8 @@ run_clusterProfiler_GO <- function(input_genes,
                                             minGSSize = min_set_size,
                                             maxGSSize = max_set_size,
                                             readable = TRUE)
-    if (dim(ORA.results)[1] >= 1) {
+    # enrichGO() returns NULL when nothing maps / no gene sets qualify; guard against dim(NULL)
+    if (!is.null(ORA.results) && nrow(as.data.frame(ORA.results)) >= 1) {
 
       if (similarity_filtering) {
         dw_log("Simplifying results...", "\n")

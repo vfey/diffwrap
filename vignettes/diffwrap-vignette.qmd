@@ -127,22 +127,22 @@ head(counts[, 1:4])
 ::: {style="text-align: justify;"}
 Three arguments together determine how an analysis is carried out: `pairs`, `block` and `do.voom`. Rather than acting independently, they resolve into one of a small number of well-defined modes. The distinction that matters most is **how the `pairs` column enters the model**:
 
--   **not used at all** --- a simple means model `~0 + groups`, with contrasts formed explicitly by `makeContrasts()`.
--   **as a fixed effect** (`pairs` given, `block = FALSE`) --- an additive model `~pairs + groups` with an intercept. Group coefficients are then already expressed relative to the control group and are extracted directly by coefficient name.
--   **as a correlation block** (`block = TRUE`) --- the means model again, but with the subject effect modelled through `limma::duplicateCorrelation()`.
+- **not used at all** --- a simple means model `~0 + groups`, with contrasts formed explicitly by `makeContrasts()`.
+- **as a fixed effect** (`pairs` given, `block = FALSE`) --- an additive model `~pairs + groups` with an intercept. Group coefficients are then already expressed relative to the control group and are extracted directly by coefficient name.
+- **as a correlation block** (`block = TRUE`) --- the means model again, but with the subject effect modelled through `limma::duplicateCorrelation()`.
 
 The second axis is simply which engine performs the test: **edgeR**'s generalised linear models, or **limma** after a `voom` transformation, selected with `do.voom`.
 
 These two axes give five valid combinations. The only constraint is that a blocked design forces the **limma** engine, because **edgeR** has no equivalent of `duplicateCorrelation()`; if `block = TRUE` is combined with `do.voom = FALSE`, `voom` is enabled automatically and the reason is written to the log.
 :::
 
-| `pairs` | `block` | `do.voom` | Design | Engine | Role of `pairs` |
-|---------|---------|-----------|--------|--------|-----------------|
-| --- | `FALSE` | `FALSE` | `~0 + groups` | edgeR GLM | --- |
-| --- | `FALSE` | `TRUE` | `~0 + groups` | limma/voom | --- |
-| given | `FALSE` | `FALSE` | `~pairs + groups` | edgeR GLM | fixed effect |
-| given | `FALSE` | `TRUE` | `~pairs + groups` | limma/voom | fixed effect |
-| given | `TRUE` | forced `TRUE` | `~0 + groups` | limma/voom | correlation block |
+| `pairs` | `block` | `do.voom`     | Design            | Engine     | Role of `pairs`   |
+|---------|---------|---------------|-------------------|------------|-------------------|
+| ---     | `FALSE` | `FALSE`       | `~0 + groups`     | edgeR GLM  | ---               |
+| ---     | `FALSE` | `TRUE`        | `~0 + groups`     | limma/voom | ---               |
+| given   | `FALSE` | `FALSE`       | `~pairs + groups` | edgeR GLM  | fixed effect      |
+| given   | `FALSE` | `TRUE`        | `~pairs + groups` | limma/voom | fixed effect      |
+| given   | `TRUE`  | forced `TRUE` | `~0 + groups`     | limma/voom | correlation block |
 
 ## Running the whole pipeline
 
@@ -253,9 +253,9 @@ cat("Of the 50 top-ranked genes,", n_true, "are truly differentially expressed\n
 ::: {style="text-align: justify;"}
 A pipeline of this size produces a lot of progress information. Rather than writing it all to the console, `diffExpr()` always writes a complete log file to `out.dir` and prints only the major steps to the console. The console channel uses `message()`, so it can be silenced in the usual R ways.
 
--   `verbose = TRUE` (default) --- major workflow steps on the console, full detail in the log file.
--   `verbose = FALSE` --- nothing on the console; the log file is still written in full.
--   `verbose = "all"` --- mirror the complete log to the console as well, which is handy while debugging.
+- `verbose = TRUE` (default) --- major workflow steps on the console, full detail in the log file.
+- `verbose = FALSE` --- nothing on the console; the log file is still written in full.
+- `verbose = "all"` --- mirror the complete log to the console as well, which is handy while debugging.
 
 `suppressMessages()` works too. The log file is named after the analysis and is written next to the results; pass `log.file` to put it somewhere else.
 :::

@@ -288,7 +288,6 @@ For experimental designs involving comparisons within as well as between subject
     technical replicates, i.e., if the samples are not independent, in other words, correlated. That correlation is addressed by
     means of the 'duplicateCorrelation()' function in the limma package.
     If 'block' is set to \code{TRUE}, the (selected) 'voom' function is enforced.
-    The (selected) 'voom' function is also enforced if paired samples are detected.
     As of version 0.4, the 'edgeR::voomLmFit()' function is incorporated, which replaces 'voom()', 'lmFit()' and
     'voomWithQualityWeights()'. voomLmFit()' ensures unbiased estimation of the residual variances and automates the estimation
     of sample weights and intrablock correlations.

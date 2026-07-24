@@ -132,7 +132,6 @@
 #'     technical replicates, i.e., if the samples are not independent, in other words, correlated. That correlation is addressed by
 #'     means of the 'duplicateCorrelation()' function in the limma package.
 #'     If 'block' is set to \code{TRUE}, the (selected) 'voom' function is enforced.
-#'     The (selected) 'voom' function is also enforced if paired samples are detected.
 #'     As of version 0.4, the 'edgeR::voomLmFit()' function is incorporated, which replaces 'voom()', 'lmFit()' and
 #'     'voomWithQualityWeights()'. voomLmFit()' ensures unbiased estimation of the residual variances and automates the estimation
 #'     of sample weights and intrablock correlations.
@@ -457,22 +456,19 @@ diffExpr <-
     }
     dw_log("  Saving output to", out.dir, "\n")
 
-    if (block) {
-      do.voom <- TRUE
-      dw_log("*** Using 'blocked' design (i.e., samples are measured _in blocks_). Enforcing 'voom'! ***\n")
-    }
+    ## Resolve the analysis mode once, up front. This is the ONLY place where the
+    ## (pairs, block, do.voom) flags are interpreted and validated; everything
+    ## downstream follows the resolved spec. 'pairs' here is still the column name
+    ## (or NULL), i.e. before it is turned into a factor, as the resolver expects.
+    mode <- dw_resolve_mode(pairs = pairs, block = block, do.voom = do.voom)
+    do.voom <- mode$do.voom                                # honour block -> voom enforcement
+    dw_step(paste(format(mode), collapse = "\n"), "\n")    # log role/engine/design/contrasts/notes
 
     ## switch off plotting device on exit in case a plot fails
     ## the resulting file will be empty but not broken
     ## NOTE: 'add=TRUE' is essential here, otherwise this would replace the logging exit handler
     on.exit({plyr::l_ply(dev.list(), dev.off)}, add = TRUE)
 
-    ## enforce voom for paired samples
-    #	if (!is.null(pairs)) {
-    #		cat("Samples are paired! Enforcing 'voom'\n")
-    #		do.voom <- TRUE
-    #	}
-    #
     ## standardize samp.info
     ### needs to be a data.frame with (at least) two columns: 'SampleNames' and 'Groups'
     ### if a data.frame is provided by the 'samp.info' argument the columns are renamed to meet that convention
@@ -630,7 +626,7 @@ diffExpr <-
       if (!block && !is.null(pairs)) {
         dw_log("    Paired samples: additional eBayes on first fit object...\n")
         fit3 <- limma::eBayes(fit = fit.l$fit, trend = bayes.trend, robust = bayes.robust)
-        out.l$fit3 <- fit.l$fit3
+        out.l$fit3 <- fit3
       }
       normcnt <- fit.l$v$E
     } else {

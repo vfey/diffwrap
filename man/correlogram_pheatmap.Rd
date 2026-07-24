@@ -35,12 +35,12 @@ the row direction or the column direction, or none (values %in%
 \item{row.clust}{boolean values determining if rows should be clustered}
 
 \item{col.clust}{boolean values determining if cols should be clustered
-and corresponding heatmap outputed, assuming clinical.mat is provided
+and corresponding heatmap output, assuming clinical.mat is provided
 the colors of the heatmap, otherwise min-max breaks are used by default}
 
 \item{signif.stars.fl}{boolean determining whether significance stars of p-values are shown in the correlogram (default = FALSE)}
 
-\item{cell.size}{double determining the widh and height of the cell and the row/col font size (default = 8)}
+\item{cell.size}{double determining the width and height of the cell and the row/col font size (default = 8)}
 
 \item{font.size}{double determining the font size (default = 10)}
 

@@ -40,7 +40,7 @@ corresponding statistical tests.}
 
 \item{rm.dups}{\code{logical}. Should duplicated input IDs (\option{biom.filter}) be removed from the result?}
 
-\item{force.ensg}{\code{logical}. Should Ensembl Gene IDs be checked for (and stripped of) ensemble version numbers? Defaults to \code{FALSE}.}
+\item{force.ensg}{\code{logical}. Should Ensembl Gene IDs be checked for (and stripped of) Ensembl version numbers? Defaults to \code{FALSE}.}
 }
 \value{
 A \code{data.frame}: the input table \option{d3} merged with the annotation retrieved from

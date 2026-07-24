@@ -42,7 +42,7 @@ A named \code{list} of \code{ggplot} objects with the elements \code{FDR} and \c
   called with an open plotting device.
 }
 \description{
-`diff_expr_volcano_plot` generates two Volcano plots highlighing genes that are differentially expressed beyond custom thresholds for siginificance (set by parameters `p.thr` and fdr.thr`) and differential expression level (set by parameter `logfc.thr`).
+`diff_expr_volcano_plot` generates two Volcano plots highlighting genes that are differentially expressed beyond custom thresholds for significance (set by parameters `p.thr` and fdr.thr`) and differential expression level (set by parameter `logfc.thr`).
 }
 \examples{
 \donttest{

@@ -12,7 +12,7 @@
 
 #' Runs clusterProfiler KEGG enrichment function for a DEG list or for a ranked gene list.
 #' @param input_genes A character vector of Entrez gene IDs (ORA) or a named,
-#'                    ordered vector of fold changes of of ALL genes with Entrez IDs as names (GSEA).
+#'                    ordered vector of fold changes of ALL genes with Entrez IDs as names (GSEA).
 #' @param background_genes A character vector of background gene IDs. If not specified, by default uses all human genes
 #'                         annotated to term domain.
 #' @param file_name A character string used as a file name.
@@ -21,7 +21,7 @@
 #' @param id_type By default uses "kegg", which is Entrez ID for eukaryotes and Locus ID for prokaryotes. Other options:
 #'                'ncbi-geneid’, ‘ncbi-proteinid’ or ‘uniprot’.
 #' @param pvalueCutoff Adjusted p-value cut-off.
-#' @param min_set_size Minimun size of the functional category, uses 10 by default.
+#' @param min_set_size Minimum size of the functional category, uses 10 by default.
 #' @param max_set_size Maximum size of the functional category, uses 1000 by default.
 #' @param min_overlap Minimum size of the overlap (intersection) between query and functional category,
 #'                    smaller intersections are excluded. By default uses 2.
@@ -90,7 +90,7 @@ run_clusterProfiler_KEGG <- function(input_genes,
 
     GSE.results.df <- data.frame(GSE.results)
     GSE.results.df$Count <- sapply(GSE.results.df$core_enrichment, function(x) length(unlist(strsplit(x, split = "/"))))
-    # Filter by minimun overlap and extract only interesting columns
+    # Filter by minimum overlap and extract only interesting columns
     GSE.results.df <- GSE.results.df[GSE.results.df$Count >= min_overlap, c(1:3,5:7,11:12)]
     colnames(GSE.results.df) <- c("Term ID", "Term description", "Gene Set Size", "Normalized Enrichment Score", "P-Value",
                                   "Adjusted P-Value", "DEGs Contributing to Enrichment", "No of DEGs Contributing to Enrichment")
@@ -125,7 +125,7 @@ run_clusterProfiler_KEGG <- function(input_genes,
     }
 
     ORA.results.df <- data.frame(ORA.results)
-    # Filter by minimun overlap and extract only interesting columns
+    # Filter by minimum overlap and extract only interesting columns
     sel.cols <- c("ID", "Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "geneID", "Count")
     names(sel.cols) <- c("Term ID", "Term description", "Gene Ratio", "Background Ratio", "P-Value",
                          "Adjusted P-Value", "DEGs Annotated to Term", "No of DEGs Annotated to Term")

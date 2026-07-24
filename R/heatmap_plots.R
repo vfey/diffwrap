@@ -4,7 +4,7 @@
   # Author: Bogdan Iancu - Genevia Technologies Oy
   #
   # Arguments:
-  #         d3 = differentia expression matrix in  (genes, samples) format
+  #         d3 = differential expression matrix in  (genes, samples) format
   #
 
   # Output: list of pheatmap objects that should be preferably handled with lapply

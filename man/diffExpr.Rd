@@ -102,7 +102,7 @@ vector of groups.}
 
 \item{pairs}{\code{character}. Name of the column in 'samp.info' containing paired sample information.}
 
-\item{block}{\code{logical}. Are the the samples not independent? See Details section.}
+\item{block}{\code{logical}. Are the samples not independent? See Details section.}
 
 \item{contrasts}{\code{character}. Vector of contrasts to be made. If not provided, all possible contrasts will be made.
 This specifies group name pairs to be compared in the format expected by \code{makeContrasts()}, i.e., "group2-group1".}
@@ -162,7 +162,7 @@ values calculated by any thresholds. Defaults to 25.}
 
 \item{biom.attributes}{\code{character}. The biomart attributes to be used. Defaults to c("ensembl_gene_id", "hgnc_symbol", "description", "entrezgene_id").}
 
-\item{biom.force.ensg}{\code{logical}. Should Ensembl Gene IDs be checked for (and stripped of) ensemble version numbers? Defaults to \code{FALSE}.}
+\item{biom.force.ensg}{\code{logical}. Should Ensembl Gene IDs be checked for (and stripped of) Ensembl version numbers? Defaults to \code{FALSE}.}
 
 \item{biom.cache}{\code{character}. Path name giving the location of the cache \command{getBM()} uses if \code{use.cache=TRUE}. Defaults to the value in the \emph{BIOMART_CACHE} environment variable.}
 
@@ -188,7 +188,7 @@ Defaults to "both".}
 \item{qc.ellipse.groups}{\code{character} The name of the column in 'samp.info' with group names for ellipse drawing. If \code{NULL} (default)
 will use the \code{groups} column. If 'samp.info' is not supplied vector of groups.}
 
-\item{qc.ellipse.legend}{\code{logical}. Should a legend be addded for ellipses in PCA plots? NA, the default, includes
+\item{qc.ellipse.legend}{\code{logical}. Should a legend be added for ellipses in PCA plots? NA, the default, includes
 if any aesthetics are mapped. FALSE never includes, and TRUE always includes. It can also be a named logical vector to finely select
 the aesthetics to display.}
 
@@ -274,7 +274,7 @@ A list of all relevant objects generated in the course of the workflow:
 However, the function is first and foremost called for its side effects of generating results tables and plots.
 }
 \description{
-\command{diffExpr} is a conveniency wrapper performing all steps automatically.
+\command{diffExpr} is a convenience wrapper performing all steps automatically.
    Most sub-functions are exported and can be called by the user, as well, if desired.
    These functions may be applicable to different kinds of data/input, rely, however,
    on the conventions set for this package.

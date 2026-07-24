@@ -2,7 +2,7 @@
 % Please edit documentation in R/qc_plots.R
 \name{diff_expr_ggplot_mds}
 \alias{diff_expr_ggplot_mds}
-\title{Function to generate a MDS plot usig `ggplot2`}
+\title{Function to generate a MDS plot using `ggplot2`}
 \usage{
 diff_expr_ggplot_mds(
   counts,
@@ -39,7 +39,7 @@ diff_expr_ggplot_mds(
 A \code{ggplot} object containing the multidimensional scaling plot.
 }
 \description{
-Function to generate a MDS plot usig `ggplot2`
+Function to generate a MDS plot using `ggplot2`
 }
 \examples{
 si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")

@@ -169,10 +169,10 @@ make_pheatmap_anno_color = function(clinical.mat) {
 #' @param legend.fl logical to determine if legend should be drawn or not (default = TRUE)
 #' @param row.clust boolean values determining if rows should be clustered
 #' @param col.clust boolean values determining if cols should be clustered
-#' and corresponding heatmap outputed, assuming clinical.mat is provided
+#' and corresponding heatmap output, assuming clinical.mat is provided
 #' the colors of the heatmap, otherwise min-max breaks are used by default
 #' @param signif.stars.fl boolean determining whether significance stars of p-values are shown in the correlogram (default = FALSE)
-#' @param cell.size double determining the widh and height of the cell and the row/col font size (default = 8)
+#' @param cell.size double determining the width and height of the cell and the row/col font size (default = 8)
 #' @param font.size double determining the font size (default = 10)
 #' @param color.blind.pal string determining the RColorBrewer color blind palette (default = "PuOr");
 #' other option can be visualized with the following command: brewer.pal.info[brewer.pal.info$colorblind,]
@@ -312,11 +312,11 @@ correlogram_pheatmap = function(expr.mat, clinical.mat, scale.fl = "none", legen
 #          row.clust = boolean values determining if rows should be clustered
 #          col.clust = boolean values determining if cols should be clustered
 #          biserial.fl = boolean values determining if biserial correlation is calculated
-#                       and corresponding heatmap outputed, assuming clinical.mat is provided
+#                       and corresponding heatmap output, assuming clinical.mat is provided
 #          quantile.breaks.fl = boolean values determining if quantile breaks are used to change
 #                               the colors of the heatmap, otherwise min-max breaks are used by default
-#          signig.stars.fl = boolean determining whether significance stars of p-values are shown in the correlogram (default = FALSE)
-#          cell.size = double determining the widh and height of the cell and the row/col font size (default = 8)
+#          signif.stars.fl = boolean determining whether significance stars of p-values are shown in the correlogram (default = FALSE)
+#          cell.size = double determining the width and height of the cell and the row/col font size (default = 8)
 #          font.size = double determining the font size (default = 10)
 #          color.blind.pal = string determining the RColorBrewer color blind palette (default = "PuOr");
 #                           other option can be visualized with the following command: brewer.pal.info[brewer.pal.info$colorblind,]
@@ -342,11 +342,11 @@ correlogram_pheatmap = function(expr.mat, clinical.mat, scale.fl = "none", legen
 #' @param row.clust boolean values determining if rows should be clustered
 #' @param col.clust boolean values determining if cols should be clustered
 #' @param biserial.fl = boolean values determining if biserial correlation is calculated
-#' and corresponding heatmap outputed, assuming clinical.mat is provided
+#' and corresponding heatmap output, assuming clinical.mat is provided
 #' @param quantile.breaks.fl boolean values determining if quantile breaks are used to change
 #' the colors of the heatmap, otherwise min-max breaks are used by default
 #' @param signif.stars.fl boolean determining whether significance stars of p-values are shown in the correlogram (default = FALSE)
-#' @param cell.size double determining the widh and height of the cell and the row/col font size (default = 8)
+#' @param cell.size double determining the width and height of the cell and the row/col font size (default = 8)
 #' @param font.size double determining the font size (default = 10)
 #' @param color.blind.pal string determining the color-blind-friendly palette; must be one of
 #' RColorBrewer's diverging palettes (default = "PuOr"); other option can be visualized with the following command:
@@ -489,7 +489,7 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
                              main = ifelse(is.null(main), paste("Heatmap of genes over samples", main.plus), main))
 
 
-      #get the annotation that will be transformed into a categorial variable
+      #get the annotation that will be transformed into a categorical variable
       biserial.vars = unique(clinical.mat[,1])
       #transform annotation into categorical variable
       biserial.vec = ifelse(!grepl(biserial.vars[1],clinical.mat[,1]),1,0)

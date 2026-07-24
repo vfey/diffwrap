@@ -64,13 +64,13 @@ Consequently, in that case, no contrasts will be fitted.}
 \item{normcnt}{Matrix; depth-adjusted reads per million or "voomed" counts, i.e., a numeric matrix of
 normalized expression values on the log2 scale.}
 
-\item{out.l}{List; list of result objects generated upstream iin the workflow to add output from this function to.}
+\item{out.l}{List; list of result objects generated upstream in the workflow to add output from this function to.}
 
 \item{do.voom}{Logical; should data be "voomed"?}
 
 \item{quasi.likelihood}{Logical; should quasi-likelihood methods be used? See \emph{Details} section.
 If \code{TRUE}, the default, then the quasi-likelihood methods are used, if \code{FALSE}, then the
-likelihood ratio test is used. Olease note the main wrapper function \code{diffExpr()} will set this parameter.}
+likelihood ratio test is used. Please note the main wrapper function \code{diffExpr()} will set this parameter.}
 
 \item{out.dir}{Character; output directory for final tables. Required; no default is used so that nothing is written to the working directory unintentionally.}
 
@@ -88,7 +88,7 @@ likelihood ratio test is used. Olease note the main wrapper function \code{diffE
 
 \item{biom.attributes}{\code{character} vector. Biomart attributes, i.e., type of desired result(s); make sure query id type is included!}
 
-\item{biom.force.ensg}{\code{logical}. Should Ensembl Gene IDs be checked for (and stripped of) ensemble version numbers? Defaults to \code{FALSE}.}
+\item{biom.force.ensg}{\code{logical}. Should Ensembl Gene IDs be checked for (and stripped of) Ensembl version numbers? Defaults to \code{FALSE}.}
 
 \item{biom.cache}{\code{character}. Path name giving the location of the cache \command{getBM()} uses if \code{use.cache=TRUE}. Defaults to the value in the \emph{BIOMART_CACHE} environment variable.}
 

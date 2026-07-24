@@ -59,7 +59,7 @@ Use for selective highlighting of user-defined sample groups.}
 
 \item{label.font.size}{Numeric passed to \code{geom_text_repel} giving the label font size.}
 
-\item{plot.ellipse.legend}{Logical; should the elipse legend be plotted. \code{NA}, the default, will plot it if any aesthetics are mapped.}
+\item{plot.ellipse.legend}{Logical; should the ellipse legend be plotted. \code{NA}, the default, will plot it if any aesthetics are mapped.}
 
 \item{circle}{\code{logical}. Draw a correlation circle? (only applies when prcomp was called with scale = TRUE and when var.scale = 1)}
 

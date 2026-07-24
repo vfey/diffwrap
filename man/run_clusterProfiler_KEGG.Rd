@@ -21,7 +21,7 @@ run_clusterProfiler_KEGG(
 }
 \arguments{
 \item{input_genes}{A character vector of Entrez gene IDs (ORA) or a named,
-ordered vector of fold changes of of ALL genes with Entrez IDs as names (GSEA).}
+ordered vector of fold changes of ALL genes with Entrez IDs as names (GSEA).}
 
 \item{background_genes}{A character vector of background gene IDs. If not specified, by default uses all human genes
 annotated to term domain.}
@@ -37,7 +37,7 @@ annotated to term domain.}
 
 \item{pvalueCutoff}{Adjusted p-value cut-off.}
 
-\item{min_set_size}{Minimun size of the functional category, uses 10 by default.}
+\item{min_set_size}{Minimum size of the functional category, uses 10 by default.}
 
 \item{max_set_size}{Maximum size of the functional category, uses 1000 by default.}
 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/qc_plots.R
 \name{diff_expr_mds_plot}
 \alias{diff_expr_mds_plot}
-\title{Wrapepr around `limma::plotMDS` to generate a MDS plot}
+\title{Wrapper around `limma::plotMDS` to generate a MDS plot}
 \usage{
 diff_expr_mds_plot(
   d,
@@ -35,7 +35,7 @@ No return value. Called for its side effect of drawing a multidimensional scalin
   optionally into a PDF file below \option{out.dir}.
 }
 \description{
-Wrapepr around `limma::plotMDS` to generate a MDS plot
+Wrapper around `limma::plotMDS` to generate a MDS plot
 }
 \examples{
 \donttest{

@@ -42,14 +42,14 @@ the row direction or the column direction, or none (values %in%
 \item{col.clust}{boolean values determining if cols should be clustered}
 
 \item{biserial.fl}{= boolean values determining if biserial correlation is calculated
-and corresponding heatmap outputed, assuming clinical.mat is provided}
+and corresponding heatmap output, assuming clinical.mat is provided}
 
 \item{quantile.breaks.fl}{boolean values determining if quantile breaks are used to change
 the colors of the heatmap, otherwise min-max breaks are used by default}
 
 \item{signif.stars.fl}{boolean determining whether significance stars of p-values are shown in the correlogram (default = FALSE)}
 
-\item{cell.size}{double determining the widh and height of the cell and the row/col font size (default = 8)}
+\item{cell.size}{double determining the width and height of the cell and the row/col font size (default = 8)}
 
 \item{font.size}{double determining the font size (default = 10)}
 

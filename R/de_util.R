@@ -266,8 +266,8 @@ diffr_expr_generate_cleaned_de_table_output <-
 #' @param do.voom Logical; should data be "voomed"?
 #' @param quasi.likelihood Logical; should quasi-likelihood methods be used? See \emph{Details} section.
 #'   If \code{TRUE}, the default, then the quasi-likelihood methods are used, if \code{FALSE}, then the
-#'   likelihood ratio test is used. Olease note the main wrapper function \code{diffExpr()} will set this parameter.
-#' @param out.l List; list of result objects generated upstream iin the workflow to add output from this function to.
+#'   likelihood ratio test is used. Please note the main wrapper function \code{diffExpr()} will set this parameter.
+#' @param out.l List; list of result objects generated upstream in the workflow to add output from this function to.
 #' @param out.dir Character; output directory for final tables. Required; no default is used so that nothing is written to the working directory unintentionally.
 #' @param analysis.name Character used in the output file name.
 #' @param biomart Logical; should biomart annotation be added?
@@ -276,7 +276,7 @@ diffr_expr_generate_cleaned_de_table_output <-
 #' @param host \code{character} of length one. Host URL.
 #' @param biom.filter \code{character} of length one. Name of biomart filter, i.e., type of query ids, defaults to "ensembl_gene_id".
 #' @param biom.attributes \code{character} vector. Biomart attributes, i.e., type of desired result(s); make sure query id type is included!
-#' @param biom.force.ensg \code{logical}. Should Ensembl Gene IDs be checked for (and stripped of) ensemble version numbers? Defaults to \code{FALSE}.
+#' @param biom.force.ensg \code{logical}. Should Ensembl Gene IDs be checked for (and stripped of) Ensembl version numbers? Defaults to \code{FALSE}.
 #' @param biom.cache \code{character}. Path name giving the location of the cache \command{getBM()} uses if \code{use.cache=TRUE}. Defaults to the value in the \emph{BIOMART_CACHE} environment variable.
 #' @param use.cache (\code{logical}). Should \command{getBM()} use the cache? Defaults to \code{TRUE} as in the \command{getBM()} function and is passed on to that.
 #' @param sym.col \code{character}. Name of the column in the query result with gene symbols.
@@ -588,7 +588,7 @@ diff_expr_extract_contrasts <-
 #' @param use.cache (\code{logical}). Should \command{getBM()} use the cache? Defaults to \code{TRUE} as in the \command{getBM()} function and is passed on to that.
 #' @param sym.col \code{character}. Name of the column in the query result with gene symbols.
 #' @param rm.dups \code{logical}. Should duplicated input IDs (\option{biom.filter}) be removed from the result?
-#' @param force.ensg \code{logical}. Should Ensembl Gene IDs be checked for (and stripped of) ensemble version numbers? Defaults to \code{FALSE}.
+#' @param force.ensg \code{logical}. Should Ensembl Gene IDs be checked for (and stripped of) Ensembl version numbers? Defaults to \code{FALSE}.
 #' @return A \code{data.frame}: the input table \option{d3} merged with the annotation retrieved from
 #'   biomart. The column holding gene symbols is renamed to \code{gene_symbol}.
 #' @examples

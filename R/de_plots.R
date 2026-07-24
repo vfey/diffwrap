@@ -102,7 +102,7 @@ diff_expr_ma_plot <-
 	if (length(degPval)>0) {
 		dw_log("    for P-value filtered values...\n")
 
-		## ggplot implemetation of MA plot
+		## ggplot implementation of MA plot
 		g <- ggplot(data=dat, aes(x=`Average Expression`, y=logFC))
 		g <- g + geom_point(aes(size=`log2 Fold-Change`, color=`P-Value`))
 		g <- g + scale_colour_gradient2(low="#00106B", high="#A4B1FF", mid="#F3F5FF", midpoint=0.2)
@@ -266,7 +266,7 @@ prepare_volcano_of_given_property <-
   }
 
 #' Function to generate a Volcano plot using `ggplot2`
-#' @description `diff_expr_volcano_plot` generates two Volcano plots highlighing genes that are differentially expressed beyond custom thresholds for siginificance (set by parameters `p.thr` and fdr.thr`) and differential expression level (set by parameter `logfc.thr`).
+#' @description `diff_expr_volcano_plot` generates two Volcano plots highlighting genes that are differentially expressed beyond custom thresholds for significance (set by parameters `p.thr` and fdr.thr`) and differential expression level (set by parameter `logfc.thr`).
 #' @param d3 \code{data.frame}. Data frame containing all necessary columns to generate a Volcano plot with gene labels (at least p-values, FDR values, log-ratios and gene symbols or other IDs)
 #' @param id \code{character}. Name of the gene ID column. Can be the same as `sym.col` but usually refers to an additional column with, e.g., Ensembl Gene IDs.
 #' @param sym.col \code{character}. Name of column with gene symbols, e.g., HGNC Symbols.

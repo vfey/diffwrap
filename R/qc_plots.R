@@ -20,7 +20,7 @@ utils::globalVariables(c("PCx", "PCy", "Condition", "Sample", "Ellipse", "x", "y
 #' @param label.samples Logical; should the points be annotated with sample name labels?
 #' @param geom.point.size Numeric passed to \code{geom_point} giving the point size.
 #' @param label.font.size Numeric passed to \code{geom_text_repel} giving the label font size.
-#' @param plot.ellipse.legend Logical; should the elipse legend be plotted. \code{NA}, the default, will plot it if any aesthetics are mapped.
+#' @param plot.ellipse.legend Logical; should the ellipse legend be plotted. \code{NA}, the default, will plot it if any aesthetics are mapped.
 #' @param circle \code{logical}. Draw a correlation circle? (only applies when prcomp was called with scale = TRUE and when var.scale = 1)
 #' @param varname.size \code{double}. size of the text for variable names
 #' @param var.axes \code{logical}. draw arrows for the variables?
@@ -86,7 +86,7 @@ diff_expr_QC_plots <-
     return(out.l)
   }
 
-#' Wrapepr around `limma::plotMDS` to generate a MDS plot
+#' Wrapper around `limma::plotMDS` to generate a MDS plot
 #' @param d Passed to \code{plotMDS()} (\code{x}): Any data object that can be coerced to a matrix of log-expression values,
 #'   for example an ExpressionSet or an EList. Rows represent genes or genomic features while columns represent samples.
 #' @param groups Factor of sample groups for colouring and legend.
@@ -126,7 +126,7 @@ diff_expr_mds_plot <-
     }
   }
 
-#' Function to generate a MDS plot usig `ggplot2`
+#' Function to generate a MDS plot using `ggplot2`
 #' @param counts Counts matrix.
 #' @param samp.name Optional sample names to be used in the plot, given as character vector.
 #' @param groups Sample groups for plot annotation as character vector or factor.

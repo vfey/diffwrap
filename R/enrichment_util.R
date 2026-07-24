@@ -1,4 +1,4 @@
-# Utilities for for performing various enrichment analyses and visualisations.
+# Utilities for performing various enrichment analyses and visualisations.
 # Major function that wraps other enrichment functions is runEnrichmentAnalyses
 #
 # Author: Meeri Pekkarinen
@@ -102,7 +102,7 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
   dw_log("         FDR: ",adjPvalColumn, "\n")
   dw_log("         Genes associated with the term: ", DEGcolumn, "\n")
   dw_log("         Term descriptions used in nodes: ", termColumn, "\n", "\n")
-  dw_log("         Filtering the the genes (fdr < ", fdr.thr, "and abs. logFC >=", logfc.thr, ") and", "by the existence of symbolic names...\n")
+  dw_log("         Filtering the genes (fdr < ", fdr.thr, "and abs. logFC >=", logfc.thr, ") and", "by the existence of symbolic names...\n")
 
   # Take only n enriched terms (never more than are available, to avoid NA rows)
   enrichment.table <- enrichment.table[seq_len(min(show.terms, nrow(enrichment.table))), , drop = FALSE]
@@ -201,7 +201,7 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
   palette <- colorRampPalette(rev(RColorBrewer::brewer.pal(11,"RdBu")))
   #genes = unique(genes)
 
-  #foldchanges <- DE.table[[logFoldChangeColumn]] #origiginal plot
+  #foldchanges <- DE.table[[logFoldChangeColumn]] #original plot
   gene_indices = which(DE.table[[geneSymbolColumn]] %in% genes) #upgrade: taking fold changes only for genes associated with the terms to be plotted
   foldchanges <- DE.table[gene_indices,logFoldChangeColumn]
 
@@ -647,7 +647,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
 
 
           gene.col <- colnames(result)[grepl("^DEGs", colnames(result))] #TODO: invent more robust approach to this?
-          #First, fetching corresponding ensembles for entrez-IDs
+          #First, fetching corresponding Ensembl IDs for entrez-IDs
           for (i in seq_along(result[[gene.col]])) {
             #print(result[[gene.col]])
             genes <- unlist(strsplit(result[[gene.col]][i], split = ','))
@@ -657,7 +657,7 @@ runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichmen
             #print(head(new_names))
             result[[gene.col]][i] <- new_names
           }
-          #Then, converting the ensembles into symbolic names
+          #Then, converting the Ensembl IDs into symbolic names
           spec.name <- as.character(enrich.resource.terms[species, "species4conversion"])
           result <- format_ensembl_ids_annotated_to_term(result, spec.name)
 

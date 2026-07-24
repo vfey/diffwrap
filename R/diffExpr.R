@@ -1,6 +1,6 @@
 #' Main wrapper for executing the entire pipeline from reading in expression data such as count
 #' files to producing text files and graphs
-#' @description \command{diffExpr} is a conveniency wrapper performing all steps automatically.
+#' @description \command{diffExpr} is a convenience wrapper performing all steps automatically.
 #'    Most sub-functions are exported and can be called by the user, as well, if desired.
 #'    These functions may be applicable to different kinds of data/input, rely, however,
 #'    on the conventions set for this package.
@@ -27,7 +27,7 @@
 #' @param groups \code{character}. Name of the column in 'samp.info' containing grouping information. If 'samp.info' is not supplied
 #'     vector of groups.
 #' @param pairs \code{character}. Name of the column in 'samp.info' containing paired sample information.
-#' @param block \code{logical}. Are the the samples not independent? See Details section.
+#' @param block \code{logical}. Are the samples not independent? See Details section.
 #' @param contrasts \code{character}. Vector of contrasts to be made. If not provided, all possible contrasts will be made.
 #'   This specifies group name pairs to be compared in the format expected by \code{makeContrasts()}, i.e., "group2-group1".
 #' @param out.dir \code{character}. Path to the output directory. This argument is required: all
@@ -62,7 +62,7 @@
 #' @param biom.host \code{character}. The host to be used for the biomart. Defaults to "www.ensembl.org".
 #' @param biom.filter \code{character}. The biomart filter to be used. Defaults to "ensembl_gene_id".
 #' @param biom.attributes \code{character}. The biomart attributes to be used. Defaults to c("ensembl_gene_id", "hgnc_symbol", "description", "entrezgene_id").
-#' @param biom.force.ensg \code{logical}. Should Ensembl Gene IDs be checked for (and stripped of) ensemble version numbers? Defaults to \code{FALSE}.
+#' @param biom.force.ensg \code{logical}. Should Ensembl Gene IDs be checked for (and stripped of) Ensembl version numbers? Defaults to \code{FALSE}.
 #' @param biom.cache \code{character}. Path name giving the location of the cache \command{getBM()} uses if \code{use.cache=TRUE}. Defaults to the value in the \emph{BIOMART_CACHE} environment variable.
 #' @param biom.use.cache (\code{logical}). Should \command{getBM()} use the cache? Defaults to \code{TRUE} as in the \command{getBM()} function and is passed on to that.
 #' @param biom.sym.col \code{character}. Name of the column in the query result with gene symbols
@@ -77,7 +77,7 @@
 #' @param qc.ellipse \code{logical}. Should an ellipse be plotted around samples belonging to the same sample group? Defaults to \code{TRUE}.
 #' @param qc.ellipse.groups \code{character} The name of the column in 'samp.info' with group names for ellipse drawing. If \code{NULL} (default)
 #'     will use the \code{groups} column. If 'samp.info' is not supplied vector of groups.
-#' @param qc.ellipse.legend \code{logical}. Should a legend be addded for ellipses in PCA plots? NA, the default, includes
+#' @param qc.ellipse.legend \code{logical}. Should a legend be added for ellipses in PCA plots? NA, the default, includes
 #'     if any aesthetics are mapped. FALSE never includes, and TRUE always includes. It can also be a named logical vector to finely select
 #'     the aesthetics to display.
 #' @param qc.label.samples \code{logical}. Should points in appropriate QC plots be labelled. So far, applies only to PCA ggplot. Defaults to \code{TRUE}.
@@ -403,7 +403,7 @@ diffExpr <-
 
     #Checking whether the enrichment analyses can be run
     kegg.enrichment.will.be.performed = sum(grepl("KEGG", enrichment.methods)) > 0
-    #kegg pathway enrichments needs entrez-IDs while other approaches are fine with ensemble IDs
+    #kegg pathway enrichments needs entrez-IDs while other approaches are fine with Ensembl IDs
     if (do.enrichment & kegg.enrichment.will.be.performed) {
       if (!biomart) {
         stop("Cannot run KEGG-pathway enrichment without entrez IDs. Set 'biom.use' to TRUE or remove KEGG enrichment approach from 'enr.methods'")

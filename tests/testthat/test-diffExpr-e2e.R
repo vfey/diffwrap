@@ -132,3 +132,25 @@ test_that("a paired run resolves to the fixed-effect mode and completes", {
   expect_type(res, "list")
   expect_true("contrasts" %in% names(res))
 })
+
+test_that("block = TRUE without a 'pairs' column fails loud at mode resolution", {
+  # the mode resolver is the single interpretation/validation point; a blocked design
+  # needs a 'pairs' column to use as the correlation block, so this must error early
+  # rather than silently skipping duplicateCorrelation
+  quiet_log()
+  out.dir <- run_dir()
+  on.exit(unlink(out.dir, recursive = TRUE), add = TRUE)
+
+  expect_error(
+    suppressMessages(diffExpr(expr.dat  = ex_counts_file(),
+                              samp.info = ex_samp_info_raw(),
+                              samples   = "SampleName",
+                              groups    = "Group",
+                              control   = "control",
+                              analysis.name = "blk",
+                              out.dir   = out.dir,
+                              block     = TRUE,
+                              enr.do    = FALSE)),
+    "requires a 'pairs' column"
+  )
+})

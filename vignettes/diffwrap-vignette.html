@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Vidal Fey (vidal.fey@gmail.com)">
-<meta name="dcterms.date" content="2026-07-23">
+<meta name="dcterms.date" content="2026-07-24">
 
 <title>Differential expression analysis with diffwrap</title>
 <style>
@@ -82,16 +82,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul>
   <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction"><span class="header-section-number">1</span> Introduction</a></li>
-  <li><a href="#example-data" id="toc-example-data" class="nav-link" data-scroll-target="#example-data"><span class="header-section-number">2</span> Example data</a></li>
-  <li><a href="#choosing-an-analysis-mode" id="toc-choosing-an-analysis-mode" class="nav-link" data-scroll-target="#choosing-an-analysis-mode"><span class="header-section-number">3</span> Choosing an analysis mode</a></li>
-  <li><a href="#running-the-whole-pipeline" id="toc-running-the-whole-pipeline" class="nav-link" data-scroll-target="#running-the-whole-pipeline"><span class="header-section-number">4</span> Running the whole pipeline</a>
+  <li><a href="#pipeline-overview" id="toc-pipeline-overview" class="nav-link" data-scroll-target="#pipeline-overview"><span class="header-section-number">2</span> Pipeline overview</a></li>
+  <li><a href="#example-data" id="toc-example-data" class="nav-link" data-scroll-target="#example-data"><span class="header-section-number">3</span> Example data</a></li>
+  <li><a href="#sec-modes" id="toc-sec-modes" class="nav-link" data-scroll-target="#sec-modes"><span class="header-section-number">4</span> Choosing an analysis mode</a></li>
+  <li><a href="#running-the-whole-pipeline" id="toc-running-the-whole-pipeline" class="nav-link" data-scroll-target="#running-the-whole-pipeline"><span class="header-section-number">5</span> Running the whole pipeline</a>
   <ul class="collapse">
-  <li><a href="#paired-and-blocked-analyses" id="toc-paired-and-blocked-analyses" class="nav-link" data-scroll-target="#paired-and-blocked-analyses"><span class="header-section-number">4.1</span> Paired and blocked analyses</a></li>
+  <li><a href="#paired-and-blocked-analyses" id="toc-paired-and-blocked-analyses" class="nav-link" data-scroll-target="#paired-and-blocked-analyses"><span class="header-section-number">5.1</span> Paired and blocked analyses</a></li>
   </ul></li>
-  <li><a href="#running-the-steps-manually" id="toc-running-the-steps-manually" class="nav-link" data-scroll-target="#running-the-steps-manually"><span class="header-section-number">5</span> Running the steps manually</a></li>
-  <li><a href="#output-logging-and-verbosity" id="toc-output-logging-and-verbosity" class="nav-link" data-scroll-target="#output-logging-and-verbosity"><span class="header-section-number">6</span> Output, logging and verbosity</a></li>
-  <li><a href="#annotation-and-enrichment" id="toc-annotation-and-enrichment" class="nav-link" data-scroll-target="#annotation-and-enrichment"><span class="header-section-number">7</span> Annotation and enrichment</a></li>
-  <li><a href="#session-information" id="toc-session-information" class="nav-link" data-scroll-target="#session-information"><span class="header-section-number">8</span> Session information</a></li>
+  <li><a href="#running-the-steps-manually" id="toc-running-the-steps-manually" class="nav-link" data-scroll-target="#running-the-steps-manually"><span class="header-section-number">6</span> Running the steps manually</a></li>
+  <li><a href="#output-logging-and-verbosity" id="toc-output-logging-and-verbosity" class="nav-link" data-scroll-target="#output-logging-and-verbosity"><span class="header-section-number">7</span> Output, logging and verbosity</a></li>
+  <li><a href="#sec-enrichment" id="toc-sec-enrichment" class="nav-link" data-scroll-target="#sec-enrichment"><span class="header-section-number">8</span> Annotation and enrichment</a></li>
+  <li><a href="#session-information" id="toc-session-information" class="nav-link" data-scroll-target="#session-information"><span class="header-section-number">9</span> Session information</a></li>
   </ul>
 </nav>
 </div>
@@ -116,7 +117,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">July 23, 2026</p>
+      <p class="date">July 24, 2026</p>
     </div>
   </div>
   
@@ -135,8 +136,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>The main entry point is <code>diffExpr()</code>, a convenience wrapper that runs the whole pipeline with sensible defaults. Every step it performs is also available as an exported function, so the workflow can equally well be run manually, or individual steps reused in a different context. This vignette shows both routes.</p>
 </div>
 </section>
-<section id="example-data" class="level2" data-number="2">
-<h2 data-number="2" class="anchored" data-anchor-id="example-data"><span class="header-section-number">2</span> Example data</h2>
+<section id="pipeline-overview" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="pipeline-overview"><span class="header-section-number">2</span> Pipeline overview</h2>
+<div style="text-align: justify;">
+<p>Pre-processing runs across the top of the diagram below (with the MDS overview as an optional side branch). A <em>Mode resolution</em> hub then fans into five colour-coded lanes, one per analysis mode: each lane shows the flags that select it (<code>pairs</code>, <code>block</code>, <code>do.voom</code>) and the resulting recipe (design · contrasts · fit). The lanes reconverge at contrast extraction, and the required pipeline ends at the DE tables; QC, per-contrast plots, Venn and enrichment hang off as optional outputs. The five modes are described in <a href="#sec-modes" class="quarto-xref">Section&nbsp;4</a>; enrichment (<a href="#sec-enrichment" class="quarto-xref">Section&nbsp;8</a>) is detailed separately in <a href="#fig-enrichment" class="quarto-xref">Figure&nbsp;2</a>.</p>
+</div>
+<div id="fig-pipeline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-pipeline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="diffwrap-pipeline.svg" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-pipeline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: The diffwrap <code>diffExpr()</code> workflow. Pre-processing feeds a Mode resolution hub that fans into the five analysis modes (role × engine), each labelled with its selecting flags and its design/contrasts/fit recipe. The modes reconverge at contrast extraction; the required pipeline ends at the DE tables, with QC, plots, Venn and enrichment as optional branches.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="example-data" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="example-data"><span class="header-section-number">3</span> Example data</h2>
 <div style="text-align: justify;">
 <p>The package ships a small <strong>simulated</strong> data set so that the workflow can be demonstrated without any external data or network access. It is <em>not</em> a real experiment: counts were drawn from a negative binomial model with a known ground truth, which makes it convenient for illustration and testing.</p>
 <p>The design is eight samples in two groups of four, <code>control</code> and <code>treated</code>. Each of the four subjects (<code>P1</code>–<code>P4</code>) contributed one control and one treated sample, so the same data can be analysed as an unpaired comparison, as a paired design, or as a blocked design. A subject-specific offset is built into the simulation, giving the paired analyses a real effect to remove.</p>
@@ -240,8 +257,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </details>
 </div>
 </section>
-<section id="choosing-an-analysis-mode" class="level2" data-number="3">
-<h2 data-number="3" class="anchored" data-anchor-id="choosing-an-analysis-mode"><span class="header-section-number">3</span> Choosing an analysis mode</h2>
+<section id="sec-modes" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="sec-modes"><span class="header-section-number">4</span> Choosing an analysis mode</h2>
 <div style="text-align: justify;">
 <p>Three arguments together determine how an analysis is carried out: <code>pairs</code>, <code>block</code> and <code>do.voom</code>. Rather than acting independently, they resolve into one of a small number of well-defined modes. The distinction that matters most is <strong>how the <code>pairs</code> column enters the model</strong>:</p>
 <ul>
@@ -254,12 +271,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 16%">
-<col style="width: 16%">
-<col style="width: 16%">
-<col style="width: 16%">
-<col style="width: 16%">
+<col style="width: 10%">
+<col style="width: 10%">
 <col style="width: 18%">
+<col style="width: 22%">
+<col style="width: 14%">
+<col style="width: 22%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -315,8 +332,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="running-the-whole-pipeline" class="level2" data-number="4">
-<h2 data-number="4" class="anchored" data-anchor-id="running-the-whole-pipeline"><span class="header-section-number">4</span> Running the whole pipeline</h2>
+<section id="running-the-whole-pipeline" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="running-the-whole-pipeline"><span class="header-section-number">5</span> Running the whole pipeline</h2>
 <div style="text-align: justify;">
 <p>In the simplest case a single call is enough. Note that <code>out.dir</code> is <strong>required</strong>: the package deliberately has no default output location, so that nothing is ever written to the working directory unintentionally. Here the results go to a temporary directory, which is also what you should do in your own examples and tests.</p>
 </div>
@@ -333,15 +350,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>                <span class="at">control   =</span> <span class="st">"control"</span>,</span>
 <span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>                <span class="at">analysis.name =</span> <span class="st">"demo"</span>,</span>
 <span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>                <span class="at">out.dir   =</span> out.dir,</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>                <span class="at">do.enrichment =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>                <span class="at">enr.do =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <div style="text-align: justify;">
 <p>The chunk above is not evaluated when the vignette is built, simply because a full run writes a fair number of files and takes noticeably longer than is worthwhile during a package build; it needs no network access with these settings. Run it interactively to see the complete output. The manual walk-through in the next section <em>is</em> evaluated, and shows real differential expression results.</p>
 <p><code>diffExpr()</code> returns a list of the objects created along the way — the <code>DGEList</code> or <code>voom</code> object, the model fits, and one annotated result table per contrast — but it is first and foremost called for its side effects. Below <code>out.dir</code> you will find, per contrast, a full and a filtered differential expression table, a PDF of the M-A, volcano and p-value plots, heatmaps, and a Venn diagram plus intersection tables across contrasts.</p>
 </div>
-<section id="paired-and-blocked-analyses" class="level3" data-number="4.1">
-<h3 data-number="4.1" class="anchored" data-anchor-id="paired-and-blocked-analyses"><span class="header-section-number">4.1</span> Paired and blocked analyses</h3>
+<section id="paired-and-blocked-analyses" class="level3" data-number="5.1">
+<h3 data-number="5.1" class="anchored" data-anchor-id="paired-and-blocked-analyses"><span class="header-section-number">5.1</span> Paired and blocked analyses</h3>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -354,7 +371,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>                       <span class="at">control   =</span> <span class="st">"control"</span>,</span>
 <span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>                       <span class="at">analysis.name =</span> <span class="st">"demo_paired"</span>,</span>
 <span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>                       <span class="at">out.dir   =</span> out.dir,</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>                       <span class="at">do.enrichment =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>                       <span class="at">enr.do =</span> <span class="cn">FALSE</span>)</span>
 <span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co"># the same column used as a correlation block instead (forces voom)</span></span>
 <span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>res_blocked <span class="ot">&lt;-</span> <span class="fu">diffExpr</span>(<span class="at">expr.dat  =</span> counts_file,</span>
@@ -366,13 +383,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>                        <span class="at">control   =</span> <span class="st">"control"</span>,</span>
 <span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>                        <span class="at">analysis.name =</span> <span class="st">"demo_blocked"</span>,</span>
 <span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>                        <span class="at">out.dir   =</span> out.dir,</span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>                        <span class="at">do.enrichment =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>                        <span class="at">enr.do =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 </section>
 </section>
-<section id="running-the-steps-manually" class="level2" data-number="5">
-<h2 data-number="5" class="anchored" data-anchor-id="running-the-steps-manually"><span class="header-section-number">5</span> Running the steps manually</h2>
+<section id="running-the-steps-manually" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="running-the-steps-manually"><span class="header-section-number">6</span> Running the steps manually</h2>
 <div style="text-align: justify;">
 <p>The wrapper is convenient, but each step is exported and can be called on its own. This is useful when you want to inspect intermediate objects, or plug a step into a different workflow.</p>
 </div>
@@ -459,8 +476,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </details>
 </div>
 </section>
-<section id="output-logging-and-verbosity" class="level2" data-number="6">
-<h2 data-number="6" class="anchored" data-anchor-id="output-logging-and-verbosity"><span class="header-section-number">6</span> Output, logging and verbosity</h2>
+<section id="output-logging-and-verbosity" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="output-logging-and-verbosity"><span class="header-section-number">7</span> Output, logging and verbosity</h2>
 <div style="text-align: justify;">
 <p>A pipeline of this size produces a lot of progress information. Rather than writing it all to the console, <code>diffExpr()</code> always writes a complete log file to <code>out.dir</code> and prints only the major steps to the console. The console channel uses <code>message()</code>, so it can be silenced in the usual R ways.</p>
 <ul>
@@ -480,11 +497,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </details>
 </div>
 </section>
-<section id="annotation-and-enrichment" class="level2" data-number="7">
-<h2 data-number="7" class="anchored" data-anchor-id="annotation-and-enrichment"><span class="header-section-number">7</span> Annotation and enrichment</h2>
+<section id="sec-enrichment" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="sec-enrichment"><span class="header-section-number">8</span> Annotation and enrichment</h2>
 <div style="text-align: justify;">
-<p>Setting <code>biomart = TRUE</code> annotates the result tables with information retrieved from Ensembl, and <code>do.enrichment = TRUE</code> runs over-representation and gene set enrichment analyses through <strong>clusterProfiler</strong>, <strong>gprofiler2</strong> and <strong>topGO</strong>.</p>
-<p>Both require network access, and enrichment additionally requires the relevant organism annotation package (<code>org.Hs.eg.db</code> for human, <code>org.Mm.eg.db</code> for mouse). KEGG pathway enrichment needs Entrez identifiers and therefore only works together with <code>biomart = TRUE</code>; <code>diffExpr()</code> checks this at the start of a run and stops with an explanatory message rather than failing later.</p>
+<p>Setting <code>biom.use = TRUE</code> annotates the result tables with information retrieved from Ensembl, and <code>enr.do = TRUE</code> runs over-representation and gene set enrichment analyses through <strong>clusterProfiler</strong>, <strong>gprofiler2</strong> and <strong>topGO</strong>.</p>
+<p>Both require network access, and enrichment additionally requires the relevant organism annotation package (<code>org.Hs.eg.db</code> for human, <code>org.Mm.eg.db</code> for mouse). KEGG pathway enrichment needs Entrez identifiers and therefore only works together with <code>biom.use = TRUE</code>; <code>diffExpr()</code> checks this at the start of a run and stops with an explanatory message rather than failing later.</p>
+<p>Enrichment runs as a separate stage that consumes the differential-expression results: over-representation (ORA) on the significant genes and gene-set enrichment (GSEA) on the ranked gene list, across the methods selected in <code>enr.methods</code> (<a href="#fig-enrichment" class="quarto-xref">Figure&nbsp;2</a>).</p>
+</div>
+<div id="fig-enrichment" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-enrichment-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="diffwrap-enrichment.svg" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-enrichment-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Enrichment sub-pipeline. The per-contrast DE results feed over-representation (ORA) and gene-set enrichment (GSEA), run through the methods chosen in enr.methods. KEGG needs Entrez IDs and therefore biomart annotation. Results are written as tables and optional network plots.
+</figcaption>
+</figure>
+</div>
+<div style="text-align: justify;">
 <p>Neither step will produce anything meaningful for the simulated example data, whose gene identifiers are well-formed but fictitious. The chunk below is therefore shown for reference only.</p>
 </div>
 <div class="cell">
@@ -497,15 +527,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>                <span class="at">control   =</span> <span class="st">"control"</span>,</span>
 <span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>                <span class="at">analysis.name =</span> <span class="st">"demo_annotated"</span>,</span>
 <span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>                <span class="at">out.dir   =</span> out.dir,</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>                <span class="at">biomart   =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>                <span class="at">biom.use  =</span> <span class="cn">TRUE</span>,</span>
 <span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>                <span class="at">biom.data.set =</span> <span class="st">"hsapiens_gene_ensembl"</span>,</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>                <span class="at">do.enrichment =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>                <span class="at">enrichment.methods =</span> <span class="fu">c</span>(<span class="st">"clusterProfilerGO"</span>, <span class="st">"gProfileR"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>                <span class="at">enr.do =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>                <span class="at">enr.methods =</span> <span class="fu">c</span>(<span class="st">"clusterProfilerGO"</span>, <span class="st">"gProfileR"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 </section>
-<section id="session-information" class="level2" data-number="8">
-<h2 data-number="8" class="anchored" data-anchor-id="session-information"><span class="header-section-number">8</span> Session information</h2>
+<section id="session-information" class="level2" data-number="9">
+<h2 data-number="9" class="anchored" data-anchor-id="session-information"><span class="header-section-number">9</span> Session information</h2>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>

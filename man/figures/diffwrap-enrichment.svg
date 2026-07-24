@@ -1,0 +1,67 @@
+<svg viewBox="0 0 900 590" xmlns="http://www.w3.org/2000/svg" role="img" font-family="'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif">
+<title>diffwrap enrichment sub-pipeline</title>
+<desc>DE results feed an enrichment gate that splits into two parallel lanes: over-representation (ORA) through enrichGO, enrichKEGG, gProfileR and topGO, and gene-set enrichment (GSEA) through gseGO and gseKEGG. Both lanes run parallel and drop into a shared merge, then to optional network plots and enrichment tables.</desc>
+<rect x="1" y="1" width="898" height="588" rx="16" fill="#ffffff" stroke="#e4e4ec"/>
+<defs><style>
+.hd{fill:#1c1c28;font-size:20px;font-weight:700}
+.st{fill:#5a5a68;font-size:11.5px}
+.lbl{fill:#1c1c28;font-size:13px;font-weight:600}
+.fn{fill:#6b6b78;font-size:10px;font-style:italic}
+.grp{font-size:12px;font-weight:700}
+.note{fill:#5a5a68;font-size:11px}
+.leg{fill:#5a5a68;font-size:11px}
+</style></defs>
+
+<text x="40" y="40" class="hd">diffwrap · enrichment analysis</text>
+<text x="40" y="60" class="st">KEGG needs Entrez IDs (biomart annotation); enrichment supports human and mouse.</text>
+
+<!-- legend -->
+<g transform="translate(560,34)">
+<line x1="0" y1="6" x2="24" y2="6" stroke="#3182BD" stroke-width="5" stroke-linecap="round"/><text x="30" y="10" class="leg">ORA</text>
+<line x1="95" y1="6" x2="119" y2="6" stroke="#E6550D" stroke-width="5" stroke-linecap="round"/><text x="125" y="10" class="leg">GSEA</text>
+<line x1="205" y1="6" x2="229" y2="6" stroke="#6b6b76" stroke-width="5" stroke-dasharray="2 5" stroke-linecap="round"/><text x="235" y="10" class="leg">optional</text>
+</g>
+
+<!-- entry -->
+<path d="M140,120 H300" stroke="#6b6b76" stroke-width="6" fill="none" stroke-linecap="round"/>
+<circle cx="140" cy="120" r="8" fill="#fff" stroke="#6b6b76" stroke-width="4"/>
+<text x="140" y="98" text-anchor="middle" class="lbl">DE results</text><text x="140" y="112" text-anchor="middle" class="fn">per contrast</text>
+<circle cx="300" cy="120" r="13" fill="#fff" stroke="#1c1c28" stroke-width="3"/><circle cx="300" cy="120" r="6" fill="#1c1c28"/>
+<text x="300" y="98" text-anchor="middle" class="lbl">Enrichment gate</text><text x="300" y="112" text-anchor="middle" class="fn">enr.do · species · enr.methods</text>
+
+<!-- fan to two parallel lanes -->
+<path d="M300,133 C300,185 345,250 385,250" stroke="#3182BD" stroke-width="5" fill="none" stroke-linecap="round"/>
+<path d="M300,133 C300,205 345,345 385,345" stroke="#E6550D" stroke-width="5" fill="none" stroke-linecap="round"/>
+
+<!-- ORA lane -->
+<text x="385" y="230" class="grp" fill="#3182BD">ORA</text><text x="422" y="230" class="st">over-representation · significant DE genes</text>
+<path d="M385,250 H800" stroke="#3182BD" stroke-width="5" fill="none" stroke-linecap="round"/>
+<g>
+<circle cx="455" cy="250" r="8" fill="#fff" stroke="#3182BD" stroke-width="4"/><text x="455" y="276" text-anchor="middle" class="lbl">enrichGO</text><text x="455" y="289" text-anchor="middle" class="fn">clusterProfiler</text>
+<circle cx="575" cy="250" r="8" fill="#fff" stroke="#3182BD" stroke-width="4"/><text x="575" y="276" text-anchor="middle" class="lbl">enrichKEGG</text><text x="575" y="289" text-anchor="middle" class="fn">needs Entrez</text>
+<circle cx="685" cy="250" r="8" fill="#fff" stroke="#3182BD" stroke-width="4"/><text x="685" y="276" text-anchor="middle" class="lbl">gProfileR</text><text x="685" y="289" text-anchor="middle" class="fn">gost</text>
+<circle cx="775" cy="250" r="8" fill="#fff" stroke="#3182BD" stroke-width="4"/><text x="775" y="276" text-anchor="middle" class="lbl">topGO</text>
+</g>
+
+<!-- GSEA lane -->
+<text x="385" y="325" class="grp" fill="#E6550D">GSEA</text><text x="435" y="325" class="st">gene-set enrichment · ranked gene list</text>
+<path d="M385,345 H800" stroke="#E6550D" stroke-width="5" fill="none" stroke-linecap="round"/>
+<g>
+<circle cx="475" cy="345" r="8" fill="#fff" stroke="#E6550D" stroke-width="4"/><text x="475" y="371" text-anchor="middle" class="lbl">gseGO</text><text x="475" y="384" text-anchor="middle" class="fn">clusterProfiler</text>
+<circle cx="645" cy="345" r="8" fill="#fff" stroke="#E6550D" stroke-width="4"/><text x="645" y="371" text-anchor="middle" class="lbl">gseKEGG</text><text x="645" y="384" text-anchor="middle" class="fn">needs Entrez</text>
+</g>
+
+<!-- parallel drops into shared merge -->
+<path d="M796,250 V444" stroke="#3182BD" stroke-width="5" fill="none" stroke-linecap="round"/>
+<path d="M804,345 V444" stroke="#E6550D" stroke-width="5" fill="none" stroke-linecap="round"/>
+<circle cx="800" cy="452" r="12" fill="#fff" stroke="#1c1c28" stroke-width="3"/><circle cx="800" cy="452" r="5" fill="#1c1c28"/>
+<text x="820" y="449" class="lbl">Results</text>
+
+<!-- outputs -->
+<path d="M800,464 V516" stroke="#6b6b76" stroke-width="6" fill="none" stroke-linecap="round"/>
+<circle cx="800" cy="522" r="10" fill="#1c1c28" stroke="#1c1c28" stroke-width="3"/>
+<text x="800" y="548" text-anchor="middle" class="lbl">Enrichment tables</text><text x="800" y="561" text-anchor="middle" class="fn">.xlsx per method &amp; contrast</text>
+<path d="M800,464 C800,498 620,490 620,510" stroke="#6b6b76" stroke-width="4" fill="none" stroke-dasharray="2 6" stroke-linecap="round"/>
+<circle cx="620" cy="516" r="7" fill="#fff" stroke="#6b6b76" stroke-width="4"/>
+<text x="620" y="542" text-anchor="middle" class="lbl">Network / term plots</text><text x="620" y="555" text-anchor="middle" class="fn">optional (enr.plot)</text>
+</svg>

@@ -1,0 +1,196 @@
+<svg viewBox="0 0 1240 940" xmlns="http://www.w3.org/2000/svg" role="img" font-family="'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif">
+<title>diffwrap diffExpr() pipeline as a subway map</title>
+<desc>A shared trunk (input, read, filter, normalise) feeds a modelling core that forks by engine into a limma/voom track and an edgeR/GLM track, with a block-only duplicateCorrelation station, then merges back for contrast extraction, tables, plots, Venn and optional enrichment. A key lists the five valid analysis modes.</desc>
+
+<rect x="1" y="1" width="1238" height="938" rx="16" fill="#ffffff" stroke="#e4e4ec"/>
+
+<defs>
+<style>
+.hd{fill:#1c1c28;font-size:21px;font-weight:700}
+.lbl{fill:#1c1c28;font-size:14px;font-weight:600}
+.sub{fill:#5a5a68;font-size:11px}
+.fn{fill:#6b6b78;font-size:10px;font-style:italic}
+.leg{fill:#5a5a68;font-size:12px}
+.keyh{fill:#1c1c28;font-size:13px;font-weight:700}
+.key{fill:#1c1c28;font-size:12px}
+.keyd{fill:#5a5a68;font-size:12px}
+</style>
+</defs>
+
+<text x="40" y="46" class="hd">diffwrap · diffExpr() workflow</text>
+
+<!-- legend -->
+<g transform="translate(470,32)">
+<line x1="0" y1="6" x2="26" y2="6" stroke="#2F7FD1" stroke-width="6" stroke-linecap="round"/><text x="32" y="10" class="leg">main pipeline</text>
+<line x1="140" y1="6" x2="166" y2="6" stroke="#7A6FE0" stroke-width="6" stroke-linecap="round"/><text x="172" y="10" class="leg">voom / limma</text>
+<line x1="285" y1="6" x2="311" y2="6" stroke="#1D9E75" stroke-width="6" stroke-linecap="round"/><text x="317" y="10" class="leg">edgeR / GLM</text>
+<line x1="430" y1="6" x2="456" y2="6" stroke="#8E24AA" stroke-width="6" stroke-linecap="round" stroke-dasharray="2 5"/><text x="462" y="10" class="leg">block correlation</text>
+<line x1="590" y1="6" x2="616" y2="6" stroke="#D85A30" stroke-width="6" stroke-linecap="round" stroke-dasharray="2 5"/><text x="622" y="10" class="leg">branch / output</text>
+</g>
+
+<!-- ===================== TRACKS ===================== -->
+<!-- Row1 trunk -->
+<path d="M120,150 H880" fill="none" stroke="#2F7FD1" stroke-width="6" stroke-linecap="round"/>
+<path d="M880,150 H1090 Q1110,150 1110,172 V318 Q1110,340 1090,340" fill="none" stroke="#2F7FD1" stroke-width="6"/>
+<!-- MDS spur -->
+<path d="M880,150 V244" fill="none" stroke="#D85A30" stroke-width="5" stroke-dasharray="2 6" stroke-linecap="round"/>
+<!-- Row2 spine -->
+<path d="M1090,340 H520" fill="none" stroke="#2F7FD1" stroke-width="6" stroke-linecap="round"/>
+<!-- Fork: voom (purple) -->
+<path d="M520,340 C478,340 470,300 428,300 H300" fill="none" stroke="#7A6FE0" stroke-width="6" stroke-linecap="round"/>
+<path d="M300,300 C185,300 120,345 120,458" fill="none" stroke="#7A6FE0" stroke-width="6" stroke-linecap="round"/>
+<!-- block sub-branch off voom -->
+<path d="M428,300 V254" fill="none" stroke="#8E24AA" stroke-width="5" stroke-dasharray="2 6" stroke-linecap="round"/>
+<!-- Fork: edgeR (green) -->
+<path d="M520,340 C478,340 470,380 428,380 H300" fill="none" stroke="#1D9E75" stroke-width="6" stroke-linecap="round"/>
+<path d="M300,380 C190,380 120,408 120,458" fill="none" stroke="#1D9E75" stroke-width="6" stroke-linecap="round"/>
+<!-- Row3 trunk -->
+<path d="M120,470 H940 Q960,470 960,492 V618 Q960,640 940,640" fill="none" stroke="#2F7FD1" stroke-width="6" stroke-linecap="round"/>
+<!-- QC spur -->
+<path d="M540,470 V560 H612" fill="none" stroke="#D85A30" stroke-width="5" stroke-dasharray="2 6" stroke-linecap="round"/>
+<!-- Row4 trunk -->
+<path d="M940,640 H480" fill="none" stroke="#2F7FD1" stroke-width="6" stroke-linecap="round"/>
+<!-- Enrichment off-ramp arrow -->
+<path d="M480,640 H392" fill="none" stroke="#D85A30" stroke-width="5" stroke-dasharray="2 6" stroke-linecap="round"/>
+<path d="M392,640 l10,-5 v10 z" fill="#D85A30"/>
+
+<!-- ===================== STATIONS ===================== -->
+<g>
+<!-- Row1 -->
+<circle cx="120" cy="150" r="9" fill="#ffffff" stroke="#2F7FD1" stroke-width="4"/>
+<text x="120" y="118" text-anchor="middle" class="lbl">Input</text>
+<text x="120" y="134" text-anchor="middle" class="sub">counts + samp.info</text>
+
+<circle cx="300" cy="150" r="9" fill="#ffffff" stroke="#2F7FD1" stroke-width="4"/>
+<text x="300" y="118" text-anchor="middle" class="lbl">Standardize</text>
+<text x="300" y="134" text-anchor="middle" class="fn">get_samp_info</text>
+
+<circle cx="490" cy="150" r="9" fill="#ffffff" stroke="#2F7FD1" stroke-width="4"/>
+<text x="490" y="118" text-anchor="middle" class="lbl">Read counts</text>
+<text x="490" y="134" text-anchor="middle" class="fn">read_counts</text>
+
+<circle cx="680" cy="150" r="9" fill="#ffffff" stroke="#2F7FD1" stroke-width="4"/>
+<text x="680" y="118" text-anchor="middle" class="lbl">Filter</text>
+<text x="680" y="134" text-anchor="middle" class="fn">filter_counts</text>
+
+<circle cx="880" cy="150" r="9" fill="#ffffff" stroke="#2F7FD1" stroke-width="4"/>
+<text x="880" y="118" text-anchor="middle" class="lbl">DGEList + norm</text>
+<text x="880" y="134" text-anchor="middle" class="fn">calcNormFactors (TMM)</text>
+
+<!-- MDS -->
+<circle cx="880" cy="250" r="8" fill="#ffffff" stroke="#D85A30" stroke-width="4"/>
+<text x="898" y="248" class="lbl">MDS plot</text>
+<text x="898" y="263" class="fn">mds_plot</text>
+
+<!-- Row2 -->
+<circle cx="1090" cy="340" r="14" fill="#ffffff" stroke="#1c1c28" stroke-width="3"/>
+<circle cx="1090" cy="340" r="7" fill="#1c1c28"/>
+<text x="1090" y="308" text-anchor="middle" class="lbl">Mode resolution</text>
+<text x="1090" y="374" text-anchor="middle" class="sub">pairs · block · do.voom</text>
+<text x="1090" y="388" text-anchor="middle" class="fn">dw_resolve_mode</text>
+
+<circle cx="880" cy="340" r="9" fill="#ffffff" stroke="#2F7FD1" stroke-width="4"/>
+<text x="880" y="308" text-anchor="middle" class="lbl">Design matrix</text>
+<text x="880" y="374" text-anchor="middle" class="sub">means ~0+groups · additive ~pairs+groups</text>
+<text x="880" y="388" text-anchor="middle" class="fn">make_design</text>
+
+<circle cx="700" cy="340" r="9" fill="#ffffff" stroke="#2F7FD1" stroke-width="4"/>
+<text x="700" y="308" text-anchor="middle" class="lbl">Contrasts</text>
+<text x="700" y="374" text-anchor="middle" class="sub">explicit · coef</text>
+<text x="700" y="388" text-anchor="middle" class="fn">make_contrasts</text>
+
+<!-- Linear modelling interchange -->
+<circle cx="520" cy="340" r="14" fill="#ffffff" stroke="#1c1c28" stroke-width="3"/>
+<circle cx="520" cy="340" r="7" fill="#1c1c28"/>
+<text x="520" y="308" text-anchor="middle" class="lbl">Linear modelling</text>
+<text x="520" y="388" text-anchor="middle" class="fn">diff_expr_fit</text>
+
+<!-- block-only station -->
+<circle cx="428" cy="250" r="8" fill="#ffffff" stroke="#8E24AA" stroke-width="4"/>
+<text x="428" y="230" text-anchor="middle" class="lbl">duplicateCorrelation</text>
+<text x="428" y="216" text-anchor="middle" class="sub">block only (forces voom)</text>
+
+<!-- voom track -->
+<circle cx="428" cy="300" r="8" fill="#ffffff" stroke="#7A6FE0" stroke-width="4"/>
+<text x="440" y="286" class="lbl">voom</text>
+<text x="440" y="299" class="fn">voomLmFit</text>
+<circle cx="300" cy="300" r="8" fill="#ffffff" stroke="#7A6FE0" stroke-width="4"/>
+<text x="300" y="278" text-anchor="middle" class="lbl">lmFit → eBayes</text>
+<text x="300" y="291" text-anchor="middle" class="fn">contrasts.fit</text>
+
+<!-- edgeR track -->
+<circle cx="428" cy="380" r="8" fill="#ffffff" stroke="#1D9E75" stroke-width="4"/>
+<text x="428" y="404" text-anchor="middle" class="lbl">estimateDisp</text>
+<circle cx="300" cy="380" r="8" fill="#ffffff" stroke="#1D9E75" stroke-width="4"/>
+<text x="300" y="404" text-anchor="middle" class="lbl">glmQLFit / glmLRT</text>
+<text x="300" y="417" text-anchor="middle" class="sub">QL vs LRT by n</text>
+
+<!-- Row3 -->
+<circle cx="120" cy="470" r="14" fill="#ffffff" stroke="#1c1c28" stroke-width="3"/>
+<circle cx="120" cy="470" r="7" fill="#1c1c28"/>
+<text x="120" y="440" text-anchor="middle" class="lbl">Extract contrasts</text>
+<text x="120" y="500" text-anchor="middle" class="fn">extract_contrasts</text>
+<text x="120" y="514" text-anchor="middle" class="sub">loop per contrast</text>
+
+<circle cx="330" cy="470" r="9" fill="#ffffff" stroke="#2F7FD1" stroke-width="4"/>
+<text x="330" y="446" text-anchor="middle" class="lbl">Top table</text>
+<text x="330" y="432" text-anchor="middle" class="fn">topTable / topTags</text>
+
+<circle cx="540" cy="470" r="9" fill="#ffffff" stroke="#2F7FD1" stroke-width="4"/>
+<text x="540" y="446" text-anchor="middle" class="lbl">Annotate</text>
+<text x="540" y="432" text-anchor="middle" class="fn">biomart (optional)</text>
+
+<circle cx="750" cy="470" r="9" fill="#ffffff" stroke="#2F7FD1" stroke-width="4"/>
+<text x="750" y="446" text-anchor="middle" class="lbl">DE tables</text>
+<text x="750" y="432" text-anchor="middle" class="sub">.tsv full + filtered</text>
+
+<!-- QC -->
+<circle cx="612" cy="560" r="8" fill="#ffffff" stroke="#D85A30" stroke-width="4"/>
+<text x="630" y="552" class="lbl">QC / PCA plots</text>
+<text x="630" y="567" class="sub">uncorrected + pseudo-corrected (paired)</text>
+
+<!-- Row4 -->
+<circle cx="880" cy="640" r="9" fill="#ffffff" stroke="#2F7FD1" stroke-width="4"/>
+<text x="880" y="614" text-anchor="middle" class="lbl">Per-contrast plots</text>
+<text x="880" y="600" text-anchor="middle" class="sub">MA · volcano · pval · heatmap</text>
+
+<circle cx="680" cy="640" r="9" fill="#ffffff" stroke="#2F7FD1" stroke-width="4"/>
+<text x="680" y="672" text-anchor="middle" class="lbl">Venn</text>
+<text x="680" y="686" text-anchor="middle" class="fn">diffr_venn</text>
+
+<!-- Enrichment terminal -->
+<circle cx="480" cy="640" r="14" fill="#ffffff" stroke="#1c1c28" stroke-width="3"/>
+<circle cx="480" cy="640" r="7" fill="#1c1c28"/>
+<text x="480" y="614" text-anchor="middle" class="lbl">Enrichment</text>
+<text x="480" y="672" text-anchor="middle" class="fn">runEnrichmentAnalyses</text>
+<text x="480" y="686" text-anchor="middle" class="sub">optional ▷ see enrichment map</text>
+</g>
+
+<!-- ===================== MODE KEY ===================== -->
+<g>
+<rect x="40" y="716" width="770" height="188" rx="12" fill="#f7f7fb" stroke="#e4e4ec"/>
+<text x="60" y="742" class="keyh">Analysis modes — role × engine (five valid combinations)</text>
+
+<circle cx="66" cy="762" r="6" fill="#1D9E75"/>
+<text x="80" y="766" class="key">Unpaired · edgeR</text>
+<text x="270" y="766" class="keyd">means design, explicit contrasts</text>
+
+<circle cx="66" cy="786" r="6" fill="#7A6FE0"/>
+<text x="80" y="790" class="key">Unpaired · voom</text>
+<text x="270" y="790" class="keyd">means design, explicit contrasts</text>
+
+<circle cx="66" cy="810" r="6" fill="#1D9E75"/>
+<text x="80" y="814" class="key">Paired · edgeR</text>
+<text x="270" y="814" class="keyd">additive design, coef contrasts</text>
+
+<circle cx="66" cy="834" r="6" fill="#7A6FE0"/>
+<text x="80" y="838" class="key">Paired · voom</text>
+<text x="270" y="838" class="keyd">additive design, coef contrasts</text>
+
+<circle cx="66" cy="858" r="6" fill="#8E24AA"/>
+<text x="80" y="862" class="key">Blocked · voom</text>
+<text x="270" y="862" class="keyd">means design + duplicateCorrelation</text>
+
+<text x="60" y="890" class="keyd">Constraint: a blocked design forces voom — edgeR has no duplicateCorrelation equivalent.</text>
+</g>
+</svg>

@@ -139,7 +139,7 @@ These two axes give five valid combinations. The only constraint is that a block
 :::
 
 | `pairs` | `block` | `do.voom`     | Design            | Engine     | Role of `pairs`   |
-|------------|------------|------------|------------|------------|------------|
+|---------|---------|---------------|-------------------|------------|-------------------|
 | ---     | `FALSE` | `FALSE`       | `~0 + groups`     | edgeR GLM  | ---               |
 | ---     | `FALSE` | `TRUE`        | `~0 + groups`     | limma/voom | ---               |
 | given   | `FALSE` | `FALSE`       | `~pairs + groups` | edgeR GLM  | fixed effect      |
@@ -249,6 +249,44 @@ top50   <- rownames(tt)[seq_len(50)]
 n_true  <- sum(as.integer(sub("^ENSG0*", "", top50)) <= 60)
 cat("Of the 50 top-ranked genes,", n_true, "are truly differentially expressed\n")
 ```
+
+## Reshaping outputs without re-running {#sec-reshape}
+
+::: {style="text-align: justify;"}
+Because `diffExpr()` returns every intermediate object, plots and tables can be regenerated with different thresholds, palettes or gene sets **without repeating the analysis**. The returned list `res` holds the model fit(s), one annotated table per contrast in `res$contrasts`, and the plot objects in `res$MAplots`, `res$volcanoPlots` and `res$heatmapPlots`. Each `res$contrasts[[<contrast>]]` is a data frame with the per-sample normalised expression columns, the gene symbol and the `logFC`/`PValue`/`FDR` statistics --- everything the standalone functions need.
+
+Here we assemble that table from the manual objects so the vignette stays self-contained and offline; after a full run you would simply take `de_tab <- res$contrasts[["treated-control"]]`.
+:::
+
+```{r}
+#| label: reshape-table
+## identical in structure to res$contrasts[["treated-control"]] from a full run
+de_tab <- merge(edgeR::cpm(fit.l$d2, log = TRUE), tt, by = "row.names")
+names(de_tab)[1]   <- "ID"
+de_tab$gene_symbol <- de_tab$ID       # offline demo; a real run already carries symbols
+```
+
+::: {style="text-align: justify;"}
+Regenerating the heatmap is then a single call to `pheatmap_plots()` --- the same function the wrapper uses --- at a **stricter** FDR cut-off (0.01 vs. the default 0.05) and in a **different** palette, reusing the numbers already computed. `pheatmap_plots()` draws the heatmap together with its gene and sample correlograms (as it does into the pipeline's PDF); here we send those companion panels to a scratch device and keep the heatmap itself:
+:::
+
+```{r}
+#| label: reshape-heatmap
+#| fig-width: 7
+#| fig-height: 8
+grDevices::pdf(tempfile(fileext = ".pdf"))          # swallow the companion correlograms
+hm <- pheatmap_plots(de_tab, id = "ID",
+                     samp.info = samp.info, samples = "SampleNames", groups = groups,
+                     fdr.thr = 0.01, topn = 30,
+                     color.blind.pal = "RdBu")       # default palette is "PuOr"
+invisible(grDevices::dev.off())
+
+hm$fdr$regular                                       # the FDR-filtered heatmap, new settings
+```
+
+::: {style="text-align: justify;"}
+The same pattern covers the other outputs: `diff_expr_volcano_plot()` and `diff_expr_ma_plot()` take the same `res$contrasts[[<contrast>]]` table with their own `p.thr`/`fdr.thr`/`logfc.thr` and colour arguments, and `diffr_expr_generate_cleaned_de_table_output()` re-writes a trimmed, significance-filtered result table at whatever cut-offs you choose --- all without touching the model fit.
+:::
 
 ## Output, logging and verbosity
 

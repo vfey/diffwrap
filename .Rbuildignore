@@ -9,3 +9,5 @@
 ^\.DS_Store
 ^data-raw$
 ^diffwrap-pipeline_draft.svg$
+^doc$
+^Meta$

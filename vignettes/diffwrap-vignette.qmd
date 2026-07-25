@@ -44,7 +44,7 @@ The main entry point is `diffExpr()`, a convenience wrapper that runs the whole 
 ## Pipeline overview
 
 ::: {style="text-align: justify;"}
-Pre-processing runs across the top of the diagram below (with the MDS overview as an optional side branch). A *Mode resolution* hub then fans into five colour-coded lanes, one per analysis mode: each lane shows the flags that select it (`pairs`, `block`, `do.voom`) and the resulting recipe (design · contrasts · fit). The lanes reconverge at contrast extraction, and the required pipeline ends at the DE tables; QC, per-contrast plots, Venn and enrichment hang off as optional outputs. The five modes are described in @sec-modes; enrichment (@sec-enrichment) is detailed separately in @fig-enrichment.
+Pre-processing runs across the top of the diagram below. The analysis diverges into five possible routes at a *Mode resolution* hub \[five colour-coded lanes, one per analysis mode: each lane shows the flags that select it (`pairs`, `block`, `do.voom`) and the resulting recipe (design · contrasts · fit)\]. The routes re-converge at contrast extraction, and the required pipeline ends at the DE tables; QC, per-contrast plots, Venn diagrams and enrichment analyses are optional outputs. The five modes are described in @sec-modes; enrichment (@sec-enrichment) is detailed separately in @fig-enrichment.
 :::
 
 ![The diffwrap `diffExpr()` workflow. Pre-processing feeds a Mode resolution hub that fans into the five analysis modes (role × engine), each labelled with its selecting flags and its design/contrasts/fit recipe. The modes reconverge at contrast extraction; the required pipeline ends at the DE tables, with QC, plots, Venn and enrichment as optional branches.](diffwrap-pipeline.svg){#fig-pipeline}
@@ -52,15 +52,17 @@ Pre-processing runs across the top of the diagram below (with the MDS overview a
 ## Example data
 
 ::: {style="text-align: justify;"}
-The package ships a small **simulated** data set so that the workflow can be demonstrated without any external data or network access. It is *not* a real experiment: counts were drawn from a negative binomial model with a known ground truth, which makes it convenient for illustration and testing.
+The package includes a small **simulated** data set so that the workflow can be demonstrated without any external data or network access. Note that it is *not* a real experiment: counts were drawn from a negative binomial model with a known ground truth, which makes it convenient for illustration and testing.
 
 The design is eight samples in two groups of four, `control` and `treated`. Each of the four subjects (`P1`--`P4`) contributed one control and one treated sample, so the same data can be analysed as an unpaired comparison, as a paired design, or as a blocked design. A subject-specific offset is built into the simulation, giving the paired analyses a real effect to remove.
 
-Of the 400 genes, 60 are truly differentially expressed (30 up, 30 down) with absolute log2 fold changes between 1.2 and 3. A further 40 genes are given deliberately low expression so that they straddle the default filtering threshold, and the five `htseq-count` summary rows (`__no_feature` and friends) are retained so that the filtering step has something to remove.
+Of the 400 genes, 60 are truly differentially expressed (30 up, 30 down) with absolute log2 fold changes between 1.2 and 3. A further 40 genes are given deliberately low expression so that they trigger the default filtering threshold, and the five `htseq-count` summary rows (`__no_feature` and similar) are retained so that the filtering step has something to remove.
 :::
 
 ::: {style="text-align: justify;"}
-The package ships this data set as the lazy-loaded objects `diffwrap_counts` and `diffwrap_samp_info` (see `?diffwrap_counts`), and as the plain tab-separated files `example_counts.tsv` and `example_samp_info.tsv` under the package's `extdata` directory. So that this vignette is completely self-contained and reproducible, we regenerate an equivalent data set inline from the same simulation model rather than loading the shipped copy:
+The package ships this data set as the lazy-loaded objects `diffwrap_counts` and `diffwrap_samp_info` (see `?diffwrap_counts`), and as the plain tab-separated files `example_counts.tsv` and `example_samp_info.tsv` under the package's `extdata` directory.
+
+To ensure this vignette is completely self-contained and reproducible, we regenerate an equivalent data set inline from the same simulation model rather than loading the shipped copy:
 :::
 
 ```{r}
@@ -106,7 +108,7 @@ samp_info_raw
 ```
 
 ::: {style="text-align: justify;"}
-Real analyses usually begin from a counts file rather than an in-memory matrix. To demonstrate that entry point we write the matrix to a temporary file and read it back with `diff_expr_read_counts()`, which exercises exactly the same code path. `diff_expr_get_samp_info()` first standardises the sample sheet to the conventions the package expects:
+Real analyses usually begin from a counts file rather than an in-memory matrix. To demonstrate that entry point we write the matrix to a temporary file and read it back with `diff_expr_read_counts()`. `diff_expr_get_samp_info()` first standardises the sample sheet to the conventions the package expects:
 :::
 
 ```{r}
@@ -131,13 +133,13 @@ Three arguments together determine how an analysis is carried out: `pairs`, `blo
 - **as a fixed effect** (`pairs` given, `block = FALSE`) --- an additive model `~pairs + groups` with an intercept. Group coefficients are then already expressed relative to the control group and are extracted directly by coefficient name.
 - **as a correlation block** (`block = TRUE`) --- the means model again, but with the subject effect modelled through `limma::duplicateCorrelation()`.
 
-The second axis is simply which engine performs the test: **edgeR**'s generalised linear models, or **limma** after a `voom` transformation, selected with `do.voom`.
+The second axis determines the model used for testing differential expression: **edgeR**'s generalised linear models, or **limma** after a `voom` transformation, selected with `do.voom`.
 
 These two axes give five valid combinations. The only constraint is that a blocked design forces the **limma** engine, because **edgeR** has no equivalent of `duplicateCorrelation()`; if `block = TRUE` is combined with `do.voom = FALSE`, `voom` is enabled automatically and the reason is written to the log.
 :::
 
 | `pairs` | `block` | `do.voom`     | Design            | Engine     | Role of `pairs`   |
-|---------|---------|---------------|-------------------|------------|-------------------|
+|------------|------------|------------|------------|------------|------------|
 | ---     | `FALSE` | `FALSE`       | `~0 + groups`     | edgeR GLM  | ---               |
 | ---     | `FALSE` | `TRUE`        | `~0 + groups`     | limma/voom | ---               |
 | given   | `FALSE` | `FALSE`       | `~pairs + groups` | edgeR GLM  | fixed effect      |
@@ -147,7 +149,7 @@ These two axes give five valid combinations. The only constraint is that a block
 ## Running the whole pipeline
 
 ::: {style="text-align: justify;"}
-In the simplest case a single call is enough. Note that `out.dir` is **required**: the package deliberately has no default output location, so that nothing is ever written to the working directory unintentionally. Here the results go to a temporary directory, which is also what you should do in your own examples and tests.
+In the simplest case a single call is enough. Note that `out.dir` is **required**: the package deliberately has no default output location, so that nothing is ever written to the working directory unintentionally. Here the results go to a temporary directory, which is also what users should do in their own examples and tests.
 :::
 
 ```{r}
@@ -167,9 +169,9 @@ res <- diffExpr(expr.dat  = counts_file,
 ```
 
 ::: {style="text-align: justify;"}
-The chunk above is not evaluated when the vignette is built, simply because a full run writes a fair number of files and takes noticeably longer than is worthwhile during a package build; it needs no network access with these settings. Run it interactively to see the complete output. The manual walk-through in the next section *is* evaluated, and shows real differential expression results.
+The chunk above and the two concrete full-pipeline examples below are not evaluated when the vignette is built, because a full run writes a fair number of files and is too time-consuming for a package build; it also needs no network access with these settings. Run it interactively to see the complete output. The manual walk-through in the next section *is* evaluated, and shows real differential expression results.
 
-`diffExpr()` returns a list of the objects created along the way --- the `DGEList` or `voom` object, the model fits, and one annotated result table per contrast --- but it is first and foremost called for its side effects. Below `out.dir` you will find, per contrast, a full and a filtered differential expression table, a PDF of the M-A, volcano and p-value plots, heatmaps, and a Venn diagram plus intersection tables across contrasts.
+`diffExpr()` returns a list of the objects created along the way --- the `DGEList` or `voom` object, the model fits, and one annotated result table per contrast --- but it is first and foremost called for its side effects. The `out.dir` will contain, per contrast, a full and a filtered differential expression table, a PDF of the M-A, volcano and p-value plots, heatmaps, and a Venn diagram plus intersection tables across contrasts.
 :::
 
 ### Paired and blocked analyses
@@ -193,7 +195,7 @@ res_blocked <- diffExpr(expr.dat  = counts_file,
                         samp.info = samp_info_raw,
                         samples   = "SampleName",
                         groups    = "Group",
-                        pairs     = "Subject",
+                        pairs     = "Subject",    # 'pairs' is the blocking variable
                         block     = TRUE,         # duplicateCorrelation
                         control   = "control",
                         analysis.name = "demo_blocked",
@@ -257,7 +259,7 @@ A pipeline of this size produces a lot of progress information. Rather than writ
 - `verbose = FALSE` --- nothing on the console; the log file is still written in full.
 - `verbose = "all"` --- mirror the complete log to the console as well, which is handy while debugging.
 
-`suppressMessages()` works too. The log file is named after the analysis and is written next to the results; pass `log.file` to put it somewhere else.
+`suppressMessages()` works too. The log file is named after the analysis and is written next to the results; pass `log.file` to save it somewhere else.
 :::
 
 ```{r}
@@ -279,7 +281,7 @@ Both require network access, and enrichment additionally requires the relevant o
 Enrichment runs as a separate stage that consumes the differential-expression results: over-representation (ORA) on the significant genes and gene-set enrichment (GSEA) on the ranked gene list, across the methods selected in `enr.methods` (@fig-enrichment).
 :::
 
-![Enrichment sub-pipeline. The per-contrast DE results feed over-representation (ORA) and gene-set enrichment (GSEA), run through the methods chosen in enr.methods. KEGG needs Entrez IDs and therefore biomart annotation. Results are written as tables and optional network plots.](diffwrap-enrichment.svg){#fig-enrichment}
+![Enrichment sub-pipeline. The per-contrast DE results are used in over-representation (ORA) and gene-set enrichment (GSEA), both branches run through the methods chosen in enr.methods. KEGG needs Entrez IDs and therefore biomart annotation. Results are written as tables and optional network plots.](diffwrap-enrichment.svg){#fig-enrichment}
 
 ::: {style="text-align: justify;"}
 Neither step will produce anything meaningful for the simulated example data, whose gene identifiers are well-formed but fictitious. The chunk below is therefore shown for reference only.

@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Vidal Fey (vidal.fey@gmail.com)">
-<meta name="dcterms.date" content="2026-07-24">
+<meta name="dcterms.date" content="2026-07-25">
 
 <title>Differential expression analysis with diffwrap</title>
 <style>
@@ -117,7 +117,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">July 24, 2026</p>
+      <p class="date">July 25, 2026</p>
     </div>
   </div>
   
@@ -139,7 +139,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="pipeline-overview" class="level2" data-number="2">
 <h2 data-number="2" class="anchored" data-anchor-id="pipeline-overview"><span class="header-section-number">2</span> Pipeline overview</h2>
 <div style="text-align: justify;">
-<p>Pre-processing runs across the top of the diagram below (with the MDS overview as an optional side branch). A <em>Mode resolution</em> hub then fans into five colour-coded lanes, one per analysis mode: each lane shows the flags that select it (<code>pairs</code>, <code>block</code>, <code>do.voom</code>) and the resulting recipe (design · contrasts · fit). The lanes reconverge at contrast extraction, and the required pipeline ends at the DE tables; QC, per-contrast plots, Venn and enrichment hang off as optional outputs. The five modes are described in <a href="#sec-modes" class="quarto-xref">Section&nbsp;4</a>; enrichment (<a href="#sec-enrichment" class="quarto-xref">Section&nbsp;8</a>) is detailed separately in <a href="#fig-enrichment" class="quarto-xref">Figure&nbsp;2</a>.</p>
+<p>Pre-processing runs across the top of the diagram below. The analysis diverges into five possible routes at a <em>Mode resolution</em> hub [five colour-coded lanes, one per analysis mode: each lane shows the flags that select it (<code>pairs</code>, <code>block</code>, <code>do.voom</code>) and the resulting recipe (design · contrasts · fit)]. The routes re-converge at contrast extraction, and the required pipeline ends at the DE tables; QC, per-contrast plots, Venn diagrams and enrichment analyses are optional outputs. The five modes are described in <a href="#sec-modes" class="quarto-xref">Section&nbsp;4</a>; enrichment (<a href="#sec-enrichment" class="quarto-xref">Section&nbsp;8</a>) is detailed separately in <a href="#fig-enrichment" class="quarto-xref">Figure&nbsp;2</a>.</p>
 </div>
 <div id="fig-pipeline" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
@@ -155,12 +155,13 @@ Figure&nbsp;1: The diffwrap <code>diffExpr()</code> workflow. Pre-processing fee
 <section id="example-data" class="level2" data-number="3">
 <h2 data-number="3" class="anchored" data-anchor-id="example-data"><span class="header-section-number">3</span> Example data</h2>
 <div style="text-align: justify;">
-<p>The package ships a small <strong>simulated</strong> data set so that the workflow can be demonstrated without any external data or network access. It is <em>not</em> a real experiment: counts were drawn from a negative binomial model with a known ground truth, which makes it convenient for illustration and testing.</p>
+<p>The package includes a small <strong>simulated</strong> data set so that the workflow can be demonstrated without any external data or network access. Note that it is <em>not</em> a real experiment: counts were drawn from a negative binomial model with a known ground truth, which makes it convenient for illustration and testing.</p>
 <p>The design is eight samples in two groups of four, <code>control</code> and <code>treated</code>. Each of the four subjects (<code>P1</code>–<code>P4</code>) contributed one control and one treated sample, so the same data can be analysed as an unpaired comparison, as a paired design, or as a blocked design. A subject-specific offset is built into the simulation, giving the paired analyses a real effect to remove.</p>
-<p>Of the 400 genes, 60 are truly differentially expressed (30 up, 30 down) with absolute log2 fold changes between 1.2 and 3. A further 40 genes are given deliberately low expression so that they straddle the default filtering threshold, and the five <code>htseq-count</code> summary rows (<code>__no_feature</code> and friends) are retained so that the filtering step has something to remove.</p>
+<p>Of the 400 genes, 60 are truly differentially expressed (30 up, 30 down) with absolute log2 fold changes between 1.2 and 3. A further 40 genes are given deliberately low expression so that they trigger the default filtering threshold, and the five <code>htseq-count</code> summary rows (<code>__no_feature</code> and similar) are retained so that the filtering step has something to remove.</p>
 </div>
 <div style="text-align: justify;">
-<p>The package ships this data set as the lazy-loaded objects <code>diffwrap_counts</code> and <code>diffwrap_samp_info</code> (see <code>?diffwrap_counts</code>), and as the plain tab-separated files <code>example_counts.tsv</code> and <code>example_samp_info.tsv</code> under the package’s <code>extdata</code> directory. So that this vignette is completely self-contained and reproducible, we regenerate an equivalent data set inline from the same simulation model rather than loading the shipped copy:</p>
+<p>The package ships this data set as the lazy-loaded objects <code>diffwrap_counts</code> and <code>diffwrap_samp_info</code> (see <code>?diffwrap_counts</code>), and as the plain tab-separated files <code>example_counts.tsv</code> and <code>example_samp_info.tsv</code> under the package’s <code>extdata</code> directory.</p>
+<p>To ensure this vignette is completely self-contained and reproducible, we regenerate an equivalent data set inline from the same simulation model rather than loading the shipped copy:</p>
 </div>
 <div class="cell">
 <details class="code-fold">
@@ -223,7 +224,7 @@ Figure&nbsp;1: The diffwrap <code>diffExpr()</code> workflow. Pre-processing fee
 </details>
 </div>
 <div style="text-align: justify;">
-<p>Real analyses usually begin from a counts file rather than an in-memory matrix. To demonstrate that entry point we write the matrix to a temporary file and read it back with <code>diff_expr_read_counts()</code>, which exercises exactly the same code path. <code>diff_expr_get_samp_info()</code> first standardises the sample sheet to the conventions the package expects:</p>
+<p>Real analyses usually begin from a counts file rather than an in-memory matrix. To demonstrate that entry point we write the matrix to a temporary file and read it back with <code>diff_expr_read_counts()</code>. <code>diff_expr_get_samp_info()</code> first standardises the sample sheet to the conventions the package expects:</p>
 </div>
 <div class="cell">
 <details class="code-fold">
@@ -266,17 +267,17 @@ Figure&nbsp;1: The diffwrap <code>diffExpr()</code> workflow. Pre-processing fee
 <li><strong>as a fixed effect</strong> (<code>pairs</code> given, <code>block = FALSE</code>) — an additive model <code>~pairs + groups</code> with an intercept. Group coefficients are then already expressed relative to the control group and are extracted directly by coefficient name.</li>
 <li><strong>as a correlation block</strong> (<code>block = TRUE</code>) — the means model again, but with the subject effect modelled through <code>limma::duplicateCorrelation()</code>.</li>
 </ul>
-<p>The second axis is simply which engine performs the test: <strong>edgeR</strong>’s generalised linear models, or <strong>limma</strong> after a <code>voom</code> transformation, selected with <code>do.voom</code>.</p>
+<p>The second axis determines the model used for testing differential expression: <strong>edgeR</strong>’s generalised linear models, or <strong>limma</strong> after a <code>voom</code> transformation, selected with <code>do.voom</code>.</p>
 <p>These two axes give five valid combinations. The only constraint is that a blocked design forces the <strong>limma</strong> engine, because <strong>edgeR</strong> has no equivalent of <code>duplicateCorrelation()</code>; if <code>block = TRUE</code> is combined with <code>do.voom = FALSE</code>, <code>voom</code> is enabled automatically and the reason is written to the log.</p>
 </div>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 10%">
-<col style="width: 10%">
-<col style="width: 18%">
-<col style="width: 22%">
-<col style="width: 14%">
-<col style="width: 22%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -335,7 +336,7 @@ Figure&nbsp;1: The diffwrap <code>diffExpr()</code> workflow. Pre-processing fee
 <section id="running-the-whole-pipeline" class="level2" data-number="5">
 <h2 data-number="5" class="anchored" data-anchor-id="running-the-whole-pipeline"><span class="header-section-number">5</span> Running the whole pipeline</h2>
 <div style="text-align: justify;">
-<p>In the simplest case a single call is enough. Note that <code>out.dir</code> is <strong>required</strong>: the package deliberately has no default output location, so that nothing is ever written to the working directory unintentionally. Here the results go to a temporary directory, which is also what you should do in your own examples and tests.</p>
+<p>In the simplest case a single call is enough. Note that <code>out.dir</code> is <strong>required</strong>: the package deliberately has no default output location, so that nothing is ever written to the working directory unintentionally. Here the results go to a temporary directory, which is also what users should do in their own examples and tests.</p>
 </div>
 <div class="cell">
 <details class="code-fold">
@@ -354,8 +355,8 @@ Figure&nbsp;1: The diffwrap <code>diffExpr()</code> workflow. Pre-processing fee
 </details>
 </div>
 <div style="text-align: justify;">
-<p>The chunk above is not evaluated when the vignette is built, simply because a full run writes a fair number of files and takes noticeably longer than is worthwhile during a package build; it needs no network access with these settings. Run it interactively to see the complete output. The manual walk-through in the next section <em>is</em> evaluated, and shows real differential expression results.</p>
-<p><code>diffExpr()</code> returns a list of the objects created along the way — the <code>DGEList</code> or <code>voom</code> object, the model fits, and one annotated result table per contrast — but it is first and foremost called for its side effects. Below <code>out.dir</code> you will find, per contrast, a full and a filtered differential expression table, a PDF of the M-A, volcano and p-value plots, heatmaps, and a Venn diagram plus intersection tables across contrasts.</p>
+<p>The chunk above and the two concrete full-pipeline examples below are not evaluated when the vignette is built, because a full run writes a fair number of files and is too time-consuming for a package build; it also needs no network access with these settings. Run it interactively to see the complete output. The manual walk-through in the next section <em>is</em> evaluated, and shows real differential expression results.</p>
+<p><code>diffExpr()</code> returns a list of the objects created along the way — the <code>DGEList</code> or <code>voom</code> object, the model fits, and one annotated result table per contrast — but it is first and foremost called for its side effects. The <code>out.dir</code> will contain, per contrast, a full and a filtered differential expression table, a PDF of the M-A, volcano and p-value plots, heatmaps, and a Venn diagram plus intersection tables across contrasts.</p>
 </div>
 <section id="paired-and-blocked-analyses" class="level3" data-number="5.1">
 <h3 data-number="5.1" class="anchored" data-anchor-id="paired-and-blocked-analyses"><span class="header-section-number">5.1</span> Paired and blocked analyses</h3>
@@ -378,7 +379,7 @@ Figure&nbsp;1: The diffwrap <code>diffExpr()</code> workflow. Pre-processing fee
 <span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>                        <span class="at">samp.info =</span> samp_info_raw,</span>
 <span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>                        <span class="at">samples   =</span> <span class="st">"SampleName"</span>,</span>
 <span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>                        <span class="at">groups    =</span> <span class="st">"Group"</span>,</span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>                        <span class="at">pairs     =</span> <span class="st">"Subject"</span>,</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>                        <span class="at">pairs     =</span> <span class="st">"Subject"</span>,    <span class="co"># 'pairs' is the blocking variable</span></span>
 <span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>                        <span class="at">block     =</span> <span class="cn">TRUE</span>,         <span class="co"># duplicateCorrelation</span></span>
 <span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>                        <span class="at">control   =</span> <span class="st">"control"</span>,</span>
 <span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>                        <span class="at">analysis.name =</span> <span class="st">"demo_blocked"</span>,</span>
@@ -485,7 +486,7 @@ Figure&nbsp;1: The diffwrap <code>diffExpr()</code> workflow. Pre-processing fee
 <li><code>verbose = FALSE</code> — nothing on the console; the log file is still written in full.</li>
 <li><code>verbose = "all"</code> — mirror the complete log to the console as well, which is handy while debugging.</li>
 </ul>
-<p><code>suppressMessages()</code> works too. The log file is named after the analysis and is written next to the results; pass <code>log.file</code> to put it somewhere else.</p>
+<p><code>suppressMessages()</code> works too. The log file is named after the analysis and is written next to the results; pass <code>log.file</code> to save it somewhere else.</p>
 </div>
 <div class="cell">
 <details class="code-fold">
@@ -510,7 +511,7 @@ Figure&nbsp;1: The diffwrap <code>diffExpr()</code> workflow. Pre-processing fee
 <img src="diffwrap-enrichment.svg" class="img-fluid figure-img">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-enrichment-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;2: Enrichment sub-pipeline. The per-contrast DE results feed over-representation (ORA) and gene-set enrichment (GSEA), run through the methods chosen in enr.methods. KEGG needs Entrez IDs and therefore biomart annotation. Results are written as tables and optional network plots.
+Figure&nbsp;2: Enrichment sub-pipeline. The per-contrast DE results are used in over-representation (ORA) and gene-set enrichment (GSEA), both branches run through the methods chosen in enr.methods. KEGG needs Entrez IDs and therefore biomart annotation. Results are written as tables and optional network plots.
 </figcaption>
 </figure>
 </div>

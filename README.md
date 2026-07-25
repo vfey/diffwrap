@@ -12,7 +12,12 @@ convenience function, `diffExpr()`, that takes raw read counts (or CAP-miRSeq mi
 expression values) and produces annotated result tables, publication-style plots,
 quality-control diagnostics and, optionally, functional enrichment — all with sensible
 defaults. Every step is also exported as its own function, so the pipeline can be run
-end-to-end or step by step.
+end-to-end or step by step.  
+A full automated run will present the user with a comprehensive set of results and
+visualisations with most parameters tunable at the level of the main wrapper.  
+Graphs and tables can be easily adjusted by calling the plotting and enrichment
+functions directly and tweaking the provided graphical and thresholding parameter
+arguments.
 
 ## Features
 
@@ -36,7 +41,7 @@ install.packages("diffwrap_0.5-13.tar.gz", repos = NULL, type = "source")
 
 # or the development version from GitHub (replace OWNER with the repository owner)
 # install.packages("remotes")
-remotes::install_github("OWNER/diffwrap")
+remotes::install_github("vfey/diffwrap")
 ```
 
 The core engines (**edgeR**, **limma**) are installed as dependencies. Optional features
@@ -72,12 +77,13 @@ the MA/volcano/p-value plots, heatmaps, a Venn diagram across contrasts, and a r
 
 ## Pipeline overview
 
-Pre-processing runs across the top (with MDS as an optional side branch), then a
-*Mode resolution* hub fans into **five colour-coded mode lanes** — each showing the flags
+Pre-processing runs across the top of the diagram below, then the analysis diverges
+into five possible routes at a *Mode resolution* hub
+(**five colour-coded lanes, one per analysis mode**) with each showing the flags
 that select it (`pairs`/`block`/`do.voom`) and the resulting recipe (design · contrasts ·
-fit). The lanes reconverge at contrast extraction; the required pipeline ends at the DE
-tables, and QC, per-contrast plots, Venn and enrichment hang off as optional (dashed)
-outputs.
+fit). The routes re-converge at contrast extraction; the required pipeline ends at the DE
+tables. QC, per-contrast plots, Venn diagrams and enrichment analyses are optional
+(dashed) outputs.
 
 ![diffwrap pipeline: the five analysis modes](man/figures/diffwrap-pipeline.svg)
 

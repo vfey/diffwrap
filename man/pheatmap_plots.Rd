@@ -8,10 +8,10 @@ pheatmap_plots(
   d3,
   id,
   sym.col = "gene_symbol",
-  samp.info = samp.info,
+  samp.info,
   samples,
   groups,
-  sample.plot.names,
+  sample.plot.names = NULL,
   main = NULL,
   add.main = NULL,
   color.blind.pal = "PuOr",
@@ -79,15 +79,38 @@ threshold will be retained. Defaults to 1.}
 if they meet the significance threshold (regardless of the actual significance)? Defaults to \code{FALSE}.}
 }
 \value{
-Returns a list of pheatmap plot objects
+Returns a named \code{list} of heatmap objects: an element \code{fdr} (built from the
+  FDR-filtered genes) and/or \code{pval} (used only when nothing passes the FDR threshold), each a
+  list holding the \code{regular} heatmap and the gene/sample \code{correlogram} objects. Also
+  called for its side effect of drawing those objects on the active graphics device.
 }
 \description{
 Function to generate heatmap of gene expression values
 }
 \details{
 The actual heatmap is produced as a side effect by printing the individual plot components.
+
+This is the convenience entry point used by \code{diffExpr()} to build a contrast's
+  heatmaps; it is exported so the same heatmaps can be regenerated from a stored result table
+  (e.g. \code{res$contrasts[[<contrast>]]}) with different thresholds or colours, without re-running
+  the pipeline. The lower-level work horse it calls is \code{\link{diffr_pheatmap}}.
 }
-\note{
-This function is not exported as it is tailor-made for the diffwrap workflow (and called in the main wrapper function).
-    The 'diffr_pheatmap' function used here is the main work horse and exported.
+\examples{
+\donttest{
+si     <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
+counts <- diff_expr_filter_counts(diff_expr_read_counts(diffwrap_counts, si), si)
+groups <- stats::relevel(si$Groups, ref = "control")
+d      <- edgeR::calcNormFactors(edgeR::DGEList(counts, group = groups))
+design <- diff_expr_make_design(si, groups)
+contr  <- diff_expr_make_contrasts(design, groups)
+fit    <- diff_expr_fit(counts, d, design, do.voom = FALSE, quasi.likelihood = TRUE)
+## a per-contrast table like the ones diffExpr() stores in res$contrasts
+de <- edgeR::glmQLFTest(fit$fit, contrast = contr[, 1])
+d3 <- merge(edgeR::cpm(fit$d2, log = TRUE),
+            as.data.frame(edgeR::topTags(de, n = Inf)), by = "row.names")
+names(d3)[1] <- "ID"; d3$gene_symbol <- d3$ID
+## regenerate the heatmap at a stricter cut-off and a different palette, no refit
+hm <- pheatmap_plots(d3, id = "ID", samp.info = si, samples = "SampleNames",
+                     groups = groups, fdr.thr = 0.01, topn = 30, color.blind.pal = "RdBu")
+}
 }

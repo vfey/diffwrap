@@ -66,7 +66,19 @@ diffr_venn <- function(list.comp.tables,
                             col = "transparent", fill = fill.color,  height = 8000, width = 8000, print.mode = c("raw", "percent"),
                             cat.cex = 1.2, cex = 2.2, imagetype = "png", filename = NULL), silent = TRUE)
   if (is(venn.diag, "try-error")) warning("Plotting Venn diagram failed!")
-  venn.sets.lists = venn::venn(DEGs.list)
+  # venn::venn() is used here only for its intersection sets, but it also draws a Venn to the
+  # current graphics device as a side effect. Route that unwanted plot to a scratch device so it
+  # can never land in an open output file (e.g. a per-contrast '_plots.pdf'); the real diagram is
+  # the 'venn.diag' grob above, drawn later via grid::grid.draw().
+  scratch.dev <- tempfile(fileext = ".pdf")
+  grDevices::pdf(scratch.dev)
+  venn.sets.lists <- tryCatch(
+    venn::venn(DEGs.list),
+    finally = {
+      grDevices::dev.off()
+      unlink(scratch.dev)
+    }
+  )
   venn.sets.intersections = attr(venn.sets.lists, "intersections")
 
   venn.tt <- venn.sets.lists %>% dplyr::select(-counts)

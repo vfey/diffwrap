@@ -427,11 +427,12 @@ diff_expr_extract_contrasts <-
       dw_log("Renaming ID column...\n")
       names(d3)[1] <- "ID"
       if (biomart) {
-        dw_log(" --> Retrieving additional annotation from biomart...\n")
+        dw_step(" --> Retrieving gene annotation from BioMart (large queries can take a while)...\n")
         # diffExpr() probes BioMart up front, but keep a guard here in case a host drops out
         # mid-run: on failure fall back to offline convertId2() symbols for the remaining contrasts.
+        # verbose = TRUE turns on convert.bm()/getBM() progress output (shows if the session surfaces it).
         d3.bm <- tryCatch(
-          diff_expr_biomart(d3, biom.data.set, biom.mart, host, biom.filter, biom.attributes, biom.cache, use.cache, sym.col, rm.dups, force.ensg = biom.force.ensg),
+          diff_expr_biomart(d3, biom.data.set, biom.mart, host, biom.filter, biom.attributes, biom.cache, use.cache, sym.col, rm.dups, force.ensg = biom.force.ensg, verbose = TRUE),
           error = function(e) {
             warning("biomart query failed (", conditionMessage(e), "); falling back to offline ",
                     "convertId2() gene symbols for the remaining contrasts.", call. = FALSE)
@@ -630,6 +631,8 @@ dw_biomart_available <- function(biom.data.set = "hsapiens_gene_ensembl") {
 #' @param sym.col \code{character}. Name of the column in the query result with gene symbols.
 #' @param rm.dups \code{logical}. Should duplicated input IDs (\option{biom.filter}) be removed from the result?
 #' @param force.ensg \code{logical}. Should Ensembl Gene IDs be checked for (and stripped of) Ensembl version numbers? Defaults to \code{FALSE}.
+#' @param verbose \code{logical}. Passed to \code{convert.bm()}/\code{getBM()} to show query and
+#'   chunk progress for large BioMart queries. Defaults to \code{FALSE}.
 #' @return A \code{data.frame}: the input table \option{d3} merged with the annotation retrieved from
 #'   biomart. The column holding gene symbols is renamed to \code{gene_symbol}.
 #' @examples
@@ -642,7 +645,7 @@ dw_biomart_available <- function(biom.data.set = "hsapiens_gene_ensembl") {
 diff_expr_biomart <-
   function(d3, biom.data.set="hsapiens_gene_ensembl", biom.mart="ensembl",
            host="https://www.ensembl.org", biom.filter="ensembl_gene_id", biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"),
-           biom.cache = NULL, use.cache = FALSE, sym.col="hgnc_symbol", rm.dups=FALSE, force.ensg=FALSE)
+           biom.cache = NULL, use.cache = FALSE, sym.col="hgnc_symbol", rm.dups=FALSE, force.ensg=FALSE, verbose = FALSE)
   {
     # test if needed packages are installed
     if (use.cache && !requireNamespace("rappdirs", quietly = TRUE)) {
@@ -666,7 +669,14 @@ diff_expr_biomart <-
         dw_log("  -> Nothing to do\n")
       }
     }
-    gene.lab <- convertid::convert.bm(d3, "ID", biom.data.set, biom.mart, host, biom.filter, biom.attributes, biom.cache, use.cache, sym.col, rm.dups)
+    # NB: named arguments -- the newer convert.bm() inserted 'biomart.fallback' and 'chunk.size'
+    # (which keep their defaults here: Ensembl mirrors + 500-ID chunking for large queries).
+    gene.lab <- convertid::convert.bm(dat = d3, id = "ID",
+                                      biom.data.set = biom.data.set, biom.mart = biom.mart,
+                                      host = host, biom.filter = biom.filter,
+                                      biom.attributes = biom.attributes, biom.cache = biom.cache,
+                                      use.cache = use.cache, sym.col = sym.col, rm.dups = rm.dups,
+                                      verbose = verbose)
     names(gene.lab)[names(gene.lab)==sym.col] <- "gene_symbol"
     dw_log("  Extended annotation:\n")
     biom.attributes[biom.attributes==sym.col] <- "gene_symbol"

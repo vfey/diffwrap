@@ -4,9 +4,10 @@
 #   dw_log()     detail      -> log file (console only when verbose = "all")
 #   dw_log_obj() object dump -> as dw_log(), via print()
 #
-# Console output goes through message() (stderr), so suppressMessages() works.
-# Both helpers capture cat()/print() internally, so call sites keep their exact
-# original formatting: converting a cat() call is a pure textual swap.
+# Console output goes to stdout via cat(), gated by 'verbose' (so verbose = FALSE silences it).
+# stdout is used rather than message()/stderr because dependencies loaded during a run (e.g.
+# VennDiagram/futile.logger) can disturb the stderr stream.
+# Both helpers capture cat()/print() internally, so call sites keep their exact original formatting.
 #
 # Author: vidal
 ###############################################################################
@@ -64,7 +65,10 @@ dw_log_end <- function() {
   } else {
     .dw_state$buffer <- c(.dw_state$buffer, txt)
   }
-  if (console) message(paste(txt, collapse = "\n"))
+  # Console channel is stdout via cat(), NOT message()/stderr: some dependencies loaded in a run
+  # (notably VennDiagram/futile.logger) disturb the stderr/message stream whereas stdout is
+  # diffwrap's own channel and always shows. Still gated by 'verbose'.
+  if (console) cat(paste(txt, collapse = "\n"), "\n", sep = "")
   invisible(NULL)
 }
 

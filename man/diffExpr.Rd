@@ -251,9 +251,8 @@ Defaults to 0.05.}
 
 \item{verbose}{\code{logical} or \code{character}. Controls console output. \code{TRUE} (default) prints
 major workflow steps, \code{FALSE} prints nothing, and \code{"all"} mirrors the full detail of the log
-file to the console. Console output is written via \code{message()} and can therefore also be silenced
-with \code{suppressMessages()}. Irrespective of this setting, the complete log is always written to
-\option{log.file}.}
+file to the console. Console output is written to \code{stdout} and is controlled solely by this argument.
+Irrespective of this setting, the complete log is always written to \option{log.file}.}
 
 \item{log.file}{\code{character}. Path to the run log file. If \code{NULL} (default), a log file named
 \emph{<analysis.name>_diffwrap.log} is created in \option{out.dir}. No log file is written if

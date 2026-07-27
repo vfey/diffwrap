@@ -55,7 +55,7 @@ A \code{ggplot} object containing the volcano plot for the requested significanc
 \description{
 Builds a single volcano plot for one significance measure. Points are coloured by an
   'EnhancedVolcano'-style, colour-blind safe (Okabe-Ito) four-level scheme distinguishing genes that
-  pass neither threshold ("NS"), the fold-change threshold only, the significance threshold only, or
+  pass neither threshold ("not sign."), the fold-change threshold only, the significance threshold only, or
   both. Only the doubly-significant genes are eligible for text labels.
 }
 \examples{

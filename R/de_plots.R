@@ -144,7 +144,7 @@ diff_expr_ma_plot <-
 #' Helper function that returns a volcano plot.
 #' @description Builds a single volcano plot for one significance measure. Points are coloured by an
 #'   'EnhancedVolcano'-style, colour-blind safe (Okabe-Ito) four-level scheme distinguishing genes that
-#'   pass neither threshold ("NS"), the fold-change threshold only, the significance threshold only, or
+#'   pass neither threshold ("not sign."), the fold-change threshold only, the significance threshold only, or
 #'   both. Only the doubly-significant genes are eligible for text labels.
 #' @param data.df \code{data.frame}. Data frame containing all necessary columns to generate a Volcano plot with
 #'   gene labels (at least p-values, FDR values, log-ratios and gene symbols or other IDs)
@@ -195,10 +195,10 @@ prepare_volcano_of_given_property <-
     pass.p  <- !is.na(prop) & prop < property.thr
     pass.fc <- !is.na(data.df$logFC) & abs(data.df$logFC) > logfc.thr
 
-    lab.ns   <- "NS"
-    lab.fc   <- sprintf("|logFC| > %s", logfc.thr)
+    lab.ns   <- "not sign."
+    lab.fc   <- sprintf("logFC > %s", logfc.thr)
     lab.sig  <- sprintf("%s < %s", measure, property.thr)
-    lab.both <- sprintf("%s < %s & |logFC| > %s", measure, property.thr, logfc.thr)
+    lab.both <- sprintf("%s < %s & logFC > %s", measure, property.thr, logfc.thr)
     levs     <- c(lab.ns, lab.fc, lab.sig, lab.both)
     # Okabe-Ito palette: grey / bluish-green / sky-blue / vermillion
     pal      <- stats::setNames(c("#999999", "#009E73", "#56B4E9", "#D55E00"), levs)

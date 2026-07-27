@@ -18,7 +18,8 @@ diff_expr_ma_plot(
   point.lab = TRUE,
   biom.attributes = c("ensembl_gene_id", "hgnc_symbol", "description"),
   font.size = 5,
-  lists = TRUE
+  lists = TRUE,
+  base.size = 16
 )
 }
 \arguments{
@@ -51,6 +52,10 @@ conforming to the same format.}
 \item{font.size}{Size of point labels in M-A plots.}
 
 \item{lists}{Logical; should output tables be written to files?}
+
+\item{base.size}{\code{numeric}. Overall text scale (`ggplot2` \code{base_size}, default 16) applied via
+\code{theme_gray}; controls legend, axis and title text. Independent of \code{font.size}, which sets the
+point-label size. Raise it for readability on a large device (e.g. the 15x15 inch pipeline PDF).}
 }
 \value{
 A named \code{list} of \code{ggplot} objects with the elements \code{FDR} and \code{Pval},

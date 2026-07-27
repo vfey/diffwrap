@@ -33,6 +33,7 @@ diffExpr(
   logfc.thr = 1,
   numlab = 25,
   point.lab = TRUE,
+  de.plot.base.size = 16,
   biom.use = FALSE,
   biom.data.set = "hsapiens_gene_ensembl",
   biom.mart = "ensembl",
@@ -149,6 +150,11 @@ If \code{TRUE}, then the quasi-likelihood methods are used, if \code{FALSE}, the
 values calculated by any thresholds. Defaults to 25.}
 
 \item{point.lab}{\code{logical}. Should point labels be shown in the plot? Defaults to \code{TRUE}.}
+
+\item{de.plot.base.size}{\code{numeric}. Overall text/point scale (the `ggplot2` \code{base_size}) for the
+M-A and volcano plots, defaulting to 16. Raising it enlarges legend, axes, titles, point labels and
+points together. The default (16, up from the `ggplot2` default of ~11) keeps text readable on the
+default per-contrast plot PDF, which is opened at 15x15 inches to hold the heatmaps.}
 
 \item{biom.use}{\code{logical}. Should the biomart be used for gene annotation? Defaults to \code{FALSE}.}
 

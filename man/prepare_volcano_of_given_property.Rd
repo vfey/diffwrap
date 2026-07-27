@@ -14,7 +14,8 @@ prepare_volcano_of_given_property(
   numlab = 25,
   point.lab = TRUE,
   sym.col = "gene_symbol",
-  pretty.breaks = FALSE
+  pretty.breaks = FALSE,
+  base.size = 16
 )
 }
 \arguments{
@@ -42,6 +43,11 @@ with a guaranteed minimum per side so the minor side is never left empty. The ch
 \item{sym.col}{\code{character}. Name of column with gene symbols, e.g., HGNC Symbols.}
 
 \item{pretty.breaks}{\code{logical}. Should the breaks on the axes be pretty? Uses `scales::breaks_extended`.}
+
+\item{base.size}{\code{numeric}. Overall text/point scale (the `ggplot2` \code{base_size}, default 16).
+Directly used by legend, axis and title text; point-label, threshold-annotation and point sizes are derived
+from it. Useful when the plot is printed to a large device (e.g. the 15x15 inch pipeline PDF), where the
+default `ggplot2` sizes are too small.}
 }
 \value{
 A \code{ggplot} object containing the volcano plot for the requested significance measure.

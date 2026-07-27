@@ -13,7 +13,8 @@ diff_expr_volcano_plot(
   fdr.thr = 0.05,
   logfc.thr = 1,
   numlab = 25,
-  point.lab = TRUE
+  point.lab = TRUE,
+  base.size = 16
 )
 }
 \arguments{
@@ -34,6 +35,10 @@ diff_expr_volcano_plot(
 \item{numlab}{\code{numeric}. Maximum number of labels per plot. Takes precedence to numbers calculated based on `p.thr` and `fdr.thr`.}
 
 \item{point.lab}{\code{logical}. Should points be labelled, at all?}
+
+\item{base.size}{\code{numeric}. Overall text/point scale passed on to \code{prepare_volcano_of_given_property}
+(the `ggplot2` \code{base_size}, default 16). Raise it to enlarge legend, axes, labels and points together
+when printing to a large device (e.g. the 15x15 inch pipeline PDF).}
 }
 \value{
 A named \code{list} of \code{ggplot} objects with the elements \code{FDR} and \code{Pval},

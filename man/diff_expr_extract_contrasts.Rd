@@ -49,7 +49,8 @@ diff_expr_extract_contrasts(
   samp.info = NULL,
   samples = NULL,
   groups = NULL,
-  sample.plot.names = NULL
+  sample.plot.names = NULL,
+  de.plot.base.size = 16
 )
 }
 \arguments{
@@ -153,6 +154,10 @@ vector of sample names.}
 vector of groups.}
 
 \item{sample.plot.names}{\code{character}. Optional name of a column with "nice" sample names for plotting.}
+
+\item{de.plot.base.size}{\code{numeric}. Overall text/point scale (`ggplot2` \code{base_size}, default 16)
+passed to the M-A and volcano plots. Raise it so labels and legends stay readable on the large
+per-contrast PDF (opened at 15x15 inches).}
 }
 \value{
 The input list \option{out.l}, extended with a \code{contrasts} element holding one annotated

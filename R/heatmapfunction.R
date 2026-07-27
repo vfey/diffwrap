@@ -23,7 +23,7 @@ get_hm_breaks <- function(
     expr.mat <- as.matrix(expr.mat)
   }
   # scale on the same margin pheatmap will use, so the computed breaks match the displayed data
-  # (scale() works on columns, so row-scaling needs the transpose dance)
+  # (scale() works on columns, so row-scaling needs the transpose)
   if (scale.fl == "row") {
     expr.mat <- t(scale(t(expr.mat)))
   } else if (scale.fl == "column") {
@@ -410,7 +410,9 @@ diffr_pheatmap = function(expr.mat, clinical.mat,
     n.pal.cols <- 11
   }
 
-  mat.breaks <- get_hm_breaks(expr.mat, palette.length = palette.length, quantile.breaks.fl = quantile.breaks.fl, n = n.pal.cols)
+  # pass scale.fl so the breaks are computed on the same data that will be displayed; otherwise
+  # breaks computed on row-scaled data are applied to an unscaled ("none") panel and blank it
+  mat.breaks <- get_hm_breaks(expr.mat, scale.fl = scale.fl, palette.length = palette.length, quantile.breaks.fl = quantile.breaks.fl, n = n.pal.cols)
   colour <- get_hm_colors(palette.length = palette.length, breaks = mat.breaks, color.blind.pal = color.blind.pal, n.pal.cols = n.pal.cols)
   breaks.hm <- mat.breaks
   # by default, with palette.length==NULL and quantile.breaks.fl==FALSE, breaks are meant to be set by pheatmap(), so are set to NA

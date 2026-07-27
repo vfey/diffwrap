@@ -312,6 +312,7 @@ diffExpr <-
     ## log lines are buffered in memory so that nothing from the startup checks is lost
     dw_log_start(verbose)
     on.exit(dw_log_end(), add = TRUE)
+    run_start <- Sys.time()   # start timing the run phase
 
     ## initial checks
     dw_step("@ -- STARTUP CHECKS --\n\n")
@@ -964,6 +965,9 @@ diffExpr <-
                                                 plot.num.terms=enrichment.plot.num.terms
       )
     }
+    run_secs <- as.numeric(difftime(Sys.time(), run_start, units = "secs"))
+    dw_step(sprintf("@@ -- Run completed in %s\n", fmt_dur(run_secs)))
+
     ## the run completed normally, so the device-cleanup handler is no longer needed.
     ## NOTE: do NOT call bare on.exit() here - that would also cancel dw_log_end()
     ## and leave the log file connection open.

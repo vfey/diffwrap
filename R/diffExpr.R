@@ -401,12 +401,24 @@ diffExpr <-
     }
 
     #Checking whether the enrichment analyses can be run
-    kegg.enrichment.will.be.performed = sum(grepl("KEGG", enrichment.methods)) > 0
-    #kegg pathway enrichments needs entrez-IDs while other approaches are fine with Ensembl IDs
-    if (do.enrichment & kegg.enrichment.will.be.performed) {
-      if (!biomart) {
-        stop("Cannot run KEGG-pathway enrichment without entrez IDs. Set 'biom.use' to TRUE or remove KEGG enrichment approach from 'enr.methods'")
+    ## Probe BioMart up front so the decision holds for the whole run: if it is unreachable, fall back
+    ## to offline convertId2() gene symbols (biomart off) and drop KEGG, which needs Entrez IDs.
+    if (biomart) {
+      dw_log("  Checking BioMart availability...\n")
+      if (!dw_biomart_available(biom.data.set)) {
+        warning("BioMart is not reachable (primary host or mirrors). Gene annotation will use ",
+                "offline convertId2() symbols instead; KEGG enrichment (which needs Entrez IDs) ",
+                "will be skipped.", call. = FALSE)
+        dw_step("  !NOTE! BioMart unavailable -> offline symbols via convertId2(); KEGG skipped.\n")
+        biomart <- FALSE
       }
+    }
+    #kegg pathway enrichment needs entrez-IDs (from biomart) while other approaches are fine with Ensembl IDs
+    kegg.enrichment.will.be.performed <- sum(grepl("KEGG", enrichment.methods)) > 0
+    if (do.enrichment && kegg.enrichment.will.be.performed && !biomart) {
+      dw_log("  Removing KEGG from enrichment methods (needs BioMart/Entrez IDs).\n")
+      enrichment.methods <- enrichment.methods[!grepl("KEGG", enrichment.methods)]
+      kegg.enrichment.will.be.performed <- FALSE
     }
     if (kegg.enrichment.will.be.performed) {
       #entrez ids has to be retrieved (if not already included in biom.attributes)

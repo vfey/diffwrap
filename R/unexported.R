@@ -9,7 +9,12 @@
 #' @return Character string with run time information.
 #' @keywords internal
 fmt_dur <- function(secs) {
-  if (secs < 60) sprintf("%.1f sec", secs)
-  else if (secs < 3600) sprintf("%d min %02.0f sec", secs %/% 60, secs %% 60)
-  else sprintf("%d h %02d min %02.0f sec", secs %/% 3600, (secs %% 3600) %/% 60, secs %% 60)
+  if (!is.finite(secs) || secs < 0) return(NA_character_)
+  if (secs < 60) return(sprintf("%.1f sec", secs))
+  s  <- round(secs)                 # whole seconds first -> no per-field rounding carry
+  h  <- s %/% 3600
+  m  <- (s %% 3600) %/% 60
+  ss <- s %% 60
+  if (h > 0) sprintf("%d h %02d min %02d sec", h, m, ss)
+  else       sprintf("%d min %02d sec", m, ss)
 }

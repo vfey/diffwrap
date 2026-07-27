@@ -56,6 +56,10 @@
 #' @param numlab \code{numeric}. Maximum number of point labels to be shown in the plot. This overrides/limits
 #'   values calculated by any thresholds. Defaults to 25.
 #' @param point.lab \code{logical}. Should point labels be shown in the plot? Defaults to \code{TRUE}.
+#' @param de.plot.base.size \code{numeric}. Overall text/point scale (the `ggplot2` \code{base_size}) for the
+#'   M-A and volcano plots, defaulting to 16. Raising it enlarges legend, axes, titles, point labels and
+#'   points together. The default (16, up from the `ggplot2` default of ~11) keeps text readable on the
+#'   default per-contrast plot PDF, which is opened at 15x15 inches to hold the heatmaps.
 #' @param biom.use \code{logical}. Should the biomart be used for gene annotation? Defaults to \code{FALSE}.
 #' @param biom.data.set \code{character}. The biomart dataset to be used. Defaults to "hsapiens_gene_ensembl".
 #' @param biom.mart \code{character}. The biomart to be used.
@@ -196,6 +200,7 @@ diffExpr <-
            logfc.thr = 1,
            numlab = 25,
            point.lab = TRUE,
+           de.plot.base.size = 16,
            ## --- biomart annotation (biom.*) ---
            biom.use = FALSE,
            biom.data.set = "hsapiens_gene_ensembl",
@@ -778,6 +783,7 @@ diffExpr <-
                                              anno.name = anno.name,
                                              heatmap.main = paste0("limma::", voom.fun),
                                              font.size = label.font.size,
+                                             de.plot.base.size = de.plot.base.size,
                                              plots = plots,
                                              lists = lists,
                                              filtered.lists = filtered.lists,
@@ -827,6 +833,7 @@ diffExpr <-
                                              anno.name = anno.name,
                                              heatmap.main = paste0("limma::", voom.fun),
                                              font.size = label.font.size,
+                                             de.plot.base.size = de.plot.base.size,
                                              plots = plots,
                                              lists = lists,
                                              filtered.lists,
@@ -878,6 +885,7 @@ diffExpr <-
                                              anno.name = anno.name,
                                              heatmap.main = "edgeR GLM",
                                              font.size = label.font.size,
+                                             de.plot.base.size = de.plot.base.size,
                                              plots = plots,
                                              lists = lists,
                                              filtered.lists = filtered.lists,
@@ -927,6 +935,7 @@ diffExpr <-
                                              anno.name = anno.name,
                                              heatmap.main = "edgeR GLM",
                                              font.size = label.font.size,
+                                             de.plot.base.size = de.plot.base.size,
                                              plots = plots,
                                              lists = lists,
                                              filtered.lists = filtered.lists,

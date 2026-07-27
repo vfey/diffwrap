@@ -314,6 +314,9 @@ diffr_expr_generate_cleaned_de_table_output <-
 #' @param groups \code{character}. Name of the column in 'samp.info' containing grouping information. If 'samp.info' is not supplied
 #'     vector of groups.
 #' @param sample.plot.names \code{character}. Optional name of a column with "nice" sample names for plotting.
+#' @param de.plot.base.size \code{numeric}. Overall text/point scale (`ggplot2` \code{base_size}, default 16)
+#'   passed to the M-A and volcano plots. Raise it so labels and legends stay readable on the large
+#'   per-contrast PDF (opened at 15x15 inches).
 #' @return The input list \option{out.l}, extended with a \code{contrasts} element holding one annotated
 #'   result \code{data.frame} per contrast and, if plots were requested, with the \code{MAplots},
 #'   \code{volcanoPlots} and \code{heatmapPlots} elements. Called also for its side effects of writing
@@ -346,7 +349,8 @@ diff_expr_extract_contrasts <-
            hm.p.thr = 0.05, hm.fdr.thr = 0.05, hm.logfc.thr = 1,
            heatmap.split.expr = FALSE, color.blind.pal = "PuOr", n.pal.cols = 11, color.extremes = c("#3182BD", "#E6550D"),
            palette.length = NULL, anno.color = NULL, anno.name = "Sample Class", heatmap.main = NULL, font.size=5, plots=TRUE,
-           lists=TRUE, filtered.lists = TRUE, samp.info = NULL, samples = NULL, groups = NULL, sample.plot.names = NULL)
+           lists=TRUE, filtered.lists = TRUE, samp.info = NULL, samples = NULL, groups = NULL, sample.plot.names = NULL,
+           de.plot.base.size = 16)
   {
     # initial checks
     if (is.null(samp.info)) stop("Need sample sheet! Provide as data frame to 'samp.info' argument.")
@@ -488,7 +492,7 @@ diff_expr_extract_contrasts <-
         pdf(file.path(contr.out.dir, paste(analysis.name, contr, "_plots.pdf", sep="_")), width = 15, height = 15)
         par(mar = c(6,6,5,3))
         dw_log(" MA-plot...\n")
-        out.l$MAplots[[contr]] <- diff_expr_ma_plot(d3, contr, id.col, sym.col, p.thr, fdr.thr, logfc.thr, numlab, out.dir=contr.out.dir, analysis.name, point.lab, biom.attributes, font.size, lists)
+        out.l$MAplots[[contr]] <- diff_expr_ma_plot(d3, contr, id.col, sym.col, p.thr, fdr.thr, logfc.thr, numlab, out.dir=contr.out.dir, analysis.name, point.lab, biom.attributes, font.size, lists, base.size = de.plot.base.size)
 
         ## Volcano plot
         dw_log(" Volcano plot...\n")
@@ -496,7 +500,7 @@ diff_expr_extract_contrasts <-
         volcano.name = gsub(".", " ", contr, fixed=TRUE)
         volcano.name = gsub("_", " ", volcano.name, fixed=TRUE)
         volcano.name = gsub("-", " vs. ", volcano.name, fixed=TRUE)
-        out.l$volcanoPlots[[contr]] <- diff_expr_volcano_plot(d3, id.col, sym.col="gene_symbol", main=volcano.name, p.thr=p.thr, fdr.thr=fdr.thr, logfc.thr=logfc.thr, numlab=numlab, point.lab=point.lab)
+        out.l$volcanoPlots[[contr]] <- diff_expr_volcano_plot(d3, id.col, sym.col="gene_symbol", main=volcano.name, p.thr=p.thr, fdr.thr=fdr.thr, logfc.thr=logfc.thr, numlab=numlab, point.lab=point.lab, base.size = de.plot.base.size)
 
         #png(paste(out.dir,"/",analysis.name,".Pvalue_distribution.png",sep=""),width=1280,height=960,res=150)
         ## Histogram of P-value distribution

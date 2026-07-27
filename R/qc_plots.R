@@ -113,10 +113,13 @@ diff_expr_mds_plot <-
     if (!is.null(sample.plot.names)) {
       dw_log("  *** Using custom sample labels: ***\n  ", head(sample.plot.names), "\n")
     }
-    oldpar <- par(no.readonly = TRUE)
-    on.exit(par(oldpar), add = TRUE)
     if (do.pdf) {
       pdf(file.path(out.dir, paste0(analysis.name, "_MDS_plot.pdf")), width=11, height=11)
+    } else {
+      # only when drawing to the caller's device do we change (and must restore) its par;
+      # capturing par before a pdf() would force a device open and disturb the plot output
+      oldpar <- par(no.readonly = TRUE)
+      on.exit(par(oldpar), add = TRUE)
     }
     par(mar = c(6,6,5,3))
     limma::plotMDS(d, top=n, labels=sample.plot.names, main=paste0("MDS plot for '", analysis.name, "' normalised DGEList"), col = rainbow(length(levels(groups)))[factor(groups)])

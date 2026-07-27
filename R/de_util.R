@@ -464,8 +464,11 @@ diff_expr_extract_contrasts <-
       # genes selected as differentially expressed (with a 5% false discovery rate)
       if (plots) {
         dw_log("Plotting...\n")
-        oldpar <- par(no.readonly = TRUE)
-        on.exit(par(oldpar), add = TRUE)
+        # NB: par(mar=...) below is set *after* pdf() opens, i.e. only on the transient PDF
+        # device that dev.off() destroys, so the caller's par is never modified and needs no
+        # restore. Do NOT add par(no.readonly=TRUE)/on.exit(par(oldpar)) here: capturing par
+        # before the device exists forces a device open and, inside this per-contrast loop,
+        # leaves the graphics state so the heatmap grid output never reaches the PDF.
         pdf(file.path(contr.out.dir, paste(analysis.name, contr, "_plots.pdf", sep="_")), width = 15, height = 15)
         par(mar = c(6,6,5,3))
         dw_log(" MA-plot...\n")

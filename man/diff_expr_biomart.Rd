@@ -15,7 +15,8 @@ diff_expr_biomart(
   use.cache = FALSE,
   sym.col = "hgnc_symbol",
   rm.dups = FALSE,
-  force.ensg = FALSE
+  force.ensg = FALSE,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -41,6 +42,9 @@ corresponding statistical tests.}
 \item{rm.dups}{\code{logical}. Should duplicated input IDs (\option{biom.filter}) be removed from the result?}
 
 \item{force.ensg}{\code{logical}. Should Ensembl Gene IDs be checked for (and stripped of) Ensembl version numbers? Defaults to \code{FALSE}.}
+
+\item{verbose}{\code{logical}. Passed to \code{convert.bm()}/\code{getBM()} to show query and
+chunk progress for large BioMart queries. Defaults to \code{FALSE}.}
 }
 \value{
 A \code{data.frame}: the input table \option{d3} merged with the annotation retrieved from

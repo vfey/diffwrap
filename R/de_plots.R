@@ -22,6 +22,9 @@ utils::globalVariables(c("Average Expression", "logFC", "log2 Fold-Change", "adj
 #' @param biom.attributes \code{character}. Vector of column names to be retrieved from biomart.
 #' @param font.size Size of point labels in M-A plots.
 #' @param lists Logical; should output tables be written to files?
+#' @param base.size \code{numeric}. Overall text scale (`ggplot2` \code{base_size}, default 16) applied via
+#'   \code{theme_gray}; controls legend, axis and title text. Independent of \code{font.size}, which sets the
+#'   point-label size. Raise it for readability on a large device (e.g. the 15x15 inch pipeline PDF).
 #' @return A named \code{list} of \code{ggplot} objects with the elements \code{FDR} and \code{Pval},
 #'   holding the M-A plot with points highlighted by false discovery rate and by p-value, respectively.
 #' @examples
@@ -39,7 +42,7 @@ utils::globalVariables(c("Average Expression", "logFC", "log2 Fold-Change", "adj
 diff_expr_ma_plot <-
 		function(dat, contr, id=NULL, sym.col="gene_symbol", p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=25,
 		         out.dir, analysis.name=NULL, point.lab=TRUE, biom.attributes=c("ensembl_gene_id","hgnc_symbol","description"),
-		         font.size=5, lists=TRUE)
+		         font.size=5, lists=TRUE, base.size=16)
 {
 	if (is.null(id) && !sym.col %in% names(dat)) {
 		stop("Need one of 'id' or 'sym.col'.")
@@ -96,6 +99,7 @@ diff_expr_ma_plot <-
 		} else {
 			g <- g + ggtitle(paste("M-A plot for", contr))
 		}
+		g <- g + theme_gray(base_size = base.size)
 		suppressWarnings(print(g))
 		g.l[["FDR"]] <- g
 	}
@@ -129,6 +133,7 @@ diff_expr_ma_plot <-
 		} else {
 			g <- g + ggtitle(paste("M-A plot for", contr))
 		}
+		g <- g + theme_gray(base_size = base.size)
 		print(g)
 		g.l[["Pval"]] <- g
 	}
@@ -156,6 +161,10 @@ diff_expr_ma_plot <-
 #' @param point.lab \code{logical}. Should points be labelled, at all?
 #' @param sym.col \code{character}. Name of column with gene symbols, e.g., HGNC Symbols.
 #' @param pretty.breaks \code{logical}. Should the breaks on the axes be pretty? Uses `scales::breaks_extended`.
+#' @param base.size \code{numeric}. Overall text/point scale (the `ggplot2` \code{base_size}, default 16).
+#'   Directly used by legend, axis and title text; point-label, threshold-annotation and point sizes are derived
+#'   from it. Useful when the plot is printed to a large device (e.g. the 15x15 inch pipeline PDF), where the
+#'   default `ggplot2` sizes are too small.
 #' @return A \code{ggplot} object containing the volcano plot for the requested significance measure.
 #' @examples
 #' set.seed(1)
@@ -169,7 +178,8 @@ diff_expr_ma_plot <-
 prepare_volcano_of_given_property <-
   function(data.df, property.to.plot = c("fdr", "p"), property.column,
            property.thr = 0.05, logfc.thr = 1, main = NULL, numlab = 25,
-           point.lab = TRUE, sym.col = "gene_symbol", pretty.breaks = FALSE) {
+           point.lab = TRUE, sym.col = "gene_symbol", pretty.breaks = FALSE,
+           base.size = 16) {
 
     property.to.plot <- match.arg(property.to.plot)
     if (pretty.breaks && !requireNamespace("scales", quietly = TRUE)) {
@@ -232,17 +242,17 @@ prepare_volcano_of_given_property <-
     line.tag <- paste0(if (property.to.plot == "fdr") "q" else "p", " = ", property.thr)
 
     g <- ggplot(data.df, aes(x = .data[["logFC"]], y = .data[["neg.log10"]])) +
-      geom_point(aes(colour = .data[["Significance"]]), size = 1.75, alpha = 0.7) +
+      geom_point(aes(colour = .data[["Significance"]]), size = base.size / 8, alpha = 0.7) +
       scale_colour_manual(values = pal, drop = FALSE) +
       geom_hline(yintercept = -log10(property.thr), colour = "red", linetype = "dashed") +
       geom_vline(xintercept =  logfc.thr, colour = "red", linetype = "dashed") +
       geom_vline(xintercept = -logfc.thr, colour = "red", linetype = "dashed") +
       annotate("text", x = min(data.df$logFC, na.rm = TRUE),
                y = -log10(property.thr), label = line.tag,
-               hjust = 0, vjust = -0.4, size = 3, colour = "red") +
+               hjust = 0, vjust = -0.4, size = base.size / 3.5, colour = "red") +
       labs(x = "Logarithmic fold change", y = paste0("-log10(", measure, ")"),
            colour = NULL, title = main, subtitle = paste0("(", measure, "-values)")) +
-      theme_bw(base_size = 10) +
+      theme_bw(base_size = base.size) +
       theme(panel.border = element_blank(),
             axis.line = element_line(colour = "black"),
             panel.grid.major = element_line(linewidth = 0.2),
@@ -258,7 +268,7 @@ prepare_volcano_of_given_property <-
       g <- g + ggrepel::geom_text_repel(
         data = lab, inherit.aes = FALSE,
         aes(x = .data[["logFC"]], y = .data[["neg.log10"]], label = .data[[sym.col]]),
-        size = 3, colour = "gray30", max.overlaps = 15,
+        size = base.size / 3, colour = "gray30", max.overlaps = 15,
         box.padding = grid::unit(0.35, "lines"),
         point.padding = grid::unit(0.3, "lines"), show.legend = FALSE)
 
@@ -276,6 +286,9 @@ prepare_volcano_of_given_property <-
 #' @param logfc.thr \code{numeric}. Plotted (`abs`olute) values above this threshold will have bigger dots.
 #' @param numlab \code{numeric}. Maximum number of labels per plot. Takes precedence to numbers calculated based on `p.thr` and `fdr.thr`.
 #' @param point.lab \code{logical}. Should points be labelled, at all?
+#' @param base.size \code{numeric}. Overall text/point scale passed on to \code{prepare_volcano_of_given_property}
+#'   (the `ggplot2` \code{base_size}, default 16). Raise it to enlarge legend, axes, labels and points together
+#'   when printing to a large device (e.g. the 15x15 inch pipeline PDF).
 #' @return A named \code{list} of \code{ggplot} objects with the elements \code{FDR} and \code{Pval},
 #'   holding the volcano plot with points highlighted by false discovery rate and by p-value,
 #'   respectively. Both plots are additionally printed, so that they are captured when the function is
@@ -290,7 +303,7 @@ prepare_volcano_of_given_property <-
 #' }
 #' @export
 diff_expr_volcano_plot <-
-		function(d3, id, sym.col="gene_symbol", main=NULL, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=25, point.lab=TRUE)
+		function(d3, id, sym.col="gene_symbol", main=NULL, p.thr=0.05, fdr.thr=0.05, logfc.thr=1, numlab=25, point.lab=TRUE, base.size=16)
 {
 	pv.col <- dw_find_col(names(d3), "^p\\.{0,1}val[e-u]{0,2}$", "p-value")
 	fdr.col <- dw_find_col(names(d3), "^fdr$|^adj*\\.{0,1}p\\.{0,1}val[e-u]{0,2}$", "FDR")
@@ -315,7 +328,8 @@ diff_expr_volcano_plot <-
 			main = main,
 			numlab = numlab,
 			point.lab = TRUE,
-			sym.col = sym.col)
+			sym.col = sym.col,
+			base.size = base.size)
 
 	g.l[["Pval"]] = prepare_volcano_of_given_property(data.df = cont.dat,
 			property.to.plot = 'p',
@@ -325,7 +339,8 @@ diff_expr_volcano_plot <-
 			main = main,
 			numlab = numlab,
 			point.lab = TRUE,
-			sym.col = sym.col)
+			sym.col = sym.col,
+			base.size = base.size)
 
 	#Printing the plots so they can be stored into pdf-file when this function is called
 	suppressWarnings(print(g.l[["Pval"]]))

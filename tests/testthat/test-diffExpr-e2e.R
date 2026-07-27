@@ -71,9 +71,9 @@ test_that("verbose = FALSE is silent on the console but still writes the full lo
   out.dir <- run_dir()
   on.exit(unlink(out.dir, recursive = TRUE), add = TRUE)
 
-  # capture only our logger's channel: the major-step banners must not appear on the
-  # console when verbose = FALSE. Unrelated warnings from edgeR/limma are ignored.
-  msgs <- testthat::capture_messages(suppressWarnings(
+  # the console channel is stdout (cat), so capture stdout: the major-step banners must not
+  # appear when verbose = FALSE. Unrelated warnings from edgeR/limma are ignored.
+  out <- testthat::capture_output(suppressWarnings(
     diffExpr(expr.dat  = ex_counts_file(),
              samp.info = ex_samp_info_raw(),
              samples   = "SampleName",
@@ -84,7 +84,7 @@ test_that("verbose = FALSE is silent on the console but still writes the full lo
              verbose   = FALSE,
              enr.do = FALSE)
   ))
-  expect_false(any(grepl("PREPROCESSING|STARTUP CHECKS|LINEAR MODELLING", msgs)))
+  expect_false(any(grepl("PREPROCESSING|STARTUP CHECKS|LINEAR MODELLING", out)))
 
   logs <- list.files(out.dir, pattern = "\\.log$", full.names = TRUE)
   expect_gt(length(logs), 0L)

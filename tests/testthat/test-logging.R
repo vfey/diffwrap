@@ -11,7 +11,7 @@ test_that("verbose is validated", {
 test_that("verbose = TRUE shows steps on the console but not detail", {
   dw_log_start(TRUE)
   on.exit(dw_log_end(), add = TRUE)
-  expect_message(dw_step("major\n"), "major")
+  expect_output(dw_step("major\n"), "major")
   expect_silent(dw_log("detail\n"))
 })
 
@@ -25,8 +25,8 @@ test_that("verbose = FALSE silences the console entirely", {
 test_that("verbose = 'all' mirrors detail to the console", {
   dw_log_start("all")
   on.exit(dw_log_end(), add = TRUE)
-  expect_message(dw_step("major\n"), "major")
-  expect_message(dw_log("detail\n"), "detail")
+  expect_output(dw_step("major\n"), "major")
+  expect_output(dw_log("detail\n"), "detail")
 })
 
 test_that("both tiers always reach the log file regardless of verbosity", {

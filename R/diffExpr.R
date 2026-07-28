@@ -740,7 +740,7 @@ diffExpr <-
     }
 
 
-    dw_step("@ -- EXTRACTING CONTRASTS --\n\n")
+    dw_step("@ -- EXTRACTING CONTRASTS --\n")
     if (do.voom) {
       if (!block && !is.null(pairs)) {
         dw_log("  ...for paired samples comparisons (voom)...\n")

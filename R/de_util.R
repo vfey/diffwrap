@@ -431,7 +431,7 @@ diff_expr_extract_contrasts <-
       dw_log("Renaming ID column...\n")
       names(d3)[1] <- "ID"
       if (biomart) {
-        dw_step(paste("  |--> Retrieving gene annotation from BioMart for"), contr, "...\n")
+        dw_step(paste("  |--> Retrieving gene annotation from BioMart for"), contr, "...\n\n")
         # diffExpr() probes BioMart up front, but keep a guard here in case a host drops out
         # mid-run: on failure fall back to offline convertId2() symbols for the remaining contrasts.
         # verbose = TRUE turns on convert.bm()/getBM() progress output (shows if the session surfaces it).
@@ -451,6 +451,7 @@ diff_expr_extract_contrasts <-
         }
       }
       if (!biomart) {
+        dw_step("\n")
         # convertId2() defaults to human; pass the species matching 'biom.data.set' so mouse
         # datasets are not annotated with human symbols. Also the offline fallback used above.
         conv.species <- switch(biom.data.set,

@@ -966,7 +966,7 @@ diffExpr <-
       )
     }
     run_secs <- as.numeric(difftime(Sys.time(), run_start, units = "secs"))
-    dw_step(sprintf("| >> RUN COMPLETED IN %s << |\n", fmt_dur(run_secs)))
+    dw_step(sprintf("@ >> RUN COMPLETED IN %s << @\n", fmt_dur(run_secs)))
 
     ## the run completed normally, so the device-cleanup handler is no longer needed.
     ## NOTE: do NOT call bare on.exit() here - that would also cancel dw_log_end()

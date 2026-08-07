@@ -61,7 +61,11 @@ diff_expr_QC_plots <-
     samp.name <- samp.info$SampleNames
     main <- paste(type, analysis.name, sep="_")
     main <- gsub("\\.{1,}", "_", make.names(main))
-    if (!length(out.l$QCplots)) out.l$QCplots <- list()
+    # exact name match: '$' does partial matching on lists, and testing !length() would also
+    # re-initialise an existing but still empty collection. This function is called once per
+    # 'type' (e.g. raw and normalised counts) on a shared 'out.l', so the entries of earlier
+    # calls must survive.
+    if (!"QCplots" %in% names(out.l)) out.l$QCplots <- list()
     dw_log("  Plotting...\n")
     pdf_file <- file.path(out.dir, paste0(Sys.Date(), "_", main, "_QC_plots.pdf"))
     dw_log("   Saving plot to", pdf_file, "...\n")

@@ -357,7 +357,7 @@ diff_expr_volcano_plot <-
 #'   Called for its side effect of drawing the p-value distribution.
 #' @examples
 #' d3 <- data.frame(ID = paste0("g", 1:200), PValue = runif(200))
-#' h <- diff_expr_pval_hist_plot(d3)
+#' diff_expr_pval_hist_plot(d3)
 #' @export
 diff_expr_pval_hist_plot <-
 		function(d3)

@@ -484,7 +484,9 @@ diffExpr <-
     ## switch off plotting device on exit in case a plot fails
     ## the resulting file will be empty but not broken
     ## NOTE: 'add=TRUE' is essential here, otherwise this would replace the logging exit handler
-    on.exit({plyr::l_ply(dev.list(), dev.off)}, add = TRUE)
+    ## Devices are closed by number via dw_dev_off(), which skips any that a plotting helper has
+    ## already closed; a bare dev.off() on the null device is an error.
+    on.exit({for (dv in grDevices::dev.list()) dw_dev_off(dv)}, add = TRUE)
 
     ## standardize samp.info
     ### needs to be a data.frame with (at least) two columns: 'SampleNames' and 'Groups'

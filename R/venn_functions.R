@@ -72,10 +72,13 @@ diffr_venn <- function(list.comp.tables,
   # the 'venn.diag' grob above, drawn later via grid::grid.draw().
   scratch.dev <- tempfile(fileext = ".pdf")
   grDevices::pdf(scratch.dev)
+  scratch.num <- grDevices::dev.cur()
   venn.sets.lists <- tryCatch(
     venn::venn(DEGs.list),
     finally = {
-      grDevices::dev.off()
+      # close by number and only if still open: venn::venn() may close the device itself, and a
+      # bare dev.off() would then error on the null device
+      dw_dev_off(scratch.num)
       unlink(scratch.dev)
     }
   )

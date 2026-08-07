@@ -179,7 +179,7 @@ diff_expr_fit <-
 #'                   row.names = paste0("S", 1:8))
 #' d3 <- data.frame(ID = paste0("g", 1:50), gene_symbol = paste0("G", 1:50),
 #'                  logFC = rnorm(50), FDR = runif(50))
-#' diffr_expr_generate_cleaned_de_table_output(
+#' tab <- diffr_expr_generate_cleaned_de_table_output(
 #'   contrast = "treated-control", annotated.normcnt = d3,
 #'   samp.name.and.group.key = key, out.dir = tempdir(),
 #'   analysis.name = "demo")
@@ -286,8 +286,8 @@ dw_contrast_plots <- function(d3, contr, id.col, sym.col, contr.out.dir, analysi
   on.exit({
     if (grDevices::dev.cur() == own.dev) { # only ever our own PDF, never the caller's device
       graphics::par(oldpar)
-      grDevices::dev.off()
     }
+    dw_dev_off(own.dev)                    # no-op if it was already closed on the normal path
   }, add = TRUE)
 
   dw_log(" MA-plot...\n")
@@ -311,10 +311,11 @@ dw_contrast_plots <- function(d3, contr, id.col, sym.col, contr.out.dir, analysi
 
   ## Heatmaps. Large ones get their own, bigger, PDF; the handler above then guards that device.
   if (heatmap.topn > 100) {
-    grDevices::dev.off()
+    dw_dev_off(own.dev)
     grDevices::pdf(file.path(contr.out.dir, paste(analysis.name, contr, "_heatmaps.pdf", sep = "_")),
                    width = 25, height = 35)
     own.dev <- grDevices::dev.cur()
+    oldpar  <- graphics::par(mar = c(6, 6, 5, 3))
   }
   dw_log("Heatmap plots...\n")
   out$heatmapPlot <- pheatmap_plots(d3 = d3,
@@ -337,8 +338,10 @@ dw_contrast_plots <- function(d3, contr, id.col, sym.col, contr.out.dir, analysi
                                     logfc.thr = hm.logfc.thr,
                                     topn = heatmap.topn,
                                     split.expr = heatmap.split.expr)
-  graphics::par(oldpar)                    # restore on our own device, before it is destroyed
-  grDevices::dev.off()
+  # restore on our own device, before it is destroyed; both steps are no-ops if a plotting helper
+  # closed the device itself (dev.off() would then hit the null device and error)
+  if (grDevices::dev.cur() == own.dev) graphics::par(oldpar)
+  dw_dev_off(own.dev)
 
   out
 }
@@ -623,8 +626,9 @@ diff_expr_extract_contrasts <-
     if (plots && !is(v[["venn.diagram"]], "try-error")) {
       dw_log(">>> Plotting Venn diagram...", "\n")
       pdf(file.path(out.dir,"Venn_Diagram.pdf"), width = 15, height= 15)
+      venn.dev <- grDevices::dev.cur()
       grid::grid.draw(v[["venn.diagram"]])
-      dev.off()
+      dw_dev_off(venn.dev)
     }
 
     ifelse(!dir.exists(file.path(out.dir, "Venn sections")), dir.create(file.path(out.dir, "Venn sections")), FALSE)
@@ -681,7 +685,8 @@ dw_biomart_available <- function(biom.data.set = "hsapiens_gene_ensembl") {
 #' # requires network access to Ensembl biomart
 #' if (requireNamespace("biomaRt", quietly = TRUE)) {
 #'   d3 <- data.frame(ID = c("ENSG00000141510", "ENSG00000012048"))
-#'   diff_expr_biomart(d3, biom.data.set = "hsapiens_gene_ensembl")
+#'   ann <- diff_expr_biomart(d3, biom.data.set = "hsapiens_gene_ensembl")
+#'   nrow(ann)
 #' }
 #' }
 #' @export

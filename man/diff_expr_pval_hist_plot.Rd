@@ -19,5 +19,5 @@ Function to generate a histogram of the P-Value distribution
 }
 \examples{
 d3 <- data.frame(ID = paste0("g", 1:200), PValue = runif(200))
-h <- diff_expr_pval_hist_plot(d3)
+diff_expr_pval_hist_plot(d3)
 }

@@ -52,10 +52,12 @@
 #' @return A table listing statistically significant enrichment results according to threshold set in padjCutoff.
 #'     The table is also saved in xlsx format with user-specified name.
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # requires network access to the g:Profiler service
-#' run_gprofiler(input_genes = c("ENSG00000141510", "ENSG00000012048"),
-#'               organism = "hsapiens")
+#' if (requireNamespace("gprofiler2", quietly = TRUE)) {
+#'   run_gprofiler(input_genes = c("ENSG00000141510", "ENSG00000012048"),
+#'                 organism = "hsapiens")
+#' }
 #' }
 #' @export
 

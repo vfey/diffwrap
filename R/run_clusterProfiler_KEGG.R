@@ -35,9 +35,10 @@
 #' @return A table listing statistically significant enrichment results according to threshold set in pvalueCutoff
 #'         The table is also saved in xlsx format with user-specified name.
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # enrichKEGG downloads pathway data from the KEGG web service (needs network)
-#' if (requireNamespace("org.Hs.eg.db", quietly = TRUE)) {
+#' if (requireNamespace("clusterProfiler", quietly = TRUE) &&
+#'     requireNamespace("org.Hs.eg.db", quietly = TRUE)) {
 #'   # KEGG works on Entrez identifiers
 #'   run_clusterProfiler_KEGG(input_genes = c("7157", "672", "675"),
 #'                            organism = "hsa", id_type = "kegg")

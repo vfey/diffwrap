@@ -58,10 +58,17 @@ prepare_scale_for_legend = function(scale.minimum, scale.maximum, int.values.for
 #' @return No return value. Called for its side effect of writing a network visualisation of the
 #'   enrichment result to the file given by \option{plot.filename}.
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # builds a network plot from an enrichment result and writes it to 'plot.filename'
-#' plot_enrichment_network(enrichment.result, DE.result,
-#'                         plot.filename = file.path(tempdir(), "network.pdf"))
+#' if (requireNamespace("igraph", quietly = TRUE)) {
+#'   enr <- data.frame(Description = c("Pathway A", "Pathway B"),
+#'                     genes = c("G1,G2,G3", "G3,G4,G5"))
+#'   de <- data.frame(gene_symbol = paste0("G", 1:5),
+#'                    logFC = c(2.5, -1.8, 1.2, -2.1, 0.9),
+#'                    FDR = c(0.001, 0.002, 0.01, 0.003, 0.02))
+#'   plot_enrichment_network(enr, de,
+#'                           plot.filename = file.path(tempdir(), "network.pdf"))
+#' }
 #' }
 #' @export
 plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
@@ -352,15 +359,19 @@ format_ensembl_ids_annotated_to_term <- function(result, species, which.split = 
 ###############################################################################
 
 #' @examples
-#' \dontrun{
-#' # needs an annotation package (org.Hs.eg.db); run on real data with mappable gene IDs
-#' out.dir <- file.path(tempdir(), "diffwrap_demo")
-#' dir.create(out.dir, showWarnings = FALSE)
-#' res <- diffExpr(diffwrap_counts, diffwrap_samp_info, samples = "SampleName",
-#'                 groups = "Group", control = "control", analysis.name = "demo",
-#'                 out.dir = out.dir, enr.do = FALSE)
-#' runEnrichmentAnalyses(res, analysis.name = "demo", out.dir = out.dir,
-#'                       species = "human", enrichment.methods = "clusterProfilerGO")
+#' \donttest{
+#' # needs annotation packages; run on real data with mappable gene IDs
+#' if (requireNamespace("clusterProfiler", quietly = TRUE) &&
+#'     requireNamespace("org.Hs.eg.db", quietly = TRUE) &&
+#'     requireNamespace("AnnotationDbi", quietly = TRUE)) {
+#'   out.dir <- file.path(tempdir(), "diffwrap_demo")
+#'   dir.create(out.dir, showWarnings = FALSE)
+#'   res <- diffExpr(diffwrap_counts, diffwrap_samp_info, samples = "SampleName",
+#'                   groups = "Group", control = "control", analysis.name = "demo",
+#'                   out.dir = out.dir, enr.do = FALSE)
+#'   runEnrichmentAnalyses(res, analysis.name = "demo", out.dir = out.dir,
+#'                         species = "human", enrichment.methods = "clusterProfilerGO")
+#' }
 #' }
 #' @export
 runEnrichmentAnalyses <- function(diffr.wrapper.output, analysis.name="enrichment",

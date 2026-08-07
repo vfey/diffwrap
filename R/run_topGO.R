@@ -42,9 +42,10 @@ utils::globalVariables("genesInTerm")
 #' @author Bogdan Iancu - Genevia Technologies Oy
 #' @return A data frame with enriched terms and p-values from Fisher's exact test, using different algorithms: elim, classic, weight01.
 #' @examples
-#' \dontrun{
-#' # needs org.Hs.eg.db; builds a genome-wide GO universe, so it is not run automatically
-#' if (requireNamespace("org.Hs.eg.db", quietly = TRUE) &&
+#' \donttest{
+#' # needs org.Hs.eg.db; builds a genome-wide GO universe, so it is slow
+#' if (requireNamespace("topGO", quietly = TRUE) &&
+#'     requireNamespace("org.Hs.eg.db", quietly = TRUE) &&
 #'     requireNamespace("AnnotationDbi", quietly = TRUE)) {
 #'   bg <- AnnotationDbi::keys(org.Hs.eg.db::org.Hs.eg.db, keytype = "ENSEMBL")
 #'   fg <- c("ENSG00000141510", "ENSG00000012048", "ENSG00000139618")

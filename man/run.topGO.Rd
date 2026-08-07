@@ -42,9 +42,10 @@ The columns in the final table produced by topGO (their description is fetched f
 Column 'p.adj.weight01' represents the adjusted p-value for the weight01 algorithm.
 }
 \examples{
-\dontrun{
-# needs org.Hs.eg.db; builds a genome-wide GO universe, so it is not run automatically
-if (requireNamespace("org.Hs.eg.db", quietly = TRUE) &&
+\donttest{
+# needs org.Hs.eg.db; builds a genome-wide GO universe, so it is slow
+if (requireNamespace("topGO", quietly = TRUE) &&
+    requireNamespace("org.Hs.eg.db", quietly = TRUE) &&
     requireNamespace("AnnotationDbi", quietly = TRUE)) {
   bg <- AnnotationDbi::keys(org.Hs.eg.db::org.Hs.eg.db, keytype = "ENSEMBL")
   fg <- c("ENSG00000141510", "ENSG00000012048", "ENSG00000139618")

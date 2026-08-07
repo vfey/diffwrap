@@ -83,9 +83,11 @@ A table listing statistically significant enrichment results according to thresh
 Runs gprofiler function for a DEG list or for a ranked gene list.
 }
 \examples{
-\dontrun{
+\donttest{
 # requires network access to the g:Profiler service
-run_gprofiler(input_genes = c("ENSG00000141510", "ENSG00000012048"),
-              organism = "hsapiens")
+if (requireNamespace("gprofiler2", quietly = TRUE)) {
+  run_gprofiler(input_genes = c("ENSG00000141510", "ENSG00000012048"),
+                organism = "hsapiens")
+}
 }
 }

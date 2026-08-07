@@ -47,9 +47,16 @@ Function for making network visualisation based on enrichment result, DE gene ta
 Can take the input tables either as data frames or Excel files
 }
 \examples{
-\dontrun{
+\donttest{
 # builds a network plot from an enrichment result and writes it to 'plot.filename'
-plot_enrichment_network(enrichment.result, DE.result,
-                        plot.filename = file.path(tempdir(), "network.pdf"))
+if (requireNamespace("igraph", quietly = TRUE)) {
+  enr <- data.frame(Description = c("Pathway A", "Pathway B"),
+                    genes = c("G1,G2,G3", "G3,G4,G5"))
+  de <- data.frame(gene_symbol = paste0("G", 1:5),
+                   logFC = c(2.5, -1.8, 1.2, -2.1, 0.9),
+                   FDR = c(0.001, 0.002, 0.01, 0.003, 0.02))
+  plot_enrichment_network(enr, de,
+                          plot.filename = file.path(tempdir(), "network.pdf"))
+}
 }
 }

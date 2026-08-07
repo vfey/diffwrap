@@ -54,9 +54,11 @@ A \code{data.frame}: the input table \option{d3} merged with the annotation retr
 Function to retrieve additional information from biomart
 }
 \examples{
-\dontrun{
+\donttest{
 # requires network access to Ensembl biomart
-d3 <- data.frame(ID = c("ENSG00000141510", "ENSG00000012048"))
-diff_expr_biomart(d3, biom.data.set = "hsapiens_gene_ensembl")
+if (requireNamespace("biomaRt", quietly = TRUE)) {
+  d3 <- data.frame(ID = c("ENSG00000141510", "ENSG00000012048"))
+  diff_expr_biomart(d3, biom.data.set = "hsapiens_gene_ensembl")
+}
 }
 }

@@ -87,14 +87,18 @@ Functions in various R-packages (clusterProfiler, topGO, gProfileR)
 are integrated. Currently supports human or mouse!
 }
 \examples{
-\dontrun{
-# needs an annotation package (org.Hs.eg.db); run on real data with mappable gene IDs
-out.dir <- file.path(tempdir(), "diffwrap_demo")
-dir.create(out.dir, showWarnings = FALSE)
-res <- diffExpr(diffwrap_counts, diffwrap_samp_info, samples = "SampleName",
-                groups = "Group", control = "control", analysis.name = "demo",
-                out.dir = out.dir, enr.do = FALSE)
-runEnrichmentAnalyses(res, analysis.name = "demo", out.dir = out.dir,
-                      species = "human", enrichment.methods = "clusterProfilerGO")
+\donttest{
+# needs annotation packages; run on real data with mappable gene IDs
+if (requireNamespace("clusterProfiler", quietly = TRUE) &&
+    requireNamespace("org.Hs.eg.db", quietly = TRUE) &&
+    requireNamespace("AnnotationDbi", quietly = TRUE)) {
+  out.dir <- file.path(tempdir(), "diffwrap_demo")
+  dir.create(out.dir, showWarnings = FALSE)
+  res <- diffExpr(diffwrap_counts, diffwrap_samp_info, samples = "SampleName",
+                  groups = "Group", control = "control", analysis.name = "demo",
+                  out.dir = out.dir, enr.do = FALSE)
+  runEnrichmentAnalyses(res, analysis.name = "demo", out.dir = out.dir,
+                        species = "human", enrichment.methods = "clusterProfilerGO")
+}
 }
 }

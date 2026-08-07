@@ -49,8 +49,8 @@ utils::globalVariables("genesInTerm")
 #'     requireNamespace("AnnotationDbi", quietly = TRUE)) {
 #'   bg <- AnnotationDbi::keys(org.Hs.eg.db::org.Hs.eg.db, keytype = "ENSEMBL")
 #'   fg <- c("ENSG00000141510", "ENSG00000012048", "ENSG00000139618")
-#'   run.topGO(background = bg, foreground = fg, ontologies = "BP",
-#'             organism = "org.Hs.eg.db", ID_type = "ENSEMBL")
+#'   go <- run.topGO(background = bg, foreground = fg, ontologies = "BP",
+#'                   organism = "org.Hs.eg.db", ID_type = "ENSEMBL")
 #' }
 #' }
 #' @export

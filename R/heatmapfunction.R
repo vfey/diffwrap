@@ -23,7 +23,7 @@ get_hm_breaks <- function(
     expr.mat <- as.matrix(expr.mat)
   }
   # scale on the same margin pheatmap will use, so the computed breaks match the displayed data
-  # (scale() works on columns, so row-scaling needs the transpose)
+  # (scale() works on columns, so row-scaling needs the transposition)
   if (scale.fl == "row") {
     expr.mat <- t(scale(t(expr.mat)))
   } else if (scale.fl == "column") {
@@ -374,7 +374,7 @@ correlogram_pheatmap = function(expr.mat, clinical.mat, scale.fl = "none", legen
 #' counts <- diff_expr_filter_counts(diff_expr_read_counts(diffwrap_counts, si), si)
 #' expr <- edgeR::cpm(counts, log = TRUE)[1:30, ]
 #' clin <- data.frame(Group = si$Groups, row.names = si$SampleNames)
-#' diffr_pheatmap(expr, clin)
+#' hm <- diffr_pheatmap(expr, clin)
 #' }
 #' @export
 diffr_pheatmap = function(expr.mat, clinical.mat,

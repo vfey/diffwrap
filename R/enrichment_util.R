@@ -263,6 +263,10 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
   # Produce the plot
   #tiff(paste0(plot.filename, ".tiff"), width = 10, height = 10, units = 'cm', res = 300)
   pdf(paste0(plot.filename, ".pdf"), width = pdf.width, height = pdf.height)
+  # the device and the layout()/par() state set on it are owned by this function; the immediate
+  # on.exit() closes it even if the plotting below fails, so the caller's device is never touched
+  net.dev <- grDevices::dev.cur()
+  on.exit(dw_dev_off(net.dev), add = TRUE)
   layout(matrix(1:2, ncol = 2), widths = c(0.85*pdf.width,0.15*pdf.width),heights = c(1,0.25))
   plot(g, vertex.label.color = "black", vertex.size = igraph::V(g)$sizes, vertex.frame.color = "white",
        vertex.color = igraph::V(g)$colors, vertex.label.cex = igraph::V(g)$vert.label.sizes, vertex.shape = igraph::V(g)$shapes,
@@ -280,7 +284,9 @@ plot_enrichment_network <- function(enrichment.result, DE.result, plot.filename,
   # Add legend image
   rasterImage(legend_image, 0.1, 0.8, 0.2,1)
 
-  dev.off()
+  # the device is closed by the on.exit() handler above; return nothing so the value is not
+  # auto-printed when the function is called at top level (e.g. in examples)
+  invisible(NULL)
 }
 
 
@@ -369,8 +375,8 @@ format_ensembl_ids_annotated_to_term <- function(result, species, which.split = 
 #'   res <- diffExpr(diffwrap_counts, diffwrap_samp_info, samples = "SampleName",
 #'                   groups = "Group", control = "control", analysis.name = "demo",
 #'                   out.dir = out.dir, enr.do = FALSE)
-#'   runEnrichmentAnalyses(res, analysis.name = "demo", out.dir = out.dir,
-#'                         species = "human", enrichment.methods = "clusterProfilerGO")
+#'   enr <- runEnrichmentAnalyses(res, analysis.name = "demo", out.dir = out.dir,
+#'                                species = "human", enrichment.methods = "clusterProfilerGO")
 #' }
 #' }
 #' @export

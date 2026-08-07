@@ -91,7 +91,7 @@ si <- diff_expr_get_samp_info(diffwrap_samp_info, "SampleName", "Group")
 counts <- diff_expr_filter_counts(diff_expr_read_counts(diffwrap_counts, si), si)
 expr <- edgeR::cpm(counts, log = TRUE)[1:30, ]
 clin <- data.frame(Group = si$Groups, row.names = si$SampleNames)
-diffr_pheatmap(expr, clin)
+hm <- diffr_pheatmap(expr, clin)
 }
 }
 \author{

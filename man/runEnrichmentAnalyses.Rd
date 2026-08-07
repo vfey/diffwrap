@@ -97,8 +97,8 @@ if (requireNamespace("clusterProfiler", quietly = TRUE) &&
   res <- diffExpr(diffwrap_counts, diffwrap_samp_info, samples = "SampleName",
                   groups = "Group", control = "control", analysis.name = "demo",
                   out.dir = out.dir, enr.do = FALSE)
-  runEnrichmentAnalyses(res, analysis.name = "demo", out.dir = out.dir,
-                        species = "human", enrichment.methods = "clusterProfilerGO")
+  enr <- runEnrichmentAnalyses(res, analysis.name = "demo", out.dir = out.dir,
+                               species = "human", enrichment.methods = "clusterProfilerGO")
 }
 }
 }

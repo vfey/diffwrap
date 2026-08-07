@@ -58,7 +58,8 @@ Function to retrieve additional information from biomart
 # requires network access to Ensembl biomart
 if (requireNamespace("biomaRt", quietly = TRUE)) {
   d3 <- data.frame(ID = c("ENSG00000141510", "ENSG00000012048"))
-  diff_expr_biomart(d3, biom.data.set = "hsapiens_gene_ensembl")
+  ann <- diff_expr_biomart(d3, biom.data.set = "hsapiens_gene_ensembl")
+  nrow(ann)
 }
 }
 }

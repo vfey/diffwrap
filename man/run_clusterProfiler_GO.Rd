@@ -72,8 +72,8 @@ Runs clusterProfiler GO enrichment function for a DEG list or for a ranked gene 
 \donttest{
 if (requireNamespace("org.Hs.eg.db", quietly = TRUE)) {
   genes <- c("ENSG00000141510", "ENSG00000012048", "ENSG00000139618")
-  run_clusterProfiler_GO(input_genes = genes, ontology = "BP",
-                         OrgDb = "org.Hs.eg.db", id_type = "ENSEMBL")
+  go <- run_clusterProfiler_GO(input_genes = genes, ontology = "BP",
+                               OrgDb = "org.Hs.eg.db", id_type = "ENSEMBL")
 }
 }
 }

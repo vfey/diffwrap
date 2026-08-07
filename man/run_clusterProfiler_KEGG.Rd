@@ -66,8 +66,8 @@ Runs clusterProfiler KEGG enrichment function for a DEG list or for a ranked gen
 if (requireNamespace("clusterProfiler", quietly = TRUE) &&
     requireNamespace("org.Hs.eg.db", quietly = TRUE)) {
   # KEGG works on Entrez identifiers
-  run_clusterProfiler_KEGG(input_genes = c("7157", "672", "675"),
-                           organism = "hsa", id_type = "kegg")
+  kegg <- run_clusterProfiler_KEGG(input_genes = c("7157", "672", "675"),
+                                   organism = "hsa", id_type = "kegg")
 }
 }
 }

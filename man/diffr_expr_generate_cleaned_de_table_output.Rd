@@ -49,7 +49,7 @@ key <- data.frame(group = rep(c("control", "treated"), each = 4),
                   row.names = paste0("S", 1:8))
 d3 <- data.frame(ID = paste0("g", 1:50), gene_symbol = paste0("G", 1:50),
                  logFC = rnorm(50), FDR = runif(50))
-diffr_expr_generate_cleaned_de_table_output(
+tab <- diffr_expr_generate_cleaned_de_table_output(
   contrast = "treated-control", annotated.normcnt = d3,
   samp.name.and.group.key = key, out.dir = tempdir(),
   analysis.name = "demo")

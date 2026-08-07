@@ -86,8 +86,8 @@ Runs gprofiler function for a DEG list or for a ranked gene list.
 \donttest{
 # requires network access to the g:Profiler service
 if (requireNamespace("gprofiler2", quietly = TRUE)) {
-  run_gprofiler(input_genes = c("ENSG00000141510", "ENSG00000012048"),
-                organism = "hsapiens")
+  gp <- run_gprofiler(input_genes = c("ENSG00000141510", "ENSG00000012048"),
+                      organism = "hsapiens")
 }
 }
 }

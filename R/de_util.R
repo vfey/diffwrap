@@ -255,6 +255,94 @@ diffr_expr_generate_cleaned_de_table_output <-
     invisible(NULL)
   }
 
+# All per-contrast plotting for diff_expr_extract_contrasts(), factored out so that the PDF device
+# and the graphical parameters set on it share a single function lifetime. That is what makes the
+# graphics state safe:
+#   * the device is opened here, so par() can be captured *after* pdf() - capturing
+#     par(no.readonly = TRUE) while no device exists forces one open and leaves the grid state such
+#     that the pheatmap output never reaches the PDF (the blank-heatmap bug);
+#   * par() called with settings returns the *previous* values, so 'oldpar' holds the margins of our
+#     own PDF device, not the caller's;
+#   * the immediate on.exit() restores those margins and closes the device, but only while our own
+#     PDF is still the current device. On the normal path dev.off() has already run, so the handler
+#     is a no-op and the caller's device and par() settings are never touched. On the error path it
+#     is the cleanup.
+# Keeping this out of the per-contrast loop in the caller also avoids accumulating one redundant
+# on.exit() handler per contrast. Returns the three plot objects for this contrast.
+dw_contrast_plots <- function(d3, contr, id.col, sym.col, contr.out.dir, analysis.name,
+                              p.thr, fdr.thr, logfc.thr, numlab, point.lab, biom.attributes,
+                              font.size, de.plot.base.size, lists,
+                              samp.info, samples, groups, sample.plot.names,
+                              color.blind.pal, n.pal.cols, color.extremes, palette.length,
+                              anno.color, anno.name, heatmap.main,
+                              hm.p.thr, hm.fdr.thr, hm.logfc.thr, heatmap.topn, heatmap.split.expr) {
+
+  out <- list()
+
+  grDevices::pdf(file.path(contr.out.dir, paste(analysis.name, contr, "_plots.pdf", sep = "_")),
+                 width = 15, height = 15)
+  own.dev <- grDevices::dev.cur()          # the device this function owns; updated on any swap below
+  oldpar  <- graphics::par(mar = c(6, 6, 5, 3))
+  on.exit({
+    if (grDevices::dev.cur() == own.dev) { # only ever our own PDF, never the caller's device
+      graphics::par(oldpar)
+      grDevices::dev.off()
+    }
+  }, add = TRUE)
+
+  dw_log(" MA-plot...\n")
+  out$MAplot <- diff_expr_ma_plot(d3, contr, id.col, sym.col, p.thr, fdr.thr, logfc.thr, numlab,
+                                  out.dir = contr.out.dir, analysis.name, point.lab, biom.attributes,
+                                  font.size, lists, base.size = de.plot.base.size)
+
+  ## Volcano plot
+  dw_log(" Volcano plot...\n")
+  volcano.name <- gsub(".", " ", contr, fixed = TRUE)
+  volcano.name <- gsub("_", " ", volcano.name, fixed = TRUE)
+  volcano.name <- gsub("-", " vs. ", volcano.name, fixed = TRUE)
+  out$volcanoPlot <- diff_expr_volcano_plot(d3, id.col, sym.col = "gene_symbol", main = volcano.name,
+                                            p.thr = p.thr, fdr.thr = fdr.thr, logfc.thr = logfc.thr,
+                                            numlab = numlab, point.lab = point.lab,
+                                            base.size = de.plot.base.size)
+
+  ## Histogram of P-value distribution
+  dw_log(" Dendrogram plot...\n")
+  diff_expr_pval_hist_plot(d3)
+
+  ## Heatmaps. Large ones get their own, bigger, PDF; the handler above then guards that device.
+  if (heatmap.topn > 100) {
+    grDevices::dev.off()
+    grDevices::pdf(file.path(contr.out.dir, paste(analysis.name, contr, "_heatmaps.pdf", sep = "_")),
+                   width = 25, height = 35)
+    own.dev <- grDevices::dev.cur()
+  }
+  dw_log("Heatmap plots...\n")
+  out$heatmapPlot <- pheatmap_plots(d3 = d3,
+                                    id = id.col,
+                                    sym.col = "gene_symbol",
+                                    samp.info = samp.info,
+                                    samples = samples,
+                                    groups = groups,
+                                    sample.plot.names = sample.plot.names,
+                                    color.blind.pal = color.blind.pal,
+                                    n.pal.cols = n.pal.cols,
+                                    color.extremes = color.extremes,
+                                    palette.length = palette.length,
+                                    anno.color = anno.color,
+                                    anno.name = anno.name,
+                                    main = NULL,
+                                    add.main = heatmap.main,
+                                    p.thr = hm.p.thr,
+                                    fdr.thr = hm.fdr.thr,
+                                    logfc.thr = hm.logfc.thr,
+                                    topn = heatmap.topn,
+                                    split.expr = heatmap.split.expr)
+  graphics::par(oldpar)                    # restore on our own device, before it is destroyed
+  grDevices::dev.off()
+
+  out
+}
+
 #' Function to extract contrasts and generate top tables and plots
 #' @param contrasts Contrast matrix as generated by \code{makeContrasts()}. If \code{NULL}, the default, the design matrix
 #'   is expected to describe simple pair-wise comparisons, i.e., with the contrasts already included in the matrix.
@@ -485,78 +573,26 @@ diff_expr_extract_contrasts <-
       # genes selected as differentially expressed (with a 5% false discovery rate)
       if (plots) {
         dw_log("Plotting...\n")
-        # NB: par(mar=...) below is set *after* pdf() opens, i.e. only on the transient PDF
-        # device that dev.off() destroys, so the caller's par is never modified and needs no
-        # restore. Do NOT add par(no.readonly=TRUE)/on.exit(par(oldpar)) here: capturing par
-        # before the device exists forces a device open and, inside this per-contrast loop,
-        # leaves the graphics state so the heatmap grid output never reaches the PDF.
-        pdf(file.path(contr.out.dir, paste(analysis.name, contr, "_plots.pdf", sep="_")), width = 15, height = 15)
-        par(mar = c(6,6,5,3))
-        dw_log(" MA-plot...\n")
-        out.l$MAplots[[contr]] <- diff_expr_ma_plot(d3, contr, id.col, sym.col, p.thr, fdr.thr, logfc.thr, numlab, out.dir=contr.out.dir, analysis.name, point.lab, biom.attributes, font.size, lists, base.size = de.plot.base.size)
-
-        ## Volcano plot
-        dw_log(" Volcano plot...\n")
-        #The following three lines would probably be wise to do using regular expression
-        volcano.name = gsub(".", " ", contr, fixed=TRUE)
-        volcano.name = gsub("_", " ", volcano.name, fixed=TRUE)
-        volcano.name = gsub("-", " vs. ", volcano.name, fixed=TRUE)
-        out.l$volcanoPlots[[contr]] <- diff_expr_volcano_plot(d3, id.col, sym.col="gene_symbol", main=volcano.name, p.thr=p.thr, fdr.thr=fdr.thr, logfc.thr=logfc.thr, numlab=numlab, point.lab=point.lab, base.size = de.plot.base.size)
-
-        #png(paste(out.dir,"/",analysis.name,".Pvalue_distribution.png",sep=""),width=1280,height=960,res=150)
-        ## Histogram of P-value distribution
-        dw_log(" Dendrogram plot...\n")
-        diff_expr_pval_hist_plot(d3)
-
-        if (heatmap.topn > 100) {
-          dev.off()
-          pdf(file.path(contr.out.dir, paste(analysis.name, contr, "_heatmaps.pdf", sep="_")), width = 25, height = 35)
-          dw_log("Heatmap plots...\n")
-          out.l$heatmapPlots[[contr]] <- pheatmap_plots(d3 = d3,
-                                                        id = id.col,
-                                                        sym.col="gene_symbol",
-                                                        samp.info = samp.info,
-                                                        samples = samples,
-                                                        groups = groups,
-                                                        sample.plot.names = sample.plot.names,
-                                                        color.blind.pal = color.blind.pal,
-                                                        n.pal.cols = n.pal.cols,
-                                                        color.extremes = color.extremes,
-                                                        palette.length = palette.length,
-                                                        anno.color = anno.color,
-                                                        anno.name = anno.name,
-                                                        main=NULL,
-                                                        add.main = heatmap.main,
-                                                        p.thr = hm.p.thr,
-                                                        fdr.thr = hm.fdr.thr,
-                                                        logfc.thr = hm.logfc.thr,
-                                                        topn = heatmap.topn,
-                                                        split.expr = heatmap.split.expr)
-          dev.off()
-        } else {
-          dw_log("Heatmap plots...\n")
-          out.l$heatmapPlots[[contr]] <- pheatmap_plots(d3 = d3,
-                                                        id = id.col,
-                                                        sym.col="gene_symbol",
-                                                        samp.info = samp.info,
-                                                        samples = samples,
-                                                        groups = groups,
-                                                        sample.plot.names = sample.plot.names,
-                                                        color.blind.pal = color.blind.pal,
-                                                        n.pal.cols = n.pal.cols,
-                                                        color.extremes = color.extremes,
-                                                        palette.length = palette.length,
-                                                        anno.color = anno.color,
-                                                        anno.name = anno.name,
-                                                        main=NULL,
-                                                        add.main = heatmap.main,
-                                                        p.thr = hm.p.thr,
-                                                        fdr.thr = hm.fdr.thr,
-                                                        logfc.thr = hm.logfc.thr,
-                                                        topn = heatmap.topn,
-                                                        split.expr = heatmap.split.expr)
-          dev.off()
-        }
+        # The PDF device and the par() settings applied to it are owned by this helper, so they
+        # share one function lifetime and are cleaned up together (see its comment block).
+        plots.l <- dw_contrast_plots(d3 = d3, contr = contr, id.col = id.col, sym.col = sym.col,
+                                     contr.out.dir = contr.out.dir, analysis.name = analysis.name,
+                                     p.thr = p.thr, fdr.thr = fdr.thr, logfc.thr = logfc.thr,
+                                     numlab = numlab, point.lab = point.lab,
+                                     biom.attributes = biom.attributes, font.size = font.size,
+                                     de.plot.base.size = de.plot.base.size, lists = lists,
+                                     samp.info = samp.info, samples = samples, groups = groups,
+                                     sample.plot.names = sample.plot.names,
+                                     color.blind.pal = color.blind.pal, n.pal.cols = n.pal.cols,
+                                     color.extremes = color.extremes, palette.length = palette.length,
+                                     anno.color = anno.color, anno.name = anno.name,
+                                     heatmap.main = heatmap.main,
+                                     hm.p.thr = hm.p.thr, hm.fdr.thr = hm.fdr.thr,
+                                     hm.logfc.thr = hm.logfc.thr, heatmap.topn = heatmap.topn,
+                                     heatmap.split.expr = heatmap.split.expr)
+        out.l$MAplots[[contr]]      <- plots.l$MAplot
+        out.l$volcanoPlots[[contr]] <- plots.l$volcanoPlot
+        out.l$heatmapPlots[[contr]] <- plots.l$heatmapPlot
       }
     }
     dw_log("=============================================================================\n")
@@ -641,10 +677,12 @@ dw_biomart_available <- function(biom.data.set = "hsapiens_gene_ensembl") {
 #' @return A \code{data.frame}: the input table \option{d3} merged with the annotation retrieved from
 #'   biomart. The column holding gene symbols is renamed to \code{gene_symbol}.
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # requires network access to Ensembl biomart
-#' d3 <- data.frame(ID = c("ENSG00000141510", "ENSG00000012048"))
-#' diff_expr_biomart(d3, biom.data.set = "hsapiens_gene_ensembl")
+#' if (requireNamespace("biomaRt", quietly = TRUE)) {
+#'   d3 <- data.frame(ID = c("ENSG00000141510", "ENSG00000012048"))
+#'   diff_expr_biomart(d3, biom.data.set = "hsapiens_gene_ensembl")
+#' }
 #' }
 #' @export
 diff_expr_biomart <-

@@ -179,7 +179,7 @@ diff_expr_fit <-
 #'                   row.names = paste0("S", 1:8))
 #' d3 <- data.frame(ID = paste0("g", 1:50), gene_symbol = paste0("G", 1:50),
 #'                  logFC = rnorm(50), FDR = runif(50))
-#' tab <- diffr_expr_generate_cleaned_de_table_output(
+#' diffr_expr_generate_cleaned_de_table_output(
 #'   contrast = "treated-control", annotated.normcnt = d3,
 #'   samp.name.and.group.key = key, out.dir = tempdir(),
 #'   analysis.name = "demo")
@@ -453,7 +453,9 @@ diff_expr_extract_contrasts <-
       warning("A unique and descriptive name for the analysis should always be provided!")
     }
 
-    if (!length(grep("contrasts", names(out.l)))) {
+    # exact name match, not grep(): a substring test would also be satisfied by any future
+    # element whose name merely contains "contrasts" and would then skip the initialisation
+    if (!"contrasts" %in% names(out.l)) {
       out.l$contrasts <- list()
     }
     if (is.null(contrasts)) {
@@ -472,8 +474,18 @@ diff_expr_extract_contrasts <-
       cn <- contrasts
     }
 
-    out.l$MAplots <- list()
-    out.l$volcanoPlots <- list()
+    # Create the collections that hold the returnable plot objects (ggplots for MA and volcano,
+    # pheatmap objects for the heatmaps), but only if they do not exist yet: diffExpr() calls this
+    # function twice for designs where some contrasts are inherent to the design and the remaining
+    # ones (e.g. all-vs-all or explicitly requested contrasts) are fitted separately. Both calls
+    # share one 'out.l', so resetting here unconditionally would discard the plots of the first
+    # call. Same idiom as for 'contrasts' above. Skipped entirely when no plots are produced, so a
+    # 'plots = FALSE' run does not return three collections that stay empty.
+    if (plots) {
+      for (el in c("MAplots", "volcanoPlots", "heatmapPlots")) {
+        if (!el %in% names(out.l)) out.l[[el]] <- list()
+      }
+    }
     for (contr in cn) {
       dw_log("Calculating differential expression for", contr, "\n")
       contr.out.dir <- file.path(out.dir, contr)
